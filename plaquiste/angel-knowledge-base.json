@@ -4,7 +4,7 @@
     "title": "Base de connaissances Ángel — Plaquiste",
     "trade": "plaquiste",
     "status": "VALIDÉ",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "module_schema_version": "1.6.1",
     "business_rules_version": "plaquiste-business-2026-10-08-v1.6.0",
     "language": "fr-FR",
@@ -774,7 +774,16 @@
     "knowledge_base_created": true,
     "angel_runtime_connected_in_this_static_demo": false,
     "supabase_connected": false,
-    "note": "Base Plaquiste mise à jour pour la version UI 1.6.1. La démo statique ne contient toujours pas le runtime conversationnel Ángel de production."
+    "note": "Base Plaquiste mise à jour pour la version UI 1.6.1. La démo statique ne contient toujours pas le runtime conversationnel Ángel de production.",
+    "integration_adapter_version": "1.6.2",
+    "business_schema_frozen": "1.6.1",
+    "adapter_file": "plaquiste/integration/speedarti-adapter.js",
+    "catalogue_mapping_template": "plaquiste/integration/catalogue-mapping-template.json",
+    "adapter_contract_tests": "8/8",
+    "business_tests_after_adapter": "113/113",
+    "runtime_errors_after_adapter": 0,
+    "production_connected": false,
+    "rule": "La V1.6.2 prépare l'intégration sans modifier le moteur métier V1.6.1. Ángel utilise le contexte préparé par l'adaptateur mais ne recalcule jamais le chiffrage."
   },
   "ui_rules": {
     "room_preview": {
@@ -825,7 +834,7 @@
     }
   },
   "connectors": {
-    "status": "PREPARED_NOT_CONNECTED",
+    "status": "ADAPTER_READY_NOT_CONNECTED",
     "manifest": "plaquiste/speedarti-connector-manifest.json",
     "source_audit": "GSTAI-Sp/speedarti-v2@main — lecture seule",
     "targets": [
@@ -852,6 +861,8 @@
       "Réserver le stock uniquement pour les matériaux physiques avec article_id stable.",
       "Réutiliser cette base Ángel existante ; ne jamais créer une base parallèle.",
       "Le dépôt GSTAI-Sp/speedarti-v2 est lecture seule pour ce travail."
-    ]
+    ],
+    "adapter": "plaquiste/integration/speedarti-adapter.js",
+    "integration_version": "1.6.2"
   }
 }
