@@ -1,0 +1,136 @@
+{
+  "metadata": {
+    "module": "plaquiste",
+    "integration_version": "1.6.2",
+    "status": "TO_COMPLETE_WITH_REAL_SPEEDARTI_CATALOGUE_IDS",
+    "rule": "Ne jamais inventer article_id/code_unique. Compléter uniquement à partir du catalogue réel SpeedArti ou d'une référence fournisseur validée."
+  },
+  "mappings": [
+    {
+      "role": "plaque_ba13",
+      "article_id": null,
+      "categorie": "plaques",
+      "required": true
+    },
+    {
+      "role": "plaque_hydro",
+      "article_id": null,
+      "categorie": "plaques",
+      "required": true
+    },
+    {
+      "role": "plaque_phonique",
+      "article_id": null,
+      "categorie": "plaques",
+      "required": true
+    },
+    {
+      "role": "plaque_feu",
+      "article_id": null,
+      "categorie": "plaques",
+      "required": true
+    },
+    {
+      "role": "plaque_habito",
+      "article_id": null,
+      "categorie": "plaques",
+      "required": true
+    },
+    {
+      "role": "rail_m48_r48",
+      "article_id": null,
+      "categorie": "ossature",
+      "required": true
+    },
+    {
+      "role": "montant_m48",
+      "article_id": null,
+      "categorie": "ossature",
+      "required": true
+    },
+    {
+      "role": "fourrure_f530",
+      "article_id": null,
+      "categorie": "ossature",
+      "required": true
+    },
+    {
+      "role": "lisse_clip_optima",
+      "article_id": null,
+      "categorie": "ossature",
+      "required": true
+    },
+    {
+      "role": "appui_optima2",
+      "article_id": null,
+      "categorie": "ossature",
+      "required": true
+    },
+    {
+      "role": "eclisse_f530",
+      "article_id": null,
+      "categorie": "accessoires_plafond",
+      "required": true
+    },
+    {
+      "role": "cavalier_f530",
+      "article_id": null,
+      "categorie": "accessoires_plafond",
+      "required": true
+    },
+    {
+      "role": "suspente_bois_longue",
+      "article_id": null,
+      "categorie": "suspentes",
+      "required": true
+    },
+    {
+      "role": "suspente_bois_maxi",
+      "article_id": null,
+      "categorie": "suspentes",
+      "required": true
+    },
+    {
+      "role": "suspente_bois_secable",
+      "article_id": null,
+      "categorie": "suspentes",
+      "required": true
+    },
+    {
+      "role": "suspente_h_hourdis",
+      "article_id": null,
+      "categorie": "suspentes",
+      "required": true
+    },
+    {
+      "role": "cheville_m6_beton",
+      "article_id": null,
+      "categorie": "fixations",
+      "required": true
+    },
+    {
+      "role": "tige_filetee_m6",
+      "article_id": null,
+      "categorie": "fixations",
+      "required": true
+    },
+    {
+      "role": "corniere_cr2",
+      "article_id": null,
+      "categorie": "ossature",
+      "required": true
+    },
+    {
+      "role": "bande_papier",
+      "article_id": null,
+      "categorie": "finitions",
+      "required": true
+    },
+    {
+      "role": "enduit_joint",
+      "article_id": null,
+      "categorie": "finitions",
+      "required": true
+    }
+  ]
+}
