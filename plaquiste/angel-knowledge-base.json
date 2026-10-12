@@ -4,7 +4,7 @@
     "title": "Base de connaissances Ángel — Plaquiste",
     "trade": "plaquiste",
     "status": "VALIDÉ",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "module_schema_version": "1.6.1",
     "business_rules_version": "plaquiste-business-2026-10-08-v1.6.0",
     "language": "fr-FR",
@@ -823,5 +823,35 @@
       "rule": "Quand l'isolation plafond est inactive, ne pas afficher 'Aucune isolation calculée pour ce mur' ni aucun libellé parlant de mur.",
       "binding": "Les champs isolation plafond utilisent les bindings ceiling / ckey, jamais wall / wkey."
     }
+  },
+  "connectors": {
+    "status": "PREPARED_NOT_CONNECTED",
+    "manifest": "plaquiste/speedarti-connector-manifest.json",
+    "source_audit": "GSTAI-Sp/speedarti-v2@main — lecture seule",
+    "targets": [
+      "authentification/contexte utilisateur",
+      "parametres_utilisateur",
+      "regles_calcul_metiers",
+      "chiffrageAPI / chiffrageService",
+      "catalogue_items / catalogue_standards",
+      "stock / reservations_stock",
+      "calculs_chantier / historique_calculs",
+      "chantier_id",
+      "clients / devis / devis_lignes",
+      "demandes_devis_fournisseurs",
+      "gestion-commandes",
+      "export PDF",
+      "retour terrain",
+      "angel-chat / toolExecutor / angelAPI",
+      "EventBus"
+    ],
+    "critical_rules": [
+      "Ne jamais laisser le calculateur Plaquiste V1.5 de production recalculer une géométrie L/T/U ou écraser les configurations mur par mur de la V1.6.1.",
+      "Conserver la TVA par ligne lorsque plusieurs taux coexistent.",
+      "Exclure les coûts internes billable=false des lignes facturées.",
+      "Réserver le stock uniquement pour les matériaux physiques avec article_id stable.",
+      "Réutiliser cette base Ángel existante ; ne jamais créer une base parallèle.",
+      "Le dépôt GSTAI-Sp/speedarti-v2 est lecture seule pour ce travail."
+    ]
   }
 }
