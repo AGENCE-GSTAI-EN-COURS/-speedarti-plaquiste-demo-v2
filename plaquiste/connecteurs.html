@@ -1,1 +1,62 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connecteurs — Démo Plaquiste</title><link rel="stylesheet" href="./styles.css"></head><body><div class="app"><main><div class="head"><span class="eyebrow">Démo GitHub Pages V1.6.1</span><h1>État des raccordements</h1><p>Cette page publique est une démo statique. Elle ne se connecte ni à Supabase, ni au catalogue personnel, ni au stock réel.</p></div><div class="card"><h2>Ce qui est actif dans la démo</h2><p>Pièces + murs simples, murs A/B/C/D indépendants, ossature/isolation/parements propres à chaque mur, ouvertures, plafonds, pertes, Optima, isolation, finitions, main-d’œuvre et contrôles de cohérence.</p></div><div class="card"><h2>Catalogue de démonstration</h2><p>Seules les dimensions et valeurs explicitement documentées dans les annexes métier sont utilisées comme références de démo. Lorsqu’un prix manque, le module l’indique et ne l’invente pas.</p></div><div class="card"><h2>Ce qui reste à raccorder dans SpeedArti</h2><p>Authentification, catalogue utilisateur réel, stock, sauvegarde Supabase, création de devis et commandes.</p></div><a class="btn primary" href="./index.html">← Retour au chiffrage</a></main></div></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Connecteurs — Démo Plaquiste</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="app"><main>
+  <div class="head">
+    <span class="eyebrow">Démo GitHub Pages V1.6.1</span>
+    <h1>Préparation des raccordements SpeedArti</h1>
+    <p>Cette démo reste statique. Aucun accès en écriture au dépôt source <b>GSTAI-Sp/speedarti-v2</b> ni à sa base Supabase. Les contrats ci-dessous ont été préparés après audit du code réel en lecture seule.</p>
+  </div>
+
+  <div class="card">
+    <h2>État général</h2>
+    <p><b>Manifeste technique :</b> <code>speedarti-connector-manifest.json</code></p>
+    <p>Statut : <b>PRÉPARÉ — NON CONNECTÉ</b>. Le moteur Plaquiste V1.6.1 reste la source de vérité métier de la démo.</p>
+  </div>
+
+  <div class="card">
+    <h2>Connecteurs préparés</h2>
+    <ul>
+      <li>Authentification / contexte utilisateur SpeedArti.</li>
+      <li>Paramètres artisan : taux horaire, effectif par défaut, taux par métier.</li>
+      <li>Règles métier versionnées.</li>
+      <li>API Chiffrage : entrée <code>DonneesChantier</code> / sortie <code>ResultatCalcul</code>.</li>
+      <li>Catalogue utilisateur <code>catalogue_items</code> puis catalogue standard.</li>
+      <li>Stock et réservations.</li>
+      <li>Sauvegarde <code>calculs_chantier</code> + historique.</li>
+      <li>Lien chantier.</li>
+      <li>Création de devis + client.</li>
+      <li>Demandes de devis fournisseur.</li>
+      <li>Gestion commandes.</li>
+      <li>Export PDF.</li>
+      <li>Retour terrain / apprentissage.</li>
+      <li>Ángel : chat, commandes, contexte métier et base de connaissances Plaquiste existante.</li>
+      <li>EventBus Chiffrage / Ángel.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Blocages à traiter avant intégration production</h2>
+    <div class="alert warn"><b>1. Pièces L/T/U :</b> l'UI Plaquiste du vrai SpeedArti suppose encore 4 murs A/B/C/D. Le calculateur accepte plusieurs murs pour les surfaces murales mais calcule encore le plafond en longueur × largeur.</div>
+    <div class="alert warn"><b>2. Murs indépendants :</b> le calculateur réel répartit encore certaines surfaces Cloison/Doublage en 60/40 et utilise des options globales d'ossature. Il ne doit pas écraser la configuration V1.6.1 mur par mur.</div>
+    <div class="alert warn"><b>3. TVA :</b> la conversion actuelle Chiffrage → Devis applique un taux unique, incompatible avec un chiffrage mixte isolation 5,5 % / autres travaux 10 %.</div>
+    <div class="alert warn"><b>4. Lignes facturées :</b> les coûts internes <code>billable=false</code> doivent être exclus du devis, tandis que les forfaits/lignes de vente doivent être conservés.</div>
+    <div class="alert warn"><b>5. Commandes :</b> le chemin actuel vers Gestion commandes lit <code>quantite</code>/<code>prix_unitaire</code> alors que <code>MateriauCalcule</code> expose <code>quantite_finale</code>/<code>prix_unitaire_ht</code>.</div>
+    <div class="alert warn"><b>6. Ángel :</b> la base métier Plaquiste existe et est à jour, mais le runtime Ángel de production doit encore être raccordé à ce JSON et au contexte du chiffrage en cours.</div>
+  </div>
+
+  <div class="card">
+    <h2>Règle d'intégration</h2>
+    <p>Ne jamais brancher la démo en copiant ses résultats dans un ancien calculateur qui les recalculerait. L'intégration doit préserver la géométrie réelle, les murs indépendants, les matériaux, la main-d'œuvre, les alertes, les unités et la TVA validés par le moteur Plaquiste V1.6.1.</p>
+  </div>
+
+  <a class="btn primary" href="./index.html">← Retour au chiffrage</a>
+</main></div>
+</body>
+</html>
