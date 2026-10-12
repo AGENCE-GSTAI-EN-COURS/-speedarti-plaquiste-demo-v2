@@ -1,0 +1,342 @@
+{
+  "metadata": {
+    "id": "speedarti-plaquiste-connector-manifest",
+    "module": "plaquiste",
+    "module_version": "1.6.1",
+    "status": "PREPARED_NOT_CONNECTED",
+    "generated_from_read_only_audit": "GSTAI-Sp/speedarti-v2@main",
+    "audit_date": "2026-10-12",
+    "rule": "Le dépôt GSTAI-Sp/speedarti-v2 est strictement en lecture seule. Ce manifeste prépare l'intégration sans écrire dans le dépôt source."
+  },
+  "source_contracts": {
+    "chiffrage_api": "src/features/chiffrage/api/index.ts",
+    "chiffrage_service": "src/services/chiffrage/chiffrageService.ts",
+    "plaquiste_ui": "src/components/chiffrage/steps/PlaquisteDimensionsStep.tsx",
+    "plaquiste_options": "src/components/chiffrage/steps/PlaquisteOptionsStep.tsx",
+    "plaquiste_calculator": "src/services/chiffrage/calculateurs/PlaquisteCalculateur.ts",
+    "types": "src/services/chiffrage/types.ts",
+    "catalogue": "src/services/chiffrage/integration/catalogueIntegration.ts",
+    "stock": "src/services/chiffrage/integration/stockIntegration.ts",
+    "devis": "src/services/chiffrage/integration/devisIntegration.ts",
+    "result_actions": "src/components/chiffrage/resultats/ActionsButtons.tsx",
+    "angel_chat": "src/services/angel/angelChatService.ts",
+    "angel_tools": "src/services/angel/toolExecutor.ts",
+    "angel_api": "src/features/angel/api/index.ts"
+  },
+  "connectors": [
+    {
+      "id": "auth_user_context",
+      "target": "authService + Supabase RLS",
+      "status": "CONTRACT_READY",
+      "direction": "SpeedArti -> Plaquiste",
+      "rule": "Toujours utiliser l'utilisateur authentifié de SpeedArti. Aucun user_id libre ou fourni par la démo."
+    },
+    {
+      "id": "artisan_settings",
+      "target": "parametres_utilisateur",
+      "status": "CONTRACT_READY",
+      "direction": "SpeedArti -> Plaquiste",
+      "fields": [
+        "taux_horaire",
+        "nb_ouvriers_defaut",
+        "taux_par_metier.plaquiste"
+      ],
+      "rule": "Les paramètres réels SpeedArti priment sur les valeurs de démonstration."
+    },
+    {
+      "id": "trade_rules",
+      "target": "regles_calcul_metiers",
+      "status": "CONTRACT_READY",
+      "direction": "SpeedArti -> Plaquiste",
+      "key": {
+        "metier": "plaquiste",
+        "active": true
+      },
+      "rule": "Ne pas dupliquer une règle de production dans l'UI. Les règles métier validées et versionnées restent traçables."
+    },
+    {
+      "id": "chiffrage_input",
+      "target": "chiffrageAPI.calculerChantier(DonneesChantier)",
+      "status": "ADAPTER_REQUIRED",
+      "direction": "Plaquiste -> SpeedArti",
+      "required_base_fields": [
+        "metier=plaquiste",
+        "nom_calcul",
+        "chantier_id?",
+        "dimensions",
+        "options"
+      ],
+      "v161_specific_data": [
+        "pieces Rectangle/L/T/U",
+        "murs dynamiques 4/6/8 segments",
+        "configuration indépendante par mur",
+        "faces indépendantes",
+        "ossature par mur",
+        "isolation par mur",
+        "plafond avec support/fixations",
+        "alertes techniques documentées"
+      ],
+      "critical": "Le calculateur Plaquiste de production ne doit pas recalculer ou écraser les résultats V1.6.1 avec ses anciennes approximations."
+    },
+    {
+      "id": "calculation_output",
+      "target": "ResultatCalcul",
+      "status": "ADAPTER_REQUIRED",
+      "direction": "Plaquiste -> SpeedArti",
+      "contract": {
+        "surfaces": [
+          "totale",
+          "nette",
+          "avec_pertes",
+          "detail_par_face"
+        ],
+        "materiaux": [
+          "article_id",
+          "nom",
+          "categorie",
+          "quantite_theorique",
+          "quantite_avec_perte",
+          "quantite_finale",
+          "unite",
+          "prix_unitaire_ht",
+          "total_ht",
+          "stock_disponible",
+          "a_commander",
+          "coef_perte_applique",
+          "conditionnement?",
+          "notes?"
+        ],
+        "main_oeuvre": [
+          "temps_estime_heures",
+          "decomposition",
+          "taux_horaire",
+          "nombre_ouvriers",
+          "cout_total"
+        ],
+        "totaux": [
+          "materiaux_ht",
+          "main_oeuvre_ht",
+          "total_ht",
+          "tva",
+          "total_ttc"
+        ],
+        "stock_status": [
+          "disponible",
+          "articles_manquants"
+        ],
+        "diagnostics": [
+          "recommandations",
+          "alertes"
+        ]
+      },
+      "rules": [
+        "Les coûts internes billable=false ne doivent jamais devenir des lignes facturées.",
+        "Les lignes de vente/forfaits de la démo doivent être conservées dans le résultat final ; ne pas les perdre lors de l'adaptation.",
+        "Les quantités et unités doivent rester identiques au moteur Plaquiste validé."
+      ]
+    },
+    {
+      "id": "catalogue",
+      "target": "catalogueIntegration.enrichirMateriauxAvecCatalogue",
+      "status": "PARTIAL_MAPPING_REQUIRED",
+      "direction": "SpeedArti -> Plaquiste",
+      "priority": [
+        "catalogue_items de l'artisan par user_id + code_unique",
+        "catalogue_standards actif",
+        "fallback explicitement documenté uniquement si prévu"
+      ],
+      "existing_production_codes": [
+        "plaque_ba13",
+        "rail_48",
+        "montant_48",
+        "vis_plaque",
+        "bande_papier",
+        "enduit_joint",
+        "fixation_optima",
+        "pare_vapeur",
+        "frein_vapeur"
+      ],
+      "v161_items_requiring_stable_code_unique": [
+        "Lisse Clip Optima",
+        "Appui Optima2 avec clé",
+        "Fourrure F530",
+        "Éclisse F530",
+        "Cavalier/connecteur F530",
+        "Suspentes bois longue/Maxi/sécable",
+        "Suspente H hourdis",
+        "Cheville M6 béton",
+        "Tige filetée M6",
+        "Cornière CR2",
+        "plaques hydro/phonique/feu/Habito selon format réel"
+      ],
+      "rule": "Ne jamais inventer un code_unique. Définir les références catalogue avant l'intégration production."
+    },
+    {
+      "id": "stock",
+      "target": "stockIntegration + stockWorkflowService",
+      "status": "READY_AFTER_ARTICLE_MAPPING",
+      "direction": "bidirectional",
+      "tables": [
+        "stocks",
+        "reservations_stock"
+      ],
+      "rules": [
+        "Seuls les matériaux physiques avec article_id stable doivent être vérifiés/réservés.",
+        "Les forfaits, main-d'œuvre et coûts internes ne doivent pas créer de réservation stock.",
+        "La sauvegarde du calcul déclenche actuellement des réservations automatiques."
+      ]
+    },
+    {
+      "id": "save_history",
+      "target": "chiffrageService.sauvegarderCalcul",
+      "status": "CONTRACT_READY",
+      "direction": "Plaquiste -> SpeedArti",
+      "tables": [
+        "calculs_chantier",
+        "historique_calculs"
+      ],
+      "stored_fields": [
+        "user_id",
+        "chantier_id",
+        "nom_calcul",
+        "metier",
+        "statut",
+        "donnees_saisie",
+        "resultats_calcul",
+        "regles_utilisees"
+      ],
+      "rule": "Conserver le payload métier complet pour pouvoir reproduire et auditer un calcul."
+    },
+    {
+      "id": "chantier",
+      "target": "DonneesChantier.chantier_id",
+      "status": "CONTRACT_READY",
+      "direction": "SpeedArti -> Plaquiste",
+      "rule": "Le module peut être lié à un chantier existant sans dupliquer les données chantier."
+    },
+    {
+      "id": "client_and_quote",
+      "target": "DevisCreationDialog + devisIntegration.creerDevisDepuisCalcul",
+      "status": "BLOCKED_UNTIL_TVA_AND_LINE_MAPPING",
+      "direction": "Plaquiste -> SpeedArti",
+      "tables": [
+        "clients",
+        "devis",
+        "devis_lignes"
+      ],
+      "critical_issues": [
+        "devisIntegration applique actuellement un taux TVA unique à toutes les lignes, incompatible avec un calcul mixte 5,5 % isolation / 10 % autres travaux.",
+        "devisIntegration transforme tous les resultats.materiaux en lignes de devis : les coûts internes de finition doivent être exclus.",
+        "Les lignes de vente/forfaits du moteur Plaquiste doivent être intégrées au devis, sinon une partie du prix de vente disparaît."
+      ],
+      "rule": "Interdiction de connecter la conversion devis tant que ces trois points ne sont pas traités."
+    },
+    {
+      "id": "supplier_quote",
+      "target": "ActionsButtons -> demandes_devis_fournisseurs / demandes_devis_lignes / send-supplier-quote-request",
+      "status": "READY_AFTER_CATALOGUE_MAPPING",
+      "direction": "Plaquiste -> SpeedArti",
+      "required_material_fields": [
+        "a_commander",
+        "nom",
+        "unite",
+        "prix_unitaire_ht",
+        "catalogue_item.fournisseur_connection_id"
+      ],
+      "rule": "Les suggestions fournisseur ne doivent contenir que les quantités réellement à commander."
+    },
+    {
+      "id": "orders",
+      "target": "/gestion-commandes",
+      "status": "SOURCE_FIX_REQUIRED",
+      "direction": "Plaquiste -> SpeedArti",
+      "critical": "Le code de production ActionsButtons lit actuellement m.quantite et m.prix_unitaire alors que le contrat MateriauCalcule expose quantite_finale et prix_unitaire_ht.",
+      "rule": "Ne pas brancher le Plaquiste V1.6.1 à ce chemin avant correction dans SpeedArti par l'équipe autorisée."
+    },
+    {
+      "id": "pdf_export",
+      "target": "exportChiffrageToPDF",
+      "status": "CONTRACT_READY_AFTER_RESULT_ADAPTER",
+      "direction": "Plaquiste -> SpeedArti",
+      "rule": "Le PDF doit reprendre les résultats adaptés sans recalcul métier."
+    },
+    {
+      "id": "terrain_feedback",
+      "target": "RetourTerrain",
+      "status": "CONTRACT_READY_AFTER_SAVE",
+      "direction": "SpeedArti <-> Plaquiste",
+      "prerequisite": "calculId sauvegardé",
+      "rule": "Le retour terrain doit se rattacher au calcul exact V1.6.1 pour améliorer les futures règles sans modifier rétroactivement le calcul historique."
+    },
+    {
+      "id": "angel",
+      "target": "angel-chat + toolExecutor + angelAPI",
+      "status": "RUNTIME_KNOWLEDGE_CONNECTOR_REQUIRED",
+      "direction": "bidirectional",
+      "knowledge_source": "plaquiste/angel-knowledge-base.json",
+      "rules": [
+        "Réutiliser la base Ángel existante ; aucune base parallèle.",
+        "Ángel peut expliquer, préremplir et interroger les règles mais ne devient jamais le moteur de calcul.",
+        "Le contexte doit inclure metier=plaquiste, étape courante et payload du chiffrage en cours.",
+        "Les réponses métier doivent être fondées sur la base V1.6.1 et les données réelles du chiffrage.",
+        "Le runtime SpeedArti actuel n'ingère pas automatiquement ce JSON : un raccordement RAG/contexte reste à faire par l'équipe autorisée."
+      ]
+    },
+    {
+      "id": "events",
+      "target": "eventBus",
+      "status": "CONTRACT_READY",
+      "direction": "bidirectional",
+      "events": [
+        "chiffrage.calculStarted",
+        "chiffrage.calculCompleted",
+        "angel.voiceCommand",
+        "angel.actionExecuted",
+        "angel:fill-form"
+      ],
+      "rule": "Les événements servent à orchestrer l'UI et Ángel ; ils ne doivent pas recalculer silencieusement les données métier."
+    }
+  ],
+  "production_compatibility_findings": [
+    {
+      "severity": "BLOCKING",
+      "finding": "PlaquisteDimensionsStep de production suppose encore 4 murs A/B/C/D.",
+      "impact": "L/T/U ne peuvent pas être intégrés tels quels dans l'UI actuelle sans adaptation."
+    },
+    {
+      "severity": "BLOCKING",
+      "finding": "PlaquisteCalculateur.calculerModePieces accepte une liste p.murs pour les surfaces murales, mais calcule encore le plafond avec longueur × largeur.",
+      "impact": "Une pièce L/T/U produirait une surface plafond fausse si le calculateur de production recalculait le résultat."
+    },
+    {
+      "severity": "BLOCKING",
+      "finding": "PlaquisteCalculateur répartit encore detail_par_face.cloison/doublage à 60/40.",
+      "impact": "Cette approximation détruit la configuration indépendante réelle de chaque mur."
+    },
+    {
+      "severity": "BLOCKING",
+      "finding": "PlaquisteOptionsStep et calculerOssatureV2 utilisent encore des options globales d'ossature/doublement.",
+      "impact": "Ils ne doivent pas écraser les profils, entraxes et montants choisis mur par mur en V1.6.1."
+    },
+    {
+      "severity": "BLOCKING",
+      "finding": "devisIntegration applique un seul taux TVA à toutes les lignes.",
+      "impact": "Risque de TVA incorrecte sur chiffrage mixte 5,5 % / 10 %."
+    },
+    {
+      "severity": "IMPORTANT",
+      "finding": "ActionsButtons /gestion-commandes lit quantite/prix_unitaire au lieu de quantite_finale/prix_unitaire_ht.",
+      "impact": "La commande issue du chiffrage peut recevoir des valeurs vides ou incorrectes."
+    }
+  ],
+  "integration_order": [
+    "1. Adapter le contrat DonneesChantier/ResultatCalcul sans toucher aux calculs validés V1.6.1.",
+    "2. Définir les code_unique catalogue manquants et tester catalogue utilisateur > standard.",
+    "3. Vérifier stock et réservations uniquement sur matériaux physiques.",
+    "4. Corriger le support L/T/U et les configurations par mur dans le vrai module Plaquiste.",
+    "5. Corriger la conversion devis pour TVA par ligne + exclusion coûts internes + conservation forfaits.",
+    "6. Corriger le mapping vers Gestion commandes.",
+    "7. Raccorder Ángel à la base existante et au contexte du chiffrage.",
+    "8. Tester sauvegarde, devis, fournisseur, commandes, PDF, retour terrain et Ángel en staging avant production."
+  ]
+}
