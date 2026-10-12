@@ -4,8 +4,8 @@
     "title": "Base de connaissances Ángel — Plaquiste",
     "trade": "plaquiste",
     "status": "VALIDÉ",
-    "version": "1.1.0",
-    "module_schema_version": "1.6.0",
+    "version": "1.1.1",
+    "module_schema_version": "1.6.1",
     "business_rules_version": "plaquiste-business-2026-10-08-v1.6.0",
     "language": "fr-FR",
     "purpose": "Fournir à Ángel une base métier structurée pour répondre aux questions sur le chiffrage plaquiste sans inventer de règles, de prix ni d'unités.",
@@ -14,7 +14,7 @@
       "plaquiste/app.js — validations, catalogue démo, calculs et flux UI",
       "Les données réelles SpeedArti (catalogue utilisateur/fournisseur, stock, Supabase) priment dès qu'elles sont raccordées."
     ],
-    "updated_at": "2026-10-08"
+    "updated_at": "2026-10-12"
   },
   "speedarti_guardrails": {
     "never_invent": true,
@@ -280,7 +280,8 @@
         "M48_double_60_cm_m": 3.75,
         "M48_double_40_cm_m": 4.15
       },
-      "rule": "Ne pas afficher une alerte simplement parce qu'un choix diffère d'une suggestion. Alerter uniquement lorsqu'une limite documentée est dépassée."
+      "rule": "Ne pas afficher une alerte simplement parce qu'un choix diffère d'une suggestion. Alerter uniquement lorsqu'une limite documentée est dépassée.",
+      "display": "Temps réel à l'étape 3 + rappel dans les résultats ; source unique wallTechnicalAlerts ; jamais bloquante."
     }
   },
   "catalogue_demo": {
@@ -743,7 +744,10 @@
     "Alertes et blocages traçables avec code explicite.",
     "Pour les pièces L/T/U, afficher et calculer les surfaces sur la géométrie réelle.",
     "Pour les plafonds, expliquer le système de fixation choisi d'après le support et le plénum.",
-    "Les alertes DTU/système doivent indiquer la limite documentée dépassée et rester informatives."
+    "Les alertes DTU/système doivent indiquer la limite documentée dépassée et rester informatives.",
+    "L'aperçu 2D de l'étape 2 doit utiliser la même géométrie que les calculs de murs et de plafond.",
+    "Une alerte DTU/système doit apparaître immédiatement à l'étape 3 dès qu'une configuration documentée est sous-dimensionnée, sans bloquer l'artisan.",
+    "L'isolation plafond ne doit jamais être libellée comme une isolation de mur."
   ],
   "angel_query_contract": {
     "supported_intents": [
@@ -770,6 +774,54 @@
     "knowledge_base_created": true,
     "angel_runtime_connected_in_this_static_demo": false,
     "supabase_connected": false,
-    "note": "Base Plaquiste mise à jour pour la version 1.6.0. La démo statique expose les règles à Ángel mais ne contient pas encore le runtime conversationnel de production."
+    "note": "Base Plaquiste mise à jour pour la version UI 1.6.1. La démo statique ne contient toujours pas le runtime conversationnel Ángel de production."
+  },
+  "ui_rules": {
+    "room_preview": {
+      "status": "VALIDÉ",
+      "step": 2,
+      "rule": "Afficher un aperçu 2D dynamique et proportionnel de la pièce pendant la saisie des dimensions.",
+      "source_of_geometry": "piecePolygon / pieceFloorArea — exactement la même géométrie que le calcul métier.",
+      "shapes": [
+        "rectangle",
+        "L",
+        "T",
+        "U"
+      ],
+      "live_fields": [
+        "length",
+        "width",
+        "shapeA",
+        "shapeB"
+      ],
+      "forbidden": "Ne jamais créer une géométrie parallèle uniquement pour le dessin."
+    },
+    "simple_wall_display": {
+      "status": "VALIDÉ",
+      "step": 3,
+      "rule": "Le choix Type de mur d'un mur simple doit afficher intégralement Cloison — 2 faces et Doublage — 1 face, avec repli responsive sur mobile."
+    },
+    "technical_alerts_live": {
+      "status": "VALIDÉ",
+      "step": 3,
+      "rule": "Afficher immédiatement l'alerte technique de sous-dimensionnement pendant la configuration du mur et la conserver comme rappel dans le résultat final.",
+      "blocking": false,
+      "source": "wallTechnicalAlerts — source unique partagée par l'UI et le calcul.",
+      "triggers": [
+        "height",
+        "framing.profile",
+        "framing.spacingCm",
+        "framing.doubledStuds",
+        "face1.doubleSkin",
+        "face2.doubleSkin",
+        "type"
+      ]
+    },
+    "ceiling_isolation_copy": {
+      "status": "VALIDÉ",
+      "step": 4,
+      "rule": "Quand l'isolation plafond est inactive, ne pas afficher 'Aucune isolation calculée pour ce mur' ni aucun libellé parlant de mur.",
+      "binding": "Les champs isolation plafond utilisent les bindings ceiling / ckey, jamais wall / wkey."
+    }
   }
 }
