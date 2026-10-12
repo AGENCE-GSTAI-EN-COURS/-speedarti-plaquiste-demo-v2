@@ -3,10 +3,19 @@
     "id": "speedarti-plaquiste-connector-manifest",
     "module": "plaquiste",
     "module_version": "1.6.1",
-    "status": "PREPARED_NOT_CONNECTED",
+    "status": "ADAPTER_READY_NOT_CONNECTED",
     "generated_from_read_only_audit": "GSTAI-Sp/speedarti-v2@main",
     "audit_date": "2026-10-12",
-    "rule": "Le dépôt GSTAI-Sp/speedarti-v2 est strictement en lecture seule. Ce manifeste prépare l'intégration sans écrire dans le dépôt source."
+    "rule": "Le dépôt GSTAI-Sp/speedarti-v2 est strictement en lecture seule. Ce manifeste prépare l'intégration sans écrire dans le dépôt source. La V1.6.2 ne modifie pas le moteur métier V1.6.1.",
+    "integration_version": "1.6.2",
+    "business_schema_frozen": "1.6.1",
+    "adapter": "plaquiste/integration/speedarti-adapter.js",
+    "catalogue_mapping_template": "plaquiste/integration/catalogue-mapping-template.json",
+    "test_status": {
+      "adapter_contract_tests": "8/8",
+      "business_tests": "113/113",
+      "runtime_errors": 0
+    }
   },
   "source_contracts": {
     "chiffrage_api": "src/features/chiffrage/api/index.ts",
@@ -57,7 +66,7 @@
     {
       "id": "chiffrage_input",
       "target": "chiffrageAPI.calculerChantier(DonneesChantier)",
-      "status": "ADAPTER_REQUIRED",
+      "status": "ADAPTER_READY_PRODUCTION_CONTRACT_CHANGE_REQUIRED",
       "direction": "Plaquiste -> SpeedArti",
       "required_base_fields": [
         "metier=plaquiste",
@@ -76,12 +85,13 @@
         "plafond avec support/fixations",
         "alertes techniques documentées"
       ],
-      "critical": "Le calculateur Plaquiste de production ne doit pas recalculer ou écraser les résultats V1.6.1 avec ses anciennes approximations."
+      "critical": "Le calculateur Plaquiste de production ne doit pas recalculer ou écraser les résultats V1.6.1 avec ses anciennes approximations.",
+      "adapter": "SpeedArtiPlaquisteAdapter.buildDonneesChantierDraft"
     },
     {
       "id": "calculation_output",
       "target": "ResultatCalcul",
-      "status": "ADAPTER_REQUIRED",
+      "status": "ADAPTER_READY_PRODUCTION_CONTRACT_CHANGE_REQUIRED",
       "direction": "Plaquiste -> SpeedArti",
       "contract": {
         "surfaces": [
@@ -133,12 +143,13 @@
         "Les coûts internes billable=false ne doivent jamais devenir des lignes facturées.",
         "Les lignes de vente/forfaits de la démo doivent être conservées dans le résultat final ; ne pas les perdre lors de l'adaptation.",
         "Les quantités et unités doivent rester identiques au moteur Plaquiste validé."
-      ]
+      ],
+      "adapter": "SpeedArtiPlaquisteAdapter.buildResultatCalculDraft"
     },
     {
       "id": "catalogue",
       "target": "catalogueIntegration.enrichirMateriauxAvecCatalogue",
-      "status": "PARTIAL_MAPPING_REQUIRED",
+      "status": "MAPPING_TEMPLATE_READY_IDS_REQUIRED",
       "direction": "SpeedArti -> Plaquiste",
       "priority": [
         "catalogue_items de l'artisan par user_id + code_unique",
@@ -169,12 +180,13 @@
         "Cornière CR2",
         "plaques hydro/phonique/feu/Habito selon format réel"
       ],
-      "rule": "Ne jamais inventer un code_unique. Définir les références catalogue avant l'intégration production."
+      "rule": "Ne jamais inventer un code_unique. Définir les références catalogue avant l'intégration production.",
+      "mapping_template": "plaquiste/integration/catalogue-mapping-template.json"
     },
     {
       "id": "stock",
       "target": "stockIntegration + stockWorkflowService",
-      "status": "READY_AFTER_ARTICLE_MAPPING",
+      "status": "ADAPTER_READY_AFTER_REAL_ARTICLE_IDS",
       "direction": "bidirectional",
       "tables": [
         "stocks",
@@ -184,7 +196,8 @@
         "Seuls les matériaux physiques avec article_id stable doivent être vérifiés/réservés.",
         "Les forfaits, main-d'œuvre et coûts internes ne doivent pas créer de réservation stock.",
         "La sauvegarde du calcul déclenche actuellement des réservations automatiques."
-      ]
+      ],
+      "adapter": "SpeedArtiPlaquisteAdapter.buildStockCandidates"
     },
     {
       "id": "save_history",
@@ -217,7 +230,7 @@
     {
       "id": "client_and_quote",
       "target": "DevisCreationDialog + devisIntegration.creerDevisDepuisCalcul",
-      "status": "BLOCKED_UNTIL_TVA_AND_LINE_MAPPING",
+      "status": "ADAPTER_READY_PRODUCTION_TVA_CHANGE_REQUIRED",
       "direction": "Plaquiste -> SpeedArti",
       "tables": [
         "clients",
@@ -229,7 +242,8 @@
         "devisIntegration transforme tous les resultats.materiaux en lignes de devis : les coûts internes de finition doivent être exclus.",
         "Les lignes de vente/forfaits du moteur Plaquiste doivent être intégrées au devis, sinon une partie du prix de vente disparaît."
       ],
-      "rule": "Interdiction de connecter la conversion devis tant que ces trois points ne sont pas traités."
+      "rule": "Interdiction de connecter la conversion devis tant que ces trois points ne sont pas traités.",
+      "adapter": "SpeedArtiPlaquisteAdapter.buildDevisLines"
     },
     {
       "id": "supplier_quote",
@@ -271,7 +285,7 @@
     {
       "id": "angel",
       "target": "angel-chat + toolExecutor + angelAPI",
-      "status": "RUNTIME_KNOWLEDGE_CONNECTOR_REQUIRED",
+      "status": "CONTEXT_ADAPTER_READY_RUNTIME_CONNECTOR_REQUIRED",
       "direction": "bidirectional",
       "knowledge_source": "plaquiste/angel-knowledge-base.json",
       "rules": [
@@ -280,7 +294,8 @@
         "Le contexte doit inclure metier=plaquiste, étape courante et payload du chiffrage en cours.",
         "Les réponses métier doivent être fondées sur la base V1.6.1 et les données réelles du chiffrage.",
         "Le runtime SpeedArti actuel n'ingère pas automatiquement ce JSON : un raccordement RAG/contexte reste à faire par l'équipe autorisée."
-      ]
+      ],
+      "adapter": "SpeedArtiPlaquisteAdapter.buildAngelContext"
     },
     {
       "id": "events",
@@ -338,5 +353,22 @@
     "6. Corriger le mapping vers Gestion commandes.",
     "7. Raccorder Ángel à la base existante et au contexte du chiffrage.",
     "8. Tester sauvegarde, devis, fournisseur, commandes, PDF, retour terrain et Ángel en staging avant production."
-  ]
+  ],
+  "integration_validation": {
+    "business_engine_unchanged": true,
+    "app_js_schema": "1.6.1",
+    "adapter_version": "1.6.2",
+    "contract_tests": {
+      "total": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "business_tests": {
+      "total": 113,
+      "passed": 113,
+      "failed": 0
+    },
+    "runtime_errors": 0,
+    "guarantee": "L'adaptateur ne modifie ni l'état ni le résultat et bloque les conversions incompatibles plutôt que d'altérer les calculs."
+  }
 }
