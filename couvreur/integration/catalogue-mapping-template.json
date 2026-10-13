@@ -1,7 +1,7 @@
 {
   "metadata": {
     "module": "couvreur",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "rule": "Aucun identifiant catalogue ne doit être inventé."
   },
   "roles": {
@@ -69,8 +69,9 @@
     },
     "roof_windows": {
       "required": false,
-      "known_candidate": "velux",
-      "code_unique": null
+      "brand": "VELUX",
+      "code_unique": null,
+      "rule": "Mapper chaque modèle/gamme/code dimension VELUX à une référence réelle. Le tarif fournisseur/pro réel prime sur l'estimation de démonstration -15 %."
     },
     "chimneys": {
       "required": false,
