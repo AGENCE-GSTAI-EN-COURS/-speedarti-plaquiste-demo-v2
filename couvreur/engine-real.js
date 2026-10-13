@@ -35,6 +35,10 @@ function tileConsumptionInfo(p,o={}){
 function product(id){return PRODUCTS.find(p=>p.id===id)}
 function veluxProduct(id){return (VELUX.products||[]).find(p=>p.id===id)}
 function veluxProducts(){return (VELUX.products||[]).slice().sort((a,b)=>`${a.model} ${a.size_code} ${a.range}`.localeCompare(`${b.model} ${b.size_code} ${b.range}`,'fr'))}
+function recommendVeluxFlashing(p){const f=norm(`${p?.family||''} ${p?.model||''}`);return f.includes('plate')?'EDP':'EDW'}
+function veluxFlashing(code,size,withKit){return VELUX.getFlashing?.(code,size,withKit)||null}
+function veluxAccessory(code,size){return VELUX.getAccessory?.(code,size)||null}
+function veluxFlashingOptions(size){return VELUX.flashingOptions?.(size)||[]}
 function manufacturers(){return [...new Set(PRODUCTS.map(p=>p.manufacturer))].sort()}
 function products(manufacturer){return PRODUCTS.filter(p=>!manufacturer||p.manufacturer===manufacturer).sort((a,b)=>a.model.localeCompare(b.model,'fr'))}
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
@@ -80,7 +84,33 @@ class CouvreurCalculateur{
    if(input.geometry.wall_flashing_length_m)items.push(item('flashing','Solin / bande porte-solin','Étanchéité',input.geometry.wall_flashing_length_m,'ml',PRICE.flashing));
    const section=Math.max(1,Number(o.section_chatiere_cm2)||35),vent=ventCount(roofArea,input.context.isolation_case,section);if(o.ventilation_toiture!==false)items.push(item('vent_tiles','Tuiles chatières / ventilation','Ventilation',vent.count,'u',PRICE.ventTile,'Règle ventilation',`${vent.requiredAreaCm2} cm² requis; ${section} cm²/pièce`));
    if(input.openings.vmc_outlets_125)items.push(item('vmc125','Tuiles à douille / sorties VMC Ø125','Ventilation',input.openings.vmc_outlets_125,'u',PRICE.outlet125));if(input.openings.vmc_outlets_160)items.push(item('vmc160','Tuiles à douille / sorties VMC Ø160','Ventilation',input.openings.vmc_outlets_160,'u',PRICE.outlet160));
-   if(input.openings.roof_windows){const vp=veluxProduct(o.velux_product_id);if(vp){const dim=`${vp.width_cm}×${vp.height_cm} cm`;items.push(item('roof_windows',`VELUX ${vp.model} ${vp.range} ${vp.size_code} — ${dim}`,'Pénétrations',input.openings.roof_windows,'u',vp.artisan_ht,`${vp.source} — estimation artisan -${VELUX.pricing_rule?.artisan_discount_pct||15}%`,`Prix web public HT ${vp.public_ht} €; remise de chiffrage appliquée`,vp.reference))}else{alerts.push({level:'blocking',message:'Fenêtre de toit demandée mais aucun modèle VELUX sélectionné.'})}}if(input.openings.chimneys)items.push(item('chimneys','Abergements de cheminée','Pénétrations',input.openings.chimneys,'u',PRICE.chimneyFlashing));
+   if(input.openings.roof_windows){
+     const vp=veluxProduct(o.velux_product_id);
+     if(vp){
+       const dim=`${vp.width_cm}×${vp.height_cm} cm`,discount=VELUX.pricing_rule?.artisan_discount_pct||15;
+       items.push(item('roof_windows',`VELUX ${vp.model} ${vp.range} ${vp.size_code} — ${dim}`,'Pénétrations',input.openings.roof_windows,'u',vp.artisan_ht,`${vp.source} — estimation artisan -${discount}%`,`Prix public HT ${vp.public_ht} €; remise de chiffrage appliquée`,vp.reference));
+       const flashCode=(o.velux_raccord_type&&o.velux_raccord_type!=='AUTO')?o.velux_raccord_type:recommendVeluxFlashing(p);
+       const withKit=o.velux_pack_bdx_bfx!==false;
+       const vf=veluxFlashing(flashCode,vp.size_code,withKit);
+       if(vf){
+         items.push(item('velux_flashing',`VELUX ${vf.reference} — ${vf.label}`,'Pénétrations',input.openings.roof_windows,'u',vf.artisan_ht,`${vf.source} — estimation artisan -${discount}%`,`${vf.note}; prix public HT ${vf.public_ht} €`,vf.reference));
+         if(withKit){
+           items.push(item('velux_bdx_included',`VELUX BDX ${vp.size_code} — bloc isolant`,'Pénétrations',input.openings.roof_windows,'u',0,'Inclus dans raccord 2000','Accessoire inclus dans le prix du raccord 2000',`BDX ${vp.size_code}`));
+           items.push(item('velux_bfx_included',`VELUX BFX ${vp.size_code} — collerette d’étanchéité`,'Pénétrations',input.openings.roof_windows,'u',0,'Inclus dans raccord 2000','Accessoire inclus dans le prix du raccord 2000',`BFX ${vp.size_code}`));
+         }else if(o.velux_bfx){
+           const bfx=veluxAccessory(vf.pose==='encastree'?'BFX1000F':'BFX1000',vp.size_code);
+           if(bfx)items.push(item('velux_bfx',`VELUX ${bfx.reference} — ${bfx.label}`,'Pénétrations',input.openings.roof_windows,'u',bfx.artisan_ht,`${bfx.source} — estimation artisan -${discount}%`,`Prix public HT ${bfx.public_ht} €`,bfx.reference));
+         }
+         if(o.velux_bbx){
+           const bbx=veluxAccessory(o.velux_bbx_kit?'BBX1000':'BBX0000',vp.size_code);
+           if(bbx)items.push(item('velux_bbx',`VELUX ${bbx.reference} — ${bbx.label}`,'Pénétrations',input.openings.roof_windows,'u',bbx.artisan_ht,`${bbx.source} — estimation artisan -${discount}%`,`Prix public HT ${bbx.public_ht} €`,bbx.reference));
+         }
+         const pitch=input.geometry.pitch_percent;
+         if((vf.pose==='standard')&&pitch<27)alerts.push({level:'blocking',message:`Raccord VELUX ${vf.code} en pose standard : pente renseignée ${pitch}% inférieure au seuil de 27% indiqué par VELUX.`});
+         if((vf.pose==='encastree')&&pitch<36)alerts.push({level:'blocking',message:`Raccord VELUX ${vf.code} en pose encastrée : pente renseignée ${pitch}% inférieure au seuil de 36% indiqué par VELUX.`});
+       }else alerts.push({level:'blocking',message:`Aucun tarif/raccord VELUX ${flashCode} disponible pour la dimension ${vp.size_code}.`});
+     }else{alerts.push({level:'blocking',message:'Fenêtre de toit demandée mais aucun modèle VELUX sélectionné.'})}
+   }if(input.openings.chimneys)items.push(item('chimneys','Abergements de cheminée','Pénétrations',input.openings.chimneys,'u',PRICE.chimneyFlashing));
    const fixing=fixRatio(p,input);if(tiles&&o.fixations!==false){const periph=ceil((input.geometry.eaves_length_m+rakeLen)/.3),cnt=ceil(tiles*fixing.ratio)+periph;items.push(item('fixings','Crochets / vis / clips de fixation','Fixations',cnt,'u',PRICE.fixing,'Règle provisoire visible',fixing.reason))}
    // Zinguerie - lengths are always explicit, never derived from hidden doubles
    if(o.gouttieres){const gl=Math.max(0,Number(dm.longueur_gouttiere)||0),gt=o.type_gouttiere||'zinc',gp=PRICE.gutter[gt]||PRICE.gutter.zinc,nd=Math.max(0,Number(dm.nombre_descentes)||0),hd=Math.max(0,Number(dm.hauteur_descentes)||0);if(gl){items.push(item('gutter',`Gouttière ${gt}`,'Zinguerie',gl,'ml',gp));items.push(item('gutter_hooks','Crochets de gouttière','Zinguerie',gl/Math.max(.1,Number(o.ecartement_crochets_m)||.5),'u',PRICE.gutterHook,'Entraxe saisi'));items.push(item('gutter_ends','Fonds de gouttière','Zinguerie',Math.max(2,Number(o.nombre_fonds)||2),'u',PRICE.gutterEnd));items.push(item('gutter_joints','Jonctions de gouttière','Zinguerie',Math.max(0,Number(o.nombre_jonctions)||0),'u',PRICE.gutterJoint))}if(nd){items.push(item('gutter_outlet','Naissances','Zinguerie',nd,'u',PRICE.gutterOutlet));items.push(item('downpipes','Descentes EP','Zinguerie',nd*hd,'ml',PRICE.downpipe));items.push(item('elbows','Coudes de descente','Zinguerie',nd*Math.max(0,Number(o.coudes_par_descente)||2),'u',PRICE.elbow));items.push(item('collars','Colliers de descente','Zinguerie',nd*Math.ceil(hd/Math.max(.1,Number(o.ecartement_colliers_m)||1.5)),'u',PRICE.collar));items.push(item('dolphins','Dauphins / raccords bas','Zinguerie',nd,'u',PRICE.dolphin))}}
@@ -98,5 +128,5 @@ class CouvreurCalculateur{
    return {product:p,input,surfaces:{totale:roofArea,nette:roofArea,avec_pertes:round(roofArea*(1+waste/100),2),detail_par_face:{toiture:roofArea}},materiaux:items,main_oeuvre:{temps_estime_heures:duration,heures_homme:totalHH,decomposition:decomp,taux_horaire:Number(o.taux_horaire)||48,nombre_ouvriers:workers,cout_total:labor},totaux:{materiaux_ht:material,securite_ht:security,main_oeuvre_ht:labor,total_ht:total,tva:vat,total_ttc:round(total+vat,2)},stock_status:{disponible:true,articles_manquants:[]},recommandations:[`Modèle : ${p.manufacturer} ${p.model}`,`Fixation : ${fixing.reason}`,`Ventilation : ${vent.count} chatière(s) calculée(s)`],alertes:alerts,technical:{tiles_per_m2:tpm||null,tiles_per_m2_min:tileInfo.min,tiles_per_m2_max:tileInfo.max,tiles_per_m2_source:tileInfo.source,battens_ml_m2:bpm||null,gauge_mm:gauge||null,min_pitch:mp.value,validation:p.validation?.status||'unknown'}};
  }
 }
-window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,version:'0.3.0'};
+window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.4.0'};
 })();
