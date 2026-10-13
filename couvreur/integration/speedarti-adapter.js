@@ -9,6 +9,7 @@
 
   function buildDonneesChantierDraft(state){
     const p=selectedProduct(state);
+    const vp=root.SpeedArtiCouvreurReal?.getVeluxProduct?.(state?.options?.velux_product_id)||null;
     return {
       metier:'couvreur',
       nom_calcul:state?.nom_calcul||'',
@@ -22,7 +23,7 @@
         catalogue_source:p?.source||null
       },
       _integration:{
-        schema:'couvreur-demo-0.2.0',
+        schema:'couvreur-demo-0.3.0',
         requires_production_contract_extension:true,
         reason:'Ne pas rabattre surface_toiture et le modèle exact sur les anciens champs génériques.'
       }
@@ -97,9 +98,10 @@
     const p=selectedProduct(state);
     return {
       metier:'couvreur',
-      module_version:'0.2.0',
+      module_version:'0.3.0',
       nom_calcul:state?.nom_calcul||'',
       produit:p?{id:p.id,fabricant:p.manufacturer,modele:p.model,famille:p.family,source:p.source}:null,
+      fenetre_toit:vp?{id:vp.id,fabricant:'VELUX',modele:vp.model,gamme:vp.range,dimension:vp.size_code,largeur_cm:vp.width_cm,hauteur_cm:vp.height_cm,prix_artisan_estime_ht:vp.artisan_ht}:null,
       dimensions:clone(state?.dimensions||{}),
       options:clone(state?.options||{}),
       technical:clone(result?.technical||{}),
@@ -125,5 +127,5 @@
     return {total:tests.length,passed:tests.filter(t=>t.ok).length,failed:tests.filter(t=>!t.ok).length,tests};
   }
 
-  root.SpeedArtiCouvreurAdapter={buildDonneesChantierDraft,buildResultatCalculDraft,buildStockCandidates,buildAngelContext,runContractTests,version:'0.2.0'};
+  root.SpeedArtiCouvreurAdapter={buildDonneesChantierDraft,buildResultatCalculDraft,buildStockCandidates,buildAngelContext,runContractTests,version:'0.3.0'};
 })(typeof window!=='undefined'?window:globalThis);
