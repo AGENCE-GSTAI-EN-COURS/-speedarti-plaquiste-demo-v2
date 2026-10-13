@@ -20,7 +20,13 @@
         roof_product_id:p?.id||null,
         fabricant_tuile:p?.manufacturer||null,
         modele_tuile:p?.model||null,
-        catalogue_source:p?.source||null
+        catalogue_source:p?.source||null,
+        velux_product_id:vp?.id||state?.options?.velux_product_id||null,
+        velux_modele:vp?.model||null,
+        velux_gamme:vp?.range||null,
+        velux_dimension:vp?.size_code||null,
+        velux_largeur_cm:vp?.width_cm||null,
+        velux_hauteur_cm:vp?.height_cm||null
       },
       _integration:{
         schema:'couvreur-demo-0.3.0',
@@ -96,6 +102,7 @@
 
   function buildAngelContext(state,result){
     const p=selectedProduct(state);
+    const vp=root.SpeedArtiCouvreurReal?.getVeluxProduct?.(state?.options?.velux_product_id)||null;
     return {
       metier:'couvreur',
       module_version:'0.3.0',
