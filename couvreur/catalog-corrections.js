@@ -18,8 +18,13 @@
     'monier-posifix-medoc':{min:12.1,max:15.2,source:'MONIER — Posifix Médoc, selon recouvrement'},
     'monier-systeme-stop':{min:15.9,max:16.6,source:'MONIER — Système Stop'},
     'terreal-girondine':{min:12.6,max:15.9,source:'TERREAL — Girondine, selon recouvrement'},
-    'terreal-languedocienne':{min:10.7,max:12.6,source:'TERREAL — Languedocienne, selon recouvrement'},
-    'terreal-vendeenne':{min:17.5,max:22.8,source:'TERREAL — Vendéenne, selon recouvrement'}
+    'terreal-languedocienne':{min:10.7,max:13.2,source:'TERREAL — Languedocienne, selon recouvrement'},
+    'terreal-vendeenne':{min:17.5,max:22.9,source:'TERREAL — Vendéenne, selon recouvrement'},
+    'terreal-canal-evolution':{min:9.2,max:11.6,source:'TERREAL Guide Canal & Grands Moules du Sud — Canal Évolution'},
+    'terreal-canal-origine':{min:10.7,max:13.2,source:'TERREAL Guide Canal & Grands Moules du Sud — Canal Origine'},
+    'terreal-canalaverou-evo':{min:17,max:18.7,source:'TERREAL Guide Canal & Grands Moules du Sud — Canalavérou EVO'},
+    'terreal-double-canal-languedoc-aspect-vieux-pays':{min:9.5,max:10,source:'TERREAL Guide Canal & Grands Moules du Sud — DCL aspect Vieux Pays'},
+    'edilians-arboise-ecaille':{min:22.5,max:22.5,source:'EDILIANS Encyclopédie 2026 — ARBOISE ÉCAILLE'}
   };
   for(const p of C.products){
     const c=corrections[p.id];
@@ -33,5 +38,5 @@
     }
     p.validation.catalogue_correction='source_fabricant_auditee';
   }
-  C.corrections={version:'2026-10-13-v1',count:Object.keys(corrections).length};
+  C.corrections={version:'2026-10-13-v2',count:Object.keys(corrections).length};
 })();
