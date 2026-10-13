@@ -1,10 +1,10 @@
-# Couvreur — Couche d'intégration SpeedArti V0.3.0
+# Couvreur — Couche d'intégration SpeedArti V0.4.0
 
 Le dépôt `GSTAI-Sp/speedarti-v2` a été audité **uniquement en lecture**. Cette couche prépare le raccordement sans modifier le dépôt source.
 
 ## Quantité de tuiles
 
-La V0.3.0 utilise le modèle fabricant exact :
+La V0.4.0 utilise le modèle fabricant exact :
 
 - valeur fabricant exacte quand elle existe ;
 - plage fabricant quand elle varie avec recouvrement / pureau ;
@@ -14,7 +14,15 @@ La V0.3.0 utilise le modèle fabricant exact :
 
 ## Fenêtres de toit VELUX
 
-La démo V0.3.0 ajoute une bibliothèque VELUX avec modèle/gamme, code dimension, dimensions physiques et prix web public sourcé. Le prix artisan affiché applique une estimation de -15 % demandée pour le chiffrage de démonstration. Ce n'est pas un tarif professionnel VELUX contractuel : un tarif fournisseur/pro réel doit toujours primer.
+La démo V0.4.0 ajoute une bibliothèque VELUX avec modèle/gamme, code dimension, dimensions physiques et prix web public sourcé. Le prix artisan affiché applique une estimation de -15 % demandée pour le chiffrage de démonstration. Ce n'est pas un tarif professionnel VELUX contractuel : un tarif fournisseur/pro réel doit toujours primer.
+
+## Raccords et accessoires VELUX
+
+Le chiffrage affiche désormais le raccord d'étanchéité adapté à la dimension sélectionnée. Les raccords EDW, EDP, EDJ, EDL et EDN sont disponibles. Les variantes 2000 incluent BDX + BFX ; BBX peut être ajouté. Les prix de raccords/accessoires sont basés sur le tarif public conseillé VELUX France 2026, avec une estimation artisan de -15 % uniquement pour la démo.
+
+## Recherche tuiles
+
+L'artisan choisit d'abord la marque puis peut rechercher le modèle par nom, famille ou référence sans perdre la liste déroulante existante.
 
 ## Sécurité
 
