@@ -2,6 +2,16 @@
   const C=window.SpeedArtiRoofCatalog;
   if(!C||!Array.isArray(C.products)) return;
   const corrections={
+    'edilians-beauvoise-graphite':{min:20.2,max:20.7,source:'EDILIANS Encyclopédie 2026 — BEAUVOISE GRAPHITE'},
+    'edilians-plate-17x27':{min:59.5,max:66.1,source:'EDILIANS Encyclopédie 2026 — PLATE 17X27'},
+    'edilians-plate-artis-17x27':{min:59,max:65,source:'EDILIANS Encyclopédie 2026 — PLATE ARTIS 17X27'},
+    'edilians-plate-ecaille-pressee-17x27':{min:58.8,max:65.3,source:'EDILIANS Encyclopédie 2026 — PLATE ÉCAILLE PRESSÉE 17X27'},
+    'edilians-plate-elixir-16x27':{min:65.7,max:73.5,source:'EDILIANS Encyclopédie 2026 — PLATE ELIXIR 16X27'},
+    'edilians-plate-rectangulaire-pressee-17x27':{min:58.8,max:65.3,source:'EDILIANS Encyclopédie 2026 — PLATE RECTANGULAIRE PRESSÉE 17X27'},
+    'edilians-plate-restauration-16x27':{min:65.7,max:73.5,source:'EDILIANS Encyclopédie 2026 — PLATE RESTAURATION 16X27'},
+    'edilians-plate-tradition-17x27':{min:59.5,max:66.1,source:'EDILIANS Encyclopédie 2026 — PLATE TRADITION 17X27'},
+    'edilians-canal-charentaise-a-blocage':{min:34.8,max:34.8,source:'EDILIANS Encyclopédie 2026 — CANAL CHARENTAISE À BLOCAGE : 17,4/m² couvert seul ×2 couvert+courant'},
+    'edilians-canal-quintescia':{min:24.8,max:27,source:'EDILIANS Encyclopédie 2026 — CANAL QUINTESCIA : 12,4–13,5/m² couvert seul ×2 couvert+courant'},
     'edilians-double-tenord':{min:9.35,max:10.10,source:'EDILIANS Encyclopédie 2026 — DOUBLE TÉNORD'},
     'edilians-hp-13-evolutive':{min:13.3,max:16.6,source:'EDILIANS Encyclopédie 2026 — HP 13 ÉVOLUTIVE'},
     'edilians-losangee-ste-foy':{min:11.5,max:13.3,source:'EDILIANS Encyclopédie 2026 — LOSANGÉE Ste Foy'},
@@ -43,5 +53,5 @@
     }
     p.validation.catalogue_correction='source_fabricant_auditee';
   }
-  C.corrections={version:'2026-10-13-v3',count:Object.keys(corrections).length};
+  C.corrections={version:'2026-10-13-v4',count:Object.keys(corrections).length};
 })();
