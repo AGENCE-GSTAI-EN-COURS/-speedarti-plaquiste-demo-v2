@@ -2,6 +2,11 @@
   const C=window.SpeedArtiRoofCatalog;
   if(!C||!Array.isArray(C.products)) return;
   const corrections={
+    'edilians-double-tenord':{min:9.35,max:10.10,source:'EDILIANS Encyclopédie 2026 — DOUBLE TÉNORD'},
+    'edilians-hp-13-evolutive':{min:13.3,max:16.6,source:'EDILIANS Encyclopédie 2026 — HP 13 ÉVOLUTIVE'},
+    'edilians-losangee-ste-foy':{min:11.5,max:13.3,source:'EDILIANS Encyclopédie 2026 — LOSANGÉE Ste Foy'},
+    'edilians-standard-14-vario':{min:14,max:17,source:'EDILIANS Encyclopédie 2026 — STANDARD 14 VARIO'},
+    'edilians-plein-sud-reabilis':{min:9.6,max:11.4,source:'EDILIANS Encyclopédie 2026 — PLEIN SUD RÉABILIS'},
     'edilians-alpha-10':{min:10.5,max:10.5,source:'EDILIANS Encyclopédie 2026 — ALPHA 10'},
     'edilians-double-hp-20':{min:9.5,max:9.5,source:'EDILIANS Encyclopédie 2026 — DOUBLE HP 20'},
     'edilians-jura-10':{min:10,max:10,source:'EDILIANS Encyclopédie 2026 — JURA 10'},
@@ -38,5 +43,5 @@
     }
     p.validation.catalogue_correction='source_fabricant_auditee';
   }
-  C.corrections={version:'2026-10-13-v2',count:Object.keys(corrections).length};
+  C.corrections={version:'2026-10-13-v3',count:Object.keys(corrections).length};
 })();
