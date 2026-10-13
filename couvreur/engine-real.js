@@ -1,5 +1,6 @@
 (function(){
 const C=window.SpeedArtiRoofCatalog;if(!C)throw new Error('Catalogue toiture non chargé');
+const VELUX=window.SpeedArtiVeluxCatalog||{products:[],dimensions:{},pricing_rule:{artisan_discount_pct:15}};
 const PRODUCTS=C.products.filter(p=>p.active!==false);
 const PRICE={
   tile:{canal:1.85,plate:1.55,grand_moule:1.72,petit_moule:1.62,default:1.70},
@@ -29,9 +30,11 @@ function tileConsumptionInfo(p,o={}){
   if(Number.isFinite(manual)&&manual>=r.min&&manual<=r.max){
     return {calculable:true,value:manual,min:r.min,max:r.max,exact:false,defaulted:false,source:'Valeur choisie par l’artisan dans la plage fabricant'};
   }
-  return {calculable:true,value:r.max,min:r.min,max:r.max,exact:false,defaulted:true,source:'Borne haute de la plage fabricant retenue par défaut'};
+  return {calculable:true,value:r.mean,min:r.min,max:r.max,exact:false,defaulted:true,source:'Moyenne de la plage fabricant retenue par défaut'};
 }
 function product(id){return PRODUCTS.find(p=>p.id===id)}
+function veluxProduct(id){return (VELUX.products||[]).find(p=>p.id===id)}
+function veluxProducts(){return (VELUX.products||[]).slice().sort((a,b)=>`${a.model} ${a.size_code} ${a.range}`.localeCompare(`${b.model} ${b.size_code} ${b.range}`,'fr'))}
 function manufacturers(){return [...new Set(PRODUCTS.map(p=>p.manufacturer))].sort()}
 function products(manufacturer){return PRODUCTS.filter(p=>!manufacturer||p.manufacturer===manufacturer).sort((a,b)=>a.model.localeCompare(b.model,'fr'))}
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
