@@ -1,0 +1,157 @@
+{
+  "metadata": {
+    "id": "speedarti-couvreur-connector-manifest",
+    "module": "couvreur",
+    "module_version": "0.2.0",
+    "status": "ADAPTER_READY_NOT_CONNECTED",
+    "generated_from_read_only_audit": "GSTAI-Sp/speedarti-v2@869c845cea5e8066d713baea21b57be913da18d6",
+    "audit_date": "2026-10-13",
+    "rule": "Le dépôt source SpeedArti reste strictement en lecture seule."
+  },
+  "source_contracts": {
+    "wizard": "src/components/chiffrage/ChiffrageWizard.tsx",
+    "dimensions": "src/components/chiffrage/steps/CouvreurDimensionsStep.tsx",
+    "options": "src/components/chiffrage/steps/CouvreurOptionsStep.tsx",
+    "calculator": "src/services/chiffrage/calculateurs/CouvreurCalculateur.ts",
+    "orchestrator": "src/services/chiffrage/chiffrageService.ts",
+    "types": "src/services/chiffrage/types.ts",
+    "catalogue": "src/services/chiffrage/integration/catalogueIntegration.ts",
+    "products": "src/services/productsService.ts",
+    "product_selector": "src/components/chiffrage/ProduitSelector.tsx",
+    "stock": "src/services/chiffrage/integration/stockIntegration.ts",
+    "devis": "src/services/chiffrage/integration/devisIntegration.ts",
+    "rules": "src/services/chiffrage/regles/couvreur.rules.json",
+    "angel_chat": "src/services/angel/angelChatService.ts",
+    "angel_tools": "src/services/angel/toolExecutor.ts",
+    "angel_api": "src/features/angel/api"
+  },
+  "production_findings": [
+    {
+      "severity": "BLOCKING",
+      "finding": "Le calculateur Couvreur production utilise des consommations génériques par famille avant enrichissement catalogue.",
+      "required_change": "Fournir la consommation du modèle fabricant exact au moteur avant le calcul."
+    },
+    {
+      "severity": "BLOCKING",
+      "finding": "catalogueIntegration enrichit surtout nom/prix/catégorie/unité après calcul.",
+      "required_change": "Relier les paramètres techniques toiture au produit / catalogue_metier.parametres_calcul."
+    },
+    {
+      "severity": "IMPORTANT",
+      "finding": "Des valeurs géométriques cachées existent encore (+15 % de débords, faîtage/égout par défaut).",
+      "required_change": "Utiliser surface et longueurs explicites."
+    },
+    {
+      "severity": "IMPORTANT",
+      "finding": "Plusieurs options UI Couvreur n'ont pas encore d'effet complet dans le calculateur de production.",
+      "required_change": "Toute option visible doit agir ou être retirée."
+    },
+    {
+      "severity": "IMPORTANT",
+      "finding": "Le solin UI/calcul utilise des chemins différents.",
+      "required_change": "Unifier le contrat."
+    },
+    {
+      "severity": "IMPORTANT",
+      "finding": "couvreur.rules.json lit encore d'anciens champs options.pente_toit / options.type_tuile.",
+      "required_change": "Aligner les règles sur le contrat final."
+    }
+  ],
+  "connectors": [
+    {
+      "id": "chiffrage_input",
+      "target": "chiffrageService.calculerChantier(DonneesChantier)",
+      "status": "ADAPTER_READY_PRODUCTION_CONTRACT_EXTENSION_REQUIRED",
+      "direction": "Couvreur -> SpeedArti",
+      "fields": [
+        "dimensions.surface_toiture",
+        "géométrie explicite",
+        "options.roof_product_id",
+        "fabricant_tuile",
+        "modele_tuile",
+        "tuiles_par_m2_retenu"
+      ],
+      "adapter": "SpeedArtiCouvreurAdapter.buildDonneesChantierDraft"
+    },
+    {
+      "id": "catalogue_technical",
+      "target": "products + catalogue_metier.parametres_calcul",
+      "status": "MAPPING_REQUIRED",
+      "direction": "SpeedArti -> Couvreur",
+      "technical_parameters": [
+        "fabricant",
+        "modèle",
+        "tuiles_m2_min/max",
+        "pureau",
+        "liteaux_ml_m2",
+        "pentes",
+        "accessoires",
+        "ventilation",
+        "références"
+      ],
+      "rule": "Jamais de valeur générique de famille si un modèle exact est choisi.",
+      "mapping_template": "couvreur/integration/catalogue-mapping-template.json"
+    },
+    {
+      "id": "catalogue_price",
+      "target": "catalogueIntegration.enrichirMateriauxAvecCatalogue",
+      "status": "REUSABLE_AFTER_STABLE_CODE_MAPPING",
+      "direction": "SpeedArti -> Couvreur"
+    },
+    {
+      "id": "stock",
+      "target": "stockIntegration + stockWorkflowService",
+      "status": "READY_AFTER_REAL_ARTICLE_IDS",
+      "direction": "bidirectional",
+      "rule": "Réserver uniquement les matériaux physiques avec article_id réel."
+    },
+    {
+      "id": "artisan_settings",
+      "target": "parametres_utilisateur",
+      "status": "CONTRACT_READY",
+      "direction": "SpeedArti -> Couvreur",
+      "fields": [
+        "taux_horaire",
+        "nb_ouvriers_defaut",
+        "taux_par_metier.couvreur"
+      ]
+    },
+    {
+      "id": "save_history",
+      "target": "chiffrageService.sauvegarderCalcul",
+      "status": "READY_AFTER_RESULT_ADAPTER",
+      "direction": "Couvreur -> SpeedArti",
+      "rule": "Conserver modèle fabricant et consommation retenue."
+    },
+    {
+      "id": "devis",
+      "target": "devisIntegration.creerDevisDepuisCalcul",
+      "status": "OPTIONAL_ARTISAN_ACTION",
+      "direction": "Couvreur -> SpeedArti",
+      "rule": "Jamais automatique ; création d'un brouillon après action explicite."
+    },
+    {
+      "id": "angel",
+      "target": "angelChatService + toolExecutor + angel API",
+      "status": "KNOWLEDGE_PAYLOAD_READY_RUNTIME_MERGE_REQUIRED",
+      "direction": "bidirectional",
+      "knowledge_source": "couvreur/angel-knowledge-base.json",
+      "rules": [
+        "Fusionner dans la base Ángel existante.",
+        "Ángel utilise les mêmes données que le moteur.",
+        "Ángel n'est pas le moteur de calcul."
+      ],
+      "adapter": "SpeedArtiCouvreurAdapter.buildAngelContext"
+    }
+  ],
+  "integration_order": [
+    "Étendre le contrat Couvreur avec surface toiture et géométrie explicites.",
+    "Relier fabricant/modèle aux paramètres techniques avant calcul.",
+    "Remplacer ratios génériques par la consommation du modèle exact.",
+    "Unifier UI/calcul/règles.",
+    "Mapper les vrais article_id/code_unique puis activer prix et stock.",
+    "Raccorder sauvegarde/historique.",
+    "Fusionner les connaissances Couvreur dans la base Ángel existante.",
+    "Tester en staging puis conversion volontaire en brouillon de devis."
+  ]
+}
