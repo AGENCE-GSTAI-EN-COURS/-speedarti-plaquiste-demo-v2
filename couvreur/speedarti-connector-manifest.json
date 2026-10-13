@@ -2,7 +2,7 @@
   "metadata": {
     "id": "speedarti-couvreur-connector-manifest",
     "module": "couvreur",
-    "module_version": "0.2.1",
+    "module_version": "0.3.0",
     "status": "ADAPTER_READY_NOT_CONNECTED",
     "generated_from_read_only_audit": "GSTAI-Sp/speedarti-v2@869c845cea5e8066d713baea21b57be913da18d6",
     "audit_date": "2026-10-13",
@@ -60,6 +60,26 @@
       "severity": "FIXED_IN_DEMO",
       "finding": "La V0.2.1 affiche le total heures-homme, le taux horaire et rend chaque temps de poste modifiable.",
       "required_change": "Conserver ce contrat lors de l'intégration production."
+    },
+    {
+      "severity": "FIXED_IN_DEMO",
+      "finding": "La sécurité était répartie sur deux pages.",
+      "required_change": "Conserver un seul bloc Sécurité avec options et dimensions."
+    },
+    {
+      "severity": "FIXED_IN_DEMO",
+      "finding": "Les fenêtres de toit étaient chiffrées sans modèle ni dimension.",
+      "required_change": "Conserver le choix VELUX modèle/gamme/code dimension et le prix traçable."
+    },
+    {
+      "severity": "FIXED_IN_DEMO",
+      "finding": "Une plage de consommation tuiles retenait auparavant la borne haute.",
+      "required_change": "La V0.3.0 retient la moyenne fabricant par défaut, avec possibilité de modifier dans la plage."
+    },
+    {
+      "severity": "FIXED_IN_DEMO",
+      "finding": "Certaines tuiles étaient non sélectionnables faute de consommation extraite.",
+      "required_change": "Les 129 modèles sont sélectionnables et les 129 disposent désormais d'une consommation exploitable dans la démo."
     }
   ],
   "connectors": [
@@ -147,6 +167,24 @@
         "Ángel n'est pas le moteur de calcul."
       ],
       "adapter": "SpeedArtiCouvreurAdapter.buildAngelContext"
+    },
+    {
+      "id": "velux_library",
+      "target": "catalogue produit / catalogue_metier.parametres_calcul",
+      "status": "DEMO_LIBRARY_READY_REAL_CATALOGUE_MAPPING_REQUIRED",
+      "direction": "SpeedArti -> Couvreur",
+      "fields": [
+        "fabricant=VELUX",
+        "modèle",
+        "gamme",
+        "code dimension",
+        "largeur_cm",
+        "hauteur_cm",
+        "prix_public_ht",
+        "prix_artisan_estime_ht",
+        "source_prix"
+      ],
+      "rule": "Le -15 % n'est qu'une estimation SpeedArti. Le tarif professionnel ou fournisseur connecté prime."
     }
   ],
   "integration_order": [
@@ -154,6 +192,7 @@
     "Relier fabricant/modèle aux paramètres techniques avant calcul.",
     "Remplacer ratios génériques par la consommation du modèle exact.",
     "Unifier UI/calcul/règles.",
+    "Mapper la bibliothèque VELUX au catalogue réel et remplacer l'estimation -15 % par le tarif pro/fournisseur dès qu'il est disponible.",
     "Mapper les vrais article_id/code_unique puis activer prix et stock.",
     "Raccorder sauvegarde/historique.",
     "Fusionner les connaissances Couvreur dans la base Ángel existante.",
