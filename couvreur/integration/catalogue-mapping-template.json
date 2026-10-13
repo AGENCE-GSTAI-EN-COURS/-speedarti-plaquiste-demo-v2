@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "module": "couvreur",
+    "version": "0.2.0",
+    "rule": "Aucun identifiant catalogue ne doit être inventé."
+  },
+  "roles": {
+    "roof_tiles": {
+      "required": true,
+      "code_unique": null,
+      "rule": "Référence stable par modèle fabricant."
+    },
+    "underlay": {
+      "required": false,
+      "known_candidate": "ecran_sous_toiture",
+      "code_unique": null
+    },
+    "counter_battens": {
+      "required": false,
+      "code_unique": null
+    },
+    "battens": {
+      "required": false,
+      "code_unique": null
+    },
+    "eaves_apron": {
+      "required": false,
+      "code_unique": null
+    },
+    "ridge_hips": {
+      "required": false,
+      "code_unique": null,
+      "rule": "Accessoire compatible du modèle."
+    },
+    "rakes": {
+      "required": false,
+      "code_unique": null,
+      "rule": "Séparer gauche/droite si nécessaire."
+    },
+    "closer": {
+      "required": false,
+      "code_unique": null
+    },
+    "eaves_comb": {
+      "required": false,
+      "code_unique": null
+    },
+    "valley": {
+      "required": false,
+      "code_unique": null
+    },
+    "flashing": {
+      "required": false,
+      "known_candidate": "solin",
+      "code_unique": null
+    },
+    "vent_tiles": {
+      "required": false,
+      "code_unique": null,
+      "rule": "Conserver la section de ventilation."
+    },
+    "vmc125": {
+      "required": false,
+      "code_unique": null
+    },
+    "vmc160": {
+      "required": false,
+      "code_unique": null
+    },
+    "roof_windows": {
+      "required": false,
+      "known_candidate": "velux",
+      "code_unique": null
+    },
+    "chimneys": {
+      "required": false,
+      "code_unique": null
+    },
+    "fixings": {
+      "required": false,
+      "code_unique": null
+    },
+    "gutter_zinc": {
+      "required": false,
+      "known_candidate": "gouttiere_zinc",
+      "code_unique": null
+    },
+    "gutter_pvc": {
+      "required": false,
+      "known_candidate": "gouttiere_pvc",
+      "code_unique": null
+    },
+    "gutter_aluminium": {
+      "required": false,
+      "code_unique": null
+    },
+    "gutter_cuivre": {
+      "required": false,
+      "code_unique": null
+    },
+    "downpipes": {
+      "required": false,
+      "code_unique": null
+    },
+    "box_gutter": {
+      "required": false,
+      "code_unique": null
+    },
+    "fascia": {
+      "required": false,
+      "code_unique": null
+    },
+    "anchors": {
+      "required": false,
+      "code_unique": null
+    }
+  }
+}
