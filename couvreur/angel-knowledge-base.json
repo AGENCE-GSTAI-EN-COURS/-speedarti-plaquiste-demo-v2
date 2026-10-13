@@ -1,0 +1,172 @@
+{
+  "metadata": {
+    "id": "speedarti-angel-couvreur-module-payload",
+    "title": "Connaissances Ángel — Module Couvreur",
+    "trade": "couvreur",
+    "status": "PAYLOAD_MODULE_PRET_A_FUSIONNER_DANS_LA_BASE_ANGEL_EXISTANTE",
+    "version": "0.2.0",
+    "language": "fr-FR",
+    "purpose": "Apporter à la base Ángel existante les règles et données du module Couvreur sans créer une base runtime parallèle.",
+    "source_of_truth": [
+      "couvreur/catalog.js — catalogue technique TERREAL / EDILIANS / MONIER",
+      "couvreur/catalog-corrections.js — compléments issus des fiches fabricants auditées",
+      "couvreur/engine-real.js — moteur de chiffrage",
+      "couvreur/app.js — flux et validations UI",
+      "GSTAI-Sp/speedarti-v2@869c845cea5e8066d713baea21b57be913da18d6 — audité exclusivement en lecture seule"
+    ],
+    "updated_at": "2026-10-13"
+  },
+  "speedarti_guardrails": {
+    "source_repo_read_only": "GSTAI-Sp/speedarti-v2",
+    "never_invent": true,
+    "explicit_units_required": true,
+    "same_source_for_engine_and_angel": true,
+    "no_parallel_angel_runtime_base": true,
+    "chiffrage_not_quote": true,
+    "artisan_controls_quote_conversion": true,
+    "manufacturer_data_priority": true,
+    "real_catalogue_price_priority": true,
+    "missing_technical_data_behavior": "Bloquer ou avertir ; ne jamais substituer une consommation générique à un modèle fabricant exact.",
+    "hidden_geometry_defaults_forbidden": true
+  },
+  "module_intent": {
+    "primary_goal": "Chiffrer rapidement l'intégralité d'un chantier de couverture.",
+    "not_a_quote": "Le résultat reste un chiffrage ; la transformation en brouillon de devis est une action volontaire de l'artisan.",
+    "result_must_include": [
+      "quantités",
+      "nombre de pièces",
+      "mètres linéaires",
+      "accessoires",
+      "main-d'œuvre",
+      "prix disponibles",
+      "alertes techniques",
+      "total chantier"
+    ]
+  },
+  "roof_product_rules": {
+    "manufacturers": [
+      "EDILIANS",
+      "MONIER",
+      "TERREAL"
+    ],
+    "exact_model_required": true,
+    "tiles_per_m2": {
+      "exact_value": "Utiliser la valeur fabricant exacte.",
+      "manufacturer_range": "Afficher la plage. L'artisan choisit une valeur dans la plage ; sans choix, retenir la borne haute fabricant avec avertissement.",
+      "missing_value": "Bloquer le poste tuiles ; ne pas inventer.",
+      "formula": "ceil(surface_toiture_m2 × consommation_retenue_tuiles_m2 × (1 + perte_tuiles_pct/100))"
+    },
+    "battens": "Utiliser le ml/m² fabricant quand disponible, sinon valeur manuelle explicite.",
+    "gauge": "Ne pas transformer une plage de pureau en valeur arbitraire.",
+    "accessories": "Compatibilité et rendement fabricant prioritaires.",
+    "pitch": "Contrôler pente, zone, situation et écran selon les données documentées."
+  },
+  "calculation_scope": {
+    "geometry": [
+      "surface toiture m²",
+      "pente %",
+      "faîtage ml",
+      "arêtiers ml",
+      "noues ml",
+      "rives gauche/droite ml",
+      "égout ml",
+      "solins ml"
+    ],
+    "under_roof": [
+      "film / écran sous-toiture",
+      "demi-liteaux / contre-liteaux",
+      "liteaux",
+      "bavette d'égout"
+    ],
+    "roof_accessories": [
+      "faîtières",
+      "arêtiers",
+      "rives",
+      "closoir",
+      "peigne d'égout",
+      "noues",
+      "fixations",
+      "chatières",
+      "tuiles à douille / VMC",
+      "fenêtres de toit",
+      "abergements cheminée"
+    ],
+    "zinguerie": [
+      "gouttières",
+      "crochets",
+      "naissances",
+      "fonds",
+      "jonctions",
+      "descentes",
+      "coudes",
+      "colliers",
+      "dauphins",
+      "solins",
+      "chéneaux",
+      "planches de rive"
+    ],
+    "safety": [
+      "échafaudage",
+      "ligne de vie",
+      "garde-corps",
+      "filets",
+      "échelles de toit",
+      "monte-matériaux",
+      "points d'ancrage"
+    ]
+  },
+  "labor_rules": {
+    "distinguish": [
+      "heures-homme",
+      "durée estimée selon nombre d'ouvriers"
+    ],
+    "components": [
+      "préparation / calepinage",
+      "sous-toiture et liteaux",
+      "pose couverture",
+      "accessoires linéaires",
+      "pénétrations et sorties",
+      "gouttières et descentes",
+      "mise en sécurité"
+    ],
+    "artisan_rate": "Le taux horaire réel SpeedArti prime sur le taux de démonstration."
+  },
+  "price_policy": {
+    "priority": [
+      "catalogue personnel artisan",
+      "tarif fournisseur connecté",
+      "catalogue standard SpeedArti",
+      "prix de démonstration explicitement identifié"
+    ],
+    "rule": "Ángel ne présente jamais un prix de démonstration comme tarif fournisseur réel."
+  },
+  "angel_behavior": {
+    "can": [
+      "expliquer les règles",
+      "retrouver la consommation du modèle choisi",
+      "expliquer un blocage",
+      "préremplir des valeurs fournies explicitement",
+      "résumer un chiffrage calculé"
+    ],
+    "cannot": [
+      "inventer une consommation",
+      "remplacer le moteur",
+      "créer automatiquement un devis",
+      "inventer une référence/prix fournisseur",
+      "modifier silencieusement une quantité"
+    ],
+    "context_required": [
+      "metier=couvreur",
+      "étape courante",
+      "modèle choisi",
+      "données chantier",
+      "résultat moteur si calculé"
+    ]
+  },
+  "production_integration": {
+    "status": "CONNECTEUR_PREPARE_NON_BRANCHE",
+    "connector_manifest": "couvreur/speedarti-connector-manifest.json",
+    "adapter": "couvreur/integration/speedarti-adapter.js",
+    "critical_rule": "Fusionner ce payload dans la base Ángel existante ; aucune base runtime parallèle."
+  }
+}
