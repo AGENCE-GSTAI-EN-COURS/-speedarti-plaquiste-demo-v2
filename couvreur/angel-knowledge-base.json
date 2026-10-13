@@ -4,7 +4,7 @@
     "title": "Connaissances Ángel — Module Couvreur",
     "trade": "couvreur",
     "status": "PAYLOAD_MODULE_PRET_A_FUSIONNER_DANS_LA_BASE_ANGEL_EXISTANTE",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "language": "fr-FR",
     "purpose": "Apporter à la base Ángel existante les règles et données du module Couvreur sans créer une base runtime parallèle.",
     "source_of_truth": [
@@ -129,7 +129,10 @@
       "gouttières et descentes",
       "mise en sécurité"
     ],
-    "artisan_rate": "Le taux horaire réel SpeedArti prime sur le taux de démonstration."
+    "artisan_rate": "Le taux horaire réel SpeedArti prime sur le taux de démonstration.",
+    "editable_time": "Chaque poste de main-d’œuvre peut être ajusté manuellement par l’artisan dans les résultats ; le total heures-homme, la durée équipe et le coût sont recalculés.",
+    "hourly_rate_editable": "Le taux horaire HT reste modifiable par l’artisan et recalcule le coût total de main-d’œuvre.",
+    "total_hours_display": "Afficher explicitement le total heures-homme et la durée estimée selon le nombre d’ouvriers."
   },
   "price_policy": {
     "priority": [
