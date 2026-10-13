@@ -1,16 +1,24 @@
-# Couvreur — Couche d'intégration SpeedArti V0.2.0
+# Couvreur — Couche d'intégration SpeedArti V0.3.0
 
 Le dépôt `GSTAI-Sp/speedarti-v2` a été audité **uniquement en lecture**. Cette couche prépare le raccordement sans modifier le dépôt source.
 
 ## Quantité de tuiles
 
-La V0.2.0 utilise le modèle fabricant exact :
+La V0.3.0 utilise le modèle fabricant exact :
 
 - valeur fabricant exacte quand elle existe ;
 - plage fabricant quand elle varie avec recouvrement / pureau ;
 - l'artisan peut choisir une valeur dans la plage ;
-- sans choix, la borne haute fabricant est retenue avec avertissement pour éviter le sous-chiffrage ;
-- donnée absente = poste tuiles bloqué, jamais de valeur inventée.
+- sans choix, la moyenne de la plage fabricant est retenue ;
+- les 129 références de la démo disposent désormais d'une consommation exploitable ; une future référence incomplète resterait sélectionnable avec poste tuiles bloqué plutôt qu'une valeur inventée.
+
+## Fenêtres de toit VELUX
+
+La démo V0.3.0 ajoute une bibliothèque VELUX avec modèle/gamme, code dimension, dimensions physiques et prix web public sourcé. Le prix artisan affiché applique une estimation de -15 % demandée pour le chiffrage de démonstration. Ce n'est pas un tarif professionnel VELUX contractuel : un tarif fournisseur/pro réel doit toujours primer.
+
+## Sécurité
+
+Toutes les options et dimensions de sécurité sont regroupées dans un seul bloc sur l'étape Options.
 
 ## Fichiers
 
