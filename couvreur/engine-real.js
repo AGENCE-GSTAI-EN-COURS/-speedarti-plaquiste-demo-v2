@@ -11,6 +11,26 @@ const PRICE={
 };
 const round=(v,d=2)=>Math.round((Number(v)||0)*10**d)/10**d; const ceil=v=>Math.ceil(Math.max(0,Number(v)||0));
 const avg=r=>r&&Number.isFinite(Number(r.mean))?Number(r.mean):undefined;
+function numericRange(r){
+  if(!r)return null;
+  const min=Number(r.min),max=Number(r.max),mean=Number(r.mean);
+  const vals=[min,max,mean].filter(Number.isFinite);
+  if(!vals.length)return null;
+  const lo=Number.isFinite(min)?min:(Number.isFinite(mean)?mean:max);
+  const hi=Number.isFinite(max)?max:(Number.isFinite(mean)?mean:min);
+  return {min:Math.min(lo,hi),max:Math.max(lo,hi),mean:Number.isFinite(mean)?mean:(lo+hi)/2};
+}
+function tileConsumptionInfo(p,o={}){
+  const r=numericRange(p?.technical?.tiles_per_m2);
+  if(!r)return {calculable:false,value:null,min:null,max:null,exact:false,defaulted:false,source:'Consommation fabricant absente'};
+  const exact=Math.abs(r.max-r.min)<1e-9;
+  if(exact)return {calculable:true,value:r.max,min:r.min,max:r.max,exact:true,defaulted:false,source:p.technical?.tiles_per_m2_source||'Fiche fabricant'};
+  const manual=Number(o.tuiles_par_m2_retenu);
+  if(Number.isFinite(manual)&&manual>=r.min&&manual<=r.max){
+    return {calculable:true,value:manual,min:r.min,max:r.max,exact:false,defaulted:false,source:'Valeur choisie par l’artisan dans la plage fabricant'};
+  }
+  return {calculable:true,value:r.max,min:r.min,max:r.max,exact:false,defaulted:true,source:'Borne haute de la plage fabricant retenue par défaut'};
+}
 function product(id){return PRODUCTS.find(p=>p.id===id)}
 function manufacturers(){return [...new Set(PRODUCTS.map(p=>p.manufacturer))].sort()}
 function products(manufacturer){return PRODUCTS.filter(p=>!manufacturer||p.manufacturer===manufacturer).sort((a,b)=>a.model.localeCompare(b.model,'fr'))}
