@@ -6,3 +6,7 @@
 
 /* V0.2.0 — consommation tuiles fabricant */
 .consumption-box{margin-top:12px;padding:12px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:10px;display:grid;gap:10px}.consumption-box small{display:block;margin-top:5px;color:#64748b;line-height:1.35}.strong-note{margin-top:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}.catalog-card option:disabled{color:#94a3b8}
+
+
+/* V0.2.1 — main-d’œuvre editable */
+.labor-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #eef2f7}.labor-row>div:first-child{display:flex;flex-direction:column;gap:2px}.labor-row small{color:#64748b}.labor-edit{display:flex;align-items:center;gap:6px}.labor-hours{width:92px;text-align:right}.btn.tiny{padding:5px 8px;font-size:11px}.labor-summary{margin-top:12px;border-top:2px solid #e2e8f0;padding-top:8px}.labor-summary>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0}.hourly-rate input{width:95px;text-align:right;display:inline-block}.labor-total{border-top:1px solid #e2e8f0;margin-top:4px;padding-top:12px!important;font-size:16px}@media(max-width:640px){.labor-row{align-items:flex-start;flex-direction:column}.labor-edit{width:100%}.labor-hours{flex:1}.labor-summary>div{align-items:flex-start}.hourly-rate{flex-direction:column}.hourly-rate>div{width:100%}.hourly-rate input{width:120px}}
