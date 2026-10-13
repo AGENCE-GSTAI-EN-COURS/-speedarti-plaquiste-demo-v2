@@ -4,12 +4,13 @@
     "title": "Connaissances Ángel — Module Couvreur",
     "trade": "couvreur",
     "status": "PAYLOAD_MODULE_PRET_A_FUSIONNER_DANS_LA_BASE_ANGEL_EXISTANTE",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "language": "fr-FR",
     "purpose": "Apporter à la base Ángel existante les règles et données du module Couvreur sans créer une base runtime parallèle.",
     "source_of_truth": [
       "couvreur/catalog.js — catalogue technique TERREAL / EDILIANS / MONIER",
       "couvreur/catalog-corrections.js — compléments issus des fiches fabricants auditées",
+      "couvreur/velux-catalog.js — bibliothèque VELUX modèle/dimension/prix web public avec estimation artisan",
       "couvreur/engine-real.js — moteur de chiffrage",
       "couvreur/app.js — flux et validations UI",
       "GSTAI-Sp/speedarti-v2@869c845cea5e8066d713baea21b57be913da18d6 — audité exclusivement en lecture seule"
@@ -52,14 +53,15 @@
     "exact_model_required": true,
     "tiles_per_m2": {
       "exact_value": "Utiliser la valeur fabricant exacte.",
-      "manufacturer_range": "Afficher la plage. L'artisan choisit une valeur dans la plage ; sans choix, retenir la borne haute fabricant avec avertissement.",
-      "missing_value": "Bloquer le poste tuiles ; ne pas inventer.",
+      "manufacturer_range": "Afficher la plage. Sans choix artisan, retenir la moyenne de la plage fabricant ; l'artisan peut choisir une autre valeur comprise dans la plage.",
+      "missing_value": "Le modèle reste sélectionnable mais le poste tuiles doit être bloqué tant que la consommation fabricant n'est pas validée ; ne jamais inventer.",
       "formula": "ceil(surface_toiture_m2 × consommation_retenue_tuiles_m2 × (1 + perte_tuiles_pct/100))"
     },
     "battens": "Utiliser le ml/m² fabricant quand disponible, sinon valeur manuelle explicite.",
     "gauge": "Ne pas transformer une plage de pureau en valeur arbitraire.",
     "accessories": "Compatibilité et rendement fabricant prioritaires.",
-    "pitch": "Contrôler pente, zone, situation et écran selon les données documentées."
+    "pitch": "Contrôler pente, zone, situation et écran selon les données documentées.",
+    "catalogue_status": "129 modèles présents ; 129 disposent maintenant d'une consommation tuiles/m² exploitable dans la démo."
   },
   "calculation_scope": {
     "geometry": [
@@ -113,7 +115,19 @@
       "échelles de toit",
       "monte-matériaux",
       "points d'ancrage"
-    ]
+    ],
+    "roof_windows": {
+      "brand": "VELUX",
+      "selection": [
+        "modèle/gamme",
+        "code dimension",
+        "largeur × hauteur",
+        "quantité"
+      ],
+      "price_rule": "Prix web public observé puis estimation artisan = prix public HT × 0,85.",
+      "warning": "Le -15 % est une hypothèse de chiffrage SpeedArti demandée pour la démo, pas un tarif VELUX professionnel contractuel. Un vrai tarif fournisseur/pro connecté doit toujours primer."
+    },
+    "safety_display": "Toutes les options et dimensions de mise en sécurité sont regroupées dans un seul bloc à l'étape Options."
   },
   "labor_rules": {
     "distinguish": [
@@ -141,7 +155,8 @@
       "catalogue standard SpeedArti",
       "prix de démonstration explicitement identifié"
     ],
-    "rule": "Ángel ne présente jamais un prix de démonstration comme tarif fournisseur réel."
+    "rule": "Ángel ne présente jamais un prix de démonstration comme tarif fournisseur réel.",
+    "velux": "Les prix VELUX de démonstration sont sourcés sur des prix web publics. Le -15 % est une estimation de chiffrage uniquement ; un tarif pro/fournisseur réel remplace toujours cette estimation."
   },
   "angel_behavior": {
     "can": [
