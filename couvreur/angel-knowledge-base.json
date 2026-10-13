@@ -4,7 +4,7 @@
     "title": "Connaissances Ángel — Module Couvreur",
     "trade": "couvreur",
     "status": "PAYLOAD_MODULE_PRET_A_FUSIONNER_DANS_LA_BASE_ANGEL_EXISTANTE",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "language": "fr-FR",
     "purpose": "Apporter à la base Ángel existante les règles et données du module Couvreur sans créer une base runtime parallèle.",
     "source_of_truth": [
@@ -61,7 +61,8 @@
     "gauge": "Ne pas transformer une plage de pureau en valeur arbitraire.",
     "accessories": "Compatibilité et rendement fabricant prioritaires.",
     "pitch": "Contrôler pente, zone, situation et écran selon les données documentées.",
-    "catalogue_status": "129 modèles présents ; 129 disposent maintenant d'une consommation tuiles/m² exploitable dans la démo."
+    "catalogue_status": "129 modèles présents ; 129 disposent maintenant d'une consommation tuiles/m² exploitable dans la démo.",
+    "search": "La sélection de couverture commence par la marque ; un moteur de recherche filtre les modèles de cette marque par nom, famille ou référence."
   },
   "calculation_scope": {
     "geometry": [
@@ -122,10 +123,27 @@
         "modèle/gamme",
         "code dimension",
         "largeur × hauteur",
-        "quantité"
+        "quantité",
+        "raccord d'étanchéité",
+        "accessoires d'installation"
       ],
-      "price_rule": "Prix web public observé puis estimation artisan = prix public HT × 0,85.",
-      "warning": "Le -15 % est une hypothèse de chiffrage SpeedArti demandée pour la démo, pas un tarif VELUX professionnel contractuel. Un vrai tarif fournisseur/pro connecté doit toujours primer."
+      "flashing_rules": {
+        "auto_recommendation": "EDP pour familles de tuiles plates ; EDW pour les autres tuiles de la bibliothèque.",
+        "selectable": [
+          "EDW pose standard tuiles",
+          "EDP tuiles plates",
+          "EDJ pose encastrée tuiles",
+          "EDL ardoises",
+          "EDN ardoises encastrées"
+        ],
+        "installation_pack": "Les variantes 2000 incluent BDX + BFX et doivent apparaître dans le résultat comme accessoires inclus.",
+        "optional": [
+          "BFX séparée si raccord 0000",
+          "BBX pare-vapeur",
+          "BBX 1000 kit finition intérieure"
+        ]
+      },
+      "price_rule": "Tarif public conseillé VELUX France 2026 pour raccords/accessoires ; estimation artisan = public HT × 0,85. Le tarif pro/fournisseur réel prime."
     },
     "safety_display": "Toutes les options et dimensions de mise en sécurité sont regroupées dans un seul bloc à l'étape Options."
   },
