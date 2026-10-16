@@ -472,8 +472,25 @@
     if(n(c.volets)>0){ const m=configuredMaterial(state,"volet","Appareillage","Commandes volets roulants",n(c.volets),"interrupteur",alerts); if(m) materials.push(m); }
     if(c.vmcType && c.vmcType!=="none"){ const m=configuredMaterial(state,"vmc","Appareillage","Commande VMC",1,"interrupteur",alerts); if(m) materials.push(m); }
     if(n(c.exteriorSockets)>0){ const m=configuredMaterial(state,"priseExtSimple","Appareillage extérieur","Prises extérieures IP55",n(c.exteriorSockets),"prise_electrique",alerts); if(m) materials.push(m); }
-    if(n(c.exteriorLights)>0 && c.exteriorCommand!=="aucune"){ const m=configuredMaterial(state,"interExt","Appareillage extérieur","Commande éclairage extérieur IP55",1,"interrupteur",alerts,c.exteriorCommand==="va_et_vient"?"Va-et-vient":"Simple allumage avec voyant"); if(m) materials.push(m); }
-    if(n(c.exteriorLights)>0 && n(c.exteriorLightMaterialPrice)>0){ materials.push({articleId:"manual:luminaire-exterieur",category:"Éclairage extérieur",name:c.exteriorLightMaterialLabel||(c.exteriorLightType==="spot"?"Spot extérieur":"Applique extérieure"),qty:n(c.exteriorLights),unit:"u",price:n(c.exteriorLightMaterialPrice),total:Math.round(n(c.exteriorLights)*n(c.exteriorLightMaterialPrice)*100)/100,source:"Prix saisi par l'artisan",note:"Luminaire extérieur"}); }
+    if(n(c.exteriorLights)>0&&c.exteriorCommand==="va_et_vient"){
+      const m=configuredMaterial(state,"interExt","Appareillage extérieur","Commande éclairage extérieur IP55",1,null,alerts,"Va-et-vient");if(m)materials.push(m);
+    }
+    if(n(c.exteriorLights)>0&&c.exteriorCommand==="simple_voyant"){
+      const price=n(c.exteriorCommandPrice),ref=String(c.exteriorCommandReference||"").trim();
+      if(price>0&&ref)
+        materials.push({articleId:"manual:commande-exterieure",category:"Appareillage extérieur",name:"Commande extérieure avec voyant — "+ref,qty:1,unit:"u",price,total:price,source:"Prix artisan",note:ref});
+      else materials.push(catalogueMaterial(null,"Appareillage extérieur","Commande extérieure avec voyant — référence et PU à confirmer",1,"u"));
+    }
+    if(n(c.exteriorLights)>0&&!c.exteriorLightClientSupplied){
+      if(n(c.exteriorLightMaterialPrice)>0)
+        materials.push({articleId:"manual:luminaire-exterieur",category:"Éclairage extérieur",name:c.exteriorLightMaterialLabel||(c.exteriorLightType==="spot"?"Spot extérieur":"Applique extérieure"),qty:n(c.exteriorLights),unit:"u",price:n(c.exteriorLightMaterialPrice),total:Math.round(n(c.exteriorLights)*n(c.exteriorLightMaterialPrice)*100)/100,source:"Prix saisi par l'artisan",note:"Luminaire extérieur"});
+      else materials.push(catalogueMaterial(null,"Éclairage extérieur","Luminaires extérieurs — prix unitaire non fourni",n(c.exteriorLights),"u"));
+    }
+    if(n(c.exteriorDetectors)>0){
+      const price=n(c.exteriorDetectorPrice),ref=String(c.exteriorDetectorReference||"").trim(),qty=n(c.exteriorDetectors);
+      if(price>0&&ref) materials.push({articleId:"manual:detecteur-ext",category:"Éclairage extérieur",name:"Détecteur mouvement — "+ref,qty,unit:"u",price,total:Math.round(price*qty*100)/100,source:"Prix saisi par l'artisan",note:"Référence exacte"});
+      else materials.push(catalogueMaterial(null,"Éclairage extérieur","Détecteur extérieur — référence et prix à compléter",qty,"u"));
+    }
 
     // Protections divisionnaires : prix par calibre lorsqu'une référence moyenne 2026 existe.
     const fullTable=(state.installation.type||"neuf")==="neuf"||state.tableau.replaceExisting;
@@ -570,6 +587,10 @@
     if(fullTableLabor){ const tableTime=tableauHoursFor(circuits.length,state.installation.phase,blockers); if(tableTime) add(`Pose / raccordement tableau — palier ${tableTime.bracket} circuits`,tableTime.hours); }
     else if(installType==="renovation" && state.tableau.partialExisting) add("Modification partielle du tableau — temps artisan",n(state.tableau.partialHours));
     if(state.tableau.ground) add("Mise à la terre",2);
+    add("Pose points lumineux extérieurs",n(state.circuits?.exteriorLights)*.5);
+    add("Pose prises extérieures",n(state.circuits?.exteriorSockets)*.5);
+    if(n(state.circuits?.exteriorDetectors)>0)
+      add("Pose détecteurs extérieurs — temps artisan",n(state.circuits.exteriorDetectorHours));
     add("Tests / mise en service",1.5);
 
     const complexity=state.options.complexity||"moyenne";
@@ -681,6 +702,15 @@
     const wet=n(state.rooms?.cuisine)+n(state.rooms?.wc)+n(state.rooms?.wcHand)+n(state.rooms?.sdb)+n(state.rooms?.sde)+n(state.rooms?.cellier)+n(state.rooms?.buanderie);
     if(wet>0&&(!c.vmcType||c.vmcType==="none")) add("warn","ELEC_VMC","Pièces humides sans VMC.");
     if((n(c.vmcExtraMouths)>0||c.vmcRoof)&&(!c.vmcType||c.vmcType==="none")) add("block","ELEC_VMC_ORPHAN","Options VMC sans VMC.");
+    for(const [key,qty,label] of [["exteriorLight",n(c.exteriorLights),"Éclairage extérieur"],["exteriorSocket",n(c.exteriorSockets),"Prises extérieures"]]){
+      if(qty>0 && n(c[key+"Route"])<=0)add("block","ELEC_OUT_ROUTE_"+key,label+" : longueur réelle du câblage absente.");
+      if(qty>0 && (n(c[key+"Section"])<=0||n(c[key+"Breaker"])<=0||n(c[key+"CircuitCount"])<=0))
+        add("block","ELEC_OUT_CIRCUIT_"+key,label+" : nombre de circuits, section et disjoncteur à renseigner.");
+    }
+    if(n(c.exteriorDetectors)>0&&n(c.exteriorDetectorHours)<=0)
+      add("block","ELEC_DETECTOR_HOURS","Détecteurs extérieurs : temps de pose à renseigner.");
+    if(n(c.exteriorLights)>0&&c.exteriorLightClientSupplied&&n(c.exteriorLightMaterialPrice)>0)
+      add("warn","ELEC_CLIENT_LIGHT","Luminaires fournis par le client : leur prix saisi n'est pas ajouté au devis.");
     for(const [flag,key,label] of [["pac","pacManual","PAC"],["clim","climManual","Climatisation"],["gainable","gainableManual","Gainable"],["tone","toneManual","T.One"],["irve","irveManual","IRVE"],["pv","pvManual","Photovoltaïque"]]) if(c[flag]){ const m=c[key]||{}; if(!n(m.section)||!n(m.breaker))add("block","ELEC_MANUAL_"+flag.toUpperCase(),label+" : section/protection manquante."); if(n(m.materialPrice)<=0)add("block","ELEC_PRICE_"+flag.toUpperCase(),label+" : prix matériel manquant."); if(!String(m.materialLabel||"").trim())add("block","ELEC_REF_"+flag.toUpperCase(),label+" : référence fabricant manquante."); if(n(m.route)<=0)add("block","ELEC_ROUTE_"+flag.toUpperCase(),label+" : longueur réelle de raccordement manquante."); }
     if(state.installation?.phase==="triphase") add("info","ELEC_TRI","Triphasé : équilibrage phases à contrôler.");
     return markers;
