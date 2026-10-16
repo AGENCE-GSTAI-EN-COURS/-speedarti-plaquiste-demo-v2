@@ -319,7 +319,9 @@
       circuits.push({
         name:label,type:"manual",section:n(m.section),breaker:n(m.breaker),
         diff:m.diff||diffDefault||"Selon fabricant", supply:m.supply||"mono", points:1, manual:true,
-        equipmentPrice:n(m.materialPrice), equipmentLabel:m.materialLabel||label,route:n(m.route)
+        equipmentPrice:n(m.materialPrice), equipmentLabel:m.materialLabel||label,route:n(m.route),
+        protectionLabel:m.protectionLabel||"",protectionPrice:n(m.protectionPrice),
+        cableLabel:m.cableLabel||"",cablePrice:n(m.cablePrice)
       });
     }
     manualCircuit(c.pac,"pacManual","PAC","F selon configuration");
@@ -422,8 +424,15 @@
       const route=ci.manual?Math.max(0,n(ci.route)):profile.special;
       if(ci.manual&&route===0)blockers.push(ci.name+" : longueur réelle du câble d'alimentation à renseigner.");
       if(ci.supply==="3P"){
-        materials.push(catalogueMaterial(null,"Câblage",`Câble triphasé circuit ${ci.name} — ${ci.section} mm²`,Math.ceil(route),"ml","Nombre de conducteurs et référence à confirmer selon appareil / fabricant."));
-        blockers.push(`${ci.name} triphasé : câble exact à confirmer selon fabricant.`);
+        if(ci.cablePrice>0&&String(ci.cableLabel||"").trim()&&route>0){
+          const qty=Math.ceil(route);
+          materials.push({articleId:"manual:cable-3p:"+ci.name,category:"Câblage",
+            name:"Câble triphasé — "+ci.cableLabel,qty,unit:"ml",price:ci.cablePrice,
+            total:Math.round(qty*ci.cablePrice*100)/100,source:"Prix saisi par l'artisan",note:"Selon fabricant"});
+        }else{
+          materials.push(catalogueMaterial(null,"Câblage","Câble triphasé — "+ci.name,Math.ceil(route),"ml","Référence, longueur et prix du câble triphasé à compléter."));
+          blockers.push(ci.name+" triphasé : câble exact à confirmer selon fabricant.");
+        }
       }else if(ci.section===1.5 || ci.section===2.5){
         addH07(ci.section, route, ci.name, "gaine_icta_32");
       }else{
@@ -498,8 +507,15 @@
     circuits.forEach(ci=>{
       if(!fullTable)return;
       if(ci.supply==="3P"){
-        materials.push(catalogueMaterial(null,"Protection",`Disjoncteur tétrapolaire ${ci.breaker}A — ${ci.name}`,1,"u",`Différentiel ${ci.diff} — référence exacte selon marque`));
-        blockers.push(`${ci.name} triphasé : disjoncteur tétrapolaire exact à sélectionner.`);
+        if(ci.protectionPrice>0&&String(ci.protectionLabel||"").trim())
+          materials.push({articleId:"manual:breaker-3p:"+ci.name,category:"Protection",
+            name:"Disjoncteur triphasé "+ci.breaker+"A — "+ci.protectionLabel,qty:1,unit:"u",
+            price:ci.protectionPrice,total:ci.protectionPrice,source:"Prix saisi par l'artisan",note:"Différentiel "+ci.diff});
+        else{
+          materials.push(catalogueMaterial(null,"Protection","Disjoncteur tétrapolaire "+ci.breaker+"A — "+ci.name,1,"u",
+            "Calibre et référence exacts selon fabricant."));
+          blockers.push(ci.name+" triphasé : disjoncteur tétrapolaire exact à sélectionner.");
+        }
         return;
       }
       const map={2:"disjoncteur_2a",10:"disjoncteur_10a",16:"disjoncteur_16a",20:"disjoncteur_20a",25:"disjoncteur_25a",32:"disjoncteur_32a"};
@@ -525,7 +541,16 @@
       }
       if(tableau.diffA>0) materials.push(catalogueMaterial("differentiel_30ma_type_a","Protection","Interrupteur différentiel 30mA Type A",tableau.diffA,"u"));
       if(tableau.diffAC>0) materials.push(catalogueMaterial("differentiel_30ma_type_ac","Protection","Interrupteur différentiel 30mA Type AC",tableau.diffAC,"u"));
-      if(tableau.diffF>0){ materials.push(catalogueMaterial(null,"Protection","Interrupteur différentiel 30mA Type F",tableau.diffF,"u","Référence/calibre à sélectionner selon marque et équipement.")); blockers.push("Différentiel Type F requis : sélectionner la référence et le calibre selon l’équipement."); }
+      if(tableau.diffF>0){
+        const price=n(state.tableau.diffFPrice),ref=String(state.tableau.diffFReference||"").trim();
+        if(price>0&&ref)materials.push({articleId:"manual:diff-f",category:"Protection",
+          name:"Interrupteur différentiel 30mA Type F — "+ref,qty:tableau.diffF,unit:"u",
+          price,total:Math.round(price*tableau.diffF*100)/100,source:"Prix saisi par l'artisan",note:"Référence exacte"});
+        else{
+          materials.push(catalogueMaterial(null,"Protection","Interrupteur différentiel 30mA Type F",tableau.diffF,"u","Référence et prix exigés."));
+          blockers.push("Différentiel Type F requis : sélectionner la référence et le prix selon l’équipement.");
+        }
+      }
     }else if(state.installation.type==="renovation" && state.tableau.partialExisting){
       alerts.push("Modification partielle du tableau : aucun tableau complet n'est ajouté.");
       if(state.tableau.newMaterialPartial && n(state.tableau.partialMaterialPrice)>0){ materials.push({articleId:"manual:tableau-partiel",category:"Tableau électrique",name:state.tableau.partialMaterialNote||"Matériel neuf pour modification partielle du tableau",qty:1,unit:"forfait",price:n(state.tableau.partialMaterialPrice),total:n(state.tableau.partialMaterialPrice),source:"Prix saisi par l'artisan",note:"Modification partielle"}); }
