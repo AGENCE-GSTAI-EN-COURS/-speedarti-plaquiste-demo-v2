@@ -480,7 +480,20 @@
 
     // Tableau complet : en neuf, ou en rénovation si remplacement complet demandé.
     if(fullTable){
-      materials.push(catalogueMaterial("tableau_electrique","Tableau électrique",`Tableau ${tableau.rows} rangée(s)`,1,"u",`Marque : ${tableau.brand}`));
+      // Ne pas appliquer le tarif d'un coffret une rangée à un tableau multirangées.
+      const panelPrice=n(state.tableau.panelPrice);
+      if(panelPrice>0){
+        materials.push({articleId:"manual:coffret",category:"Tableau électrique",
+          name:"Coffret "+tableau.rows+" rangée(s) — "+(state.tableau.panelReference||"référence à compléter"),
+          qty:1,unit:"u",price:panelPrice,total:panelPrice,
+          source:"Prix saisi par l'artisan",note:"Marque : "+tableau.brand});
+      }else if(tableau.rows===1&&tableau.brand==="indifferent"){
+        materials.push(catalogueMaterial("tableau_electrique","Tableau électrique","Coffret 1 rangée — prix moyen",1,"u"));
+      }else{
+        materials.push(catalogueMaterial(null,"Tableau électrique","Coffret "+tableau.rows+" rangée(s) — "+tableau.brand,1,"u",
+          "Référence et tarif exact du coffret requis, aucune extrapolation depuis 1 rangée."));
+        blockers.push("Coffret tableau : référence et prix réels à compléter pour "+tableau.rows+" rangée(s).");
+      }
       if(tableau.diffA>0) materials.push(catalogueMaterial("differentiel_30ma_type_a","Protection","Interrupteur différentiel 30mA Type A",tableau.diffA,"u"));
       if(tableau.diffAC>0) materials.push(catalogueMaterial("differentiel_30ma_type_ac","Protection","Interrupteur différentiel 30mA Type AC",tableau.diffAC,"u"));
       if(tableau.diffF>0){ materials.push(catalogueMaterial(null,"Protection","Interrupteur différentiel 30mA Type F",tableau.diffF,"u","Référence/calibre à sélectionner selon marque et équipement.")); blockers.push("Différentiel Type F requis : sélectionner la référence et le calibre selon l’équipement."); }
@@ -645,7 +658,9 @@
       if(t.partialExisting&&n(t.partialHours)<=0) add("block","ELEC_PARTIAL_HOURS","Temps tableau partiel manquant.");
       if(t.partialExisting&&t.newMaterialPartial&&n(t.partialMaterialPrice)<=0) add("block","ELEC_PARTIAL_PRICE","Prix matériel tableau partiel manquant.");
     }
-    if(t.differentielTete) add("warn","ELEC_HEAD_DIFF","Différentiel de tête à préciser."); if(t.brand!=="indifferent")add("warn","ELEC_PANEL_BRAND","Marque tableau sélectionnée : les prix actuels restent des moyennes non spécifiques à cette marque.");
+    if(t.differentielTete) add("warn","ELEC_HEAD_DIFF","Différentiel de tête à préciser.");
+    const completePanel=state.installation?.type!=="renovation"||t.replaceExisting;
+    if(completePanel&&n(t.panelPrice)>0&&!String(t.panelReference||"").trim())add("block","ELEC_PANEL_REF","Coffret : référence fabricant à renseigner pour le prix saisi."); if(t.brand!=="indifferent")add("warn","ELEC_PANEL_BRAND","Marque tableau sélectionnée : les prix actuels restent des moyennes non spécifiques à cette marque.");
     if(n(t.rows)>0){ const autoRows=Math.max(1,ceilDiv(buildCircuits(state,points,[],[]).length,13)); if(n(t.rows)<autoRows)add("block","ELEC_ROWS","Rangées insuffisantes."); }
     if(n(state.pricing?.hourlyRate)<=0) add("block","ELEC_RATE","Taux horaire invalide.");
     if(n(state.installation?.height)<=0) add("block","ELEC_HEIGHT","Hauteur sous plafond invalide.");
