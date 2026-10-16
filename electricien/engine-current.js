@@ -329,8 +329,16 @@
     manualCircuit(c.irve,"irveManual","IRVE","Selon borne");
     manualCircuit(c.pv,"pvManual","Raccordement photovoltaïque","Selon étude");
 
-    if(n(c.exteriorLights)>0 || n(c.exteriorSockets)>0){
-      alerts.push("Éclairage / prises extérieurs : quantités prises en compte, mais règle de protection extérieure non fournie dans les annexes — validation requise avant commande.");
+    // Circuits extérieurs : aucune section/protection générique n'est déduite.
+    for(const [prefix,qty,label] of [["exteriorLight",n(c.exteriorLights),"Éclairage extérieur"],["exteriorSocket",n(c.exteriorSockets),"Prises extérieures"]]){
+      if(qty<=0)continue;
+      const count=n(c[prefix+"CircuitCount"]),section=n(c[prefix+"Section"]),breaker=n(c[prefix+"Breaker"]);
+      if(count<=0||section<=0||breaker<=0){
+        blockers.push(label+" : indiquer nombre de circuits, section et disjoncteur selon le chantier.");
+        continue;
+      }
+      pushMany(circuits,count,i=>({name:label+" "+(i+1),type:"exterieur",
+        section,breaker,diff:"Selon contrôle artisan",supply:"mono",points:Math.ceil(qty/count)}));
     }
 
     if(phase==="triphase"){
@@ -402,9 +410,13 @@
 
     if(n(c.volets)>0) addH07(1.5, n(c.volets)*profile.volet, "Volets roulants", "gaine_icta");
     if(c.vmcType && c.vmcType!=="none") addH07(1.5, profile.vmc, "VMC", "gaine_icta");
+    if(n(c.exteriorLights)>0&&n(c.exteriorLightRoute)>0)
+      addH07(n(c.exteriorLightSection),n(c.exteriorLightRoute),"Éclairage extérieur — parcours mesuré","gaine_icta");
+    if(n(c.exteriorSockets)>0&&n(c.exteriorSocketRoute)>0)
+      addH07(n(c.exteriorSocketSection),n(c.exteriorSocketRoute),"Prises extérieures — parcours mesuré","gaine_icta_25");
 
     // Circuits spécialisés : l'annexe donne un métrage par circuit.
-    const specialized=circuits.filter(ci=>!["prises","cuisine","eclairage","vmc"].includes(ci.type) && ci.name!=="Volets roulants");
+    const specialized=circuits.filter(ci=>!["prises","cuisine","eclairage","vmc","exterieur"].includes(ci.type) && ci.name!=="Volets roulants");
     specialized.forEach(ci=>{
       if(isReno&&!ci.manual)return;
       const route=ci.manual?Math.max(0,n(ci.route)):profile.special;
@@ -551,7 +563,7 @@
     }
 
     // Les forfaits VMC/sonnette intègrent déjà leur main-d'œuvre : pas de double comptage.
-    const specialized=circuits.filter(c=>state.installation.type==="renovation"?c.manual:!["prises","cuisine","eclairage","vmc"].includes(c.type)).length;
+    const specialized=circuits.filter(c=>state.installation.type==="renovation"?c.manual:!["prises","cuisine","eclairage","vmc","exterieur"].includes(c.type)).length;
     add("Raccordement circuits spécialisés",specialized*1);
 
     const fullTableLabor=installType==="neuf" || state.tableau.replaceExisting;
