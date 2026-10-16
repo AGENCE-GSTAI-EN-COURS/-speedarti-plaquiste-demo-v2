@@ -55,7 +55,7 @@
       vmcType:"none",vmcExtraMouths:0,vmcRoof:false
     },
     tableau:{
-      rows:"",brand:"indifferent",panelReference:"",panelPrice:"",replaceExisting:false,partialExisting:false,newMaterialPartial:false,partialHours:"",partialMaterialPrice:"",partialMaterialNote:"",
+      rows:"",brand:"indifferent",panelReference:"",panelPrice:"",diffFReference:"",diffFPrice:"",replaceExisting:false,partialExisting:false,newMaterialPartial:false,partialHours:"",partialMaterialPrice:"",partialMaterialNote:"",
       ground:false,parafoudre:false,differentielTete:false,consuel:false,diagnostic:false
     },
     renovation:{
@@ -322,6 +322,10 @@
       ${input(`${dataPath}.materialLabel`,"Référence / modèle fabricant",{cls:"c6",type:"text",placeholder:"Ex. référence fabricant"})}
       ${input(`${dataPath}.materialPrice`,"Prix matériel HT (€)",{cls:"c3",min:0,step:.01})}
       ${input(`${dataPath}.route`,"Longueur réelle de câblage (ml)",{cls:"c3",min:0,step:.5})}
+      ${input(`${dataPath}.cableLabel`,"Référence câble triphasé exact",{cls:"c6",type:"text"})}
+      ${input(`${dataPath}.cablePrice`,"Prix unitaire câble triphasé (€/ml HT)",{cls:"c3",min:0,step:.01})}
+      ${input(`${dataPath}.protectionLabel`,"Référence disjoncteur triphasé exact",{cls:"c6",type:"text"})}
+      ${input(`${dataPath}.protectionPrice`,"Prix disjoncteur triphasé HT (€)",{cls:"c3",min:0,step:.01})}
     </div></div>`;
   }
 
@@ -399,6 +403,8 @@
       ${input("pricing.hourlyRate","Taux horaire entreprise (€ HT/h)",{cls:"c4",min:0,step:.5})}
       ${input("tableau.panelReference","Référence coffret complet (si neuf/remplacement)",{cls:"c6",type:"text"})}
       ${input("tableau.panelPrice","Prix HT coffret complet (si connu)",{cls:"c6",min:0,step:.01})}
+      ${input("tableau.diffFReference","Référence différentiel Type F (si nécessaire)",{cls:"c6",type:"text"})}
+      ${input("tableau.diffFPrice","Prix unitaire différentiel Type F HT (€)",{cls:"c6",min:0,step:.01})}
     </div><div class="option-list top-gap">
       ${check("tableau.replaceExisting","Remplacement complet du tableau")}
       ${check("tableau.partialExisting","Modification partielle du tableau")}
