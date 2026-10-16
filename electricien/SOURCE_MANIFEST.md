@@ -58,3 +58,14 @@ Le moteur V3 reprend uniquement les prix existants dans cette table.
 - Différentiels A / AC / F distingués.
 - Coffret communication recalculé après overrides.
 - Éclairage extérieur : type, commande, détecteurs, prix luminaire optionnel.
+
+## V6.2 — sécurisation et traçabilité
+- Sources : annexe 1 longueurs par surface, annexe 2 coefficient, annexe 3 temps tableau, annexe 5 Somfy, prix documentés de la démo.
+- En rénovation : actions de l'existant reconciliées aux points finaux ; achats matériels uniquement pour création/remplacement ; câbles nouveaux ou déplacés chiffrés sur métrage saisi.
+- Les circuits extérieurs et les modèles fabricant exigent des données électriques et tarifaires exactes. Aucune valeur constructeur déduite par défaut.
+- Coffrets multirangées, Type F, matériel 3P : modèle/référence et prix à renseigner, aucune extrapolation inter-calibre/gamme.
+- Catalogue : compatibilité stricte de gamme et génération, prix partiels exclus des moyennes.
+- Tests ajoutés sous `electricien/tests/`, automatisation GitHub Actions `electricien-v62.yml`.
+- Les tests automatisés (moteur, Chromium desktop/mobile) ne constituent pas une recette humaine exhaustive.
+- Les règles à réintégrer dans la base **existante** d'Ángel sont décrites dans `ANGEL_KNOWLEDGE_DELTA_V62.md`. Aucune base parallèle créée ; intégration de production non réalisée.
+- Dépôt source `GSTAI-Sp/speedarti-v2` : lecture seule absolue, aucun changement.
