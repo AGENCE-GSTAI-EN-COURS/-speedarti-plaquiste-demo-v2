@@ -317,7 +317,7 @@
       circuits.push({
         name:label,type:"manual",section:n(m.section),breaker:n(m.breaker),
         diff:m.diff||diffDefault||"Selon fabricant", supply:m.supply||"mono", points:1, manual:true,
-        equipmentPrice:n(m.materialPrice), equipmentLabel:m.materialLabel||label
+        equipmentPrice:n(m.materialPrice), equipmentLabel:m.materialLabel||label,route:n(m.route)
       });
     }
     manualCircuit(c.pac,"pacManual","PAC","F selon configuration");
@@ -346,6 +346,14 @@
 
   function computeMaterials(state, points, circuits, tableau, alerts, blockers){
     const materials=[];
+    const isReno=state.installation.type==="renovation";
+    const reno=state.renovation||{};
+    const renoQty=(key,act)=>Math.max(0,n(reno[key]?.[act]));
+    const purchased=key=>renoQty(key,"replace")+renoQty(key,"create");
+    const measured=key=>Math.max(0,n(reno.routes?.[key]));
+    const billed=isReno?{...points,generalSockets:purchased("prises"),kitchenSockets:0,
+      switches:purchased("interrupteurs"),lightPoints:purchased("luminaires"),
+      rj45:purchased("rj45"),tv:purchased("tv")}:points;
     const profile=lengthProfileForSurface(state.installation.surface);
     const sectionMeters={};
     const gaineMeters={gaine_icta:0,gaine_icta_25:0,gaine_icta_32:0};
@@ -373,14 +381,22 @@
     // Annexe 1 : longueur moyenne par unité selon la surface.
     // Diamètres ICTA repris de la logique déjà présente dans l'Électricien SpeedArti :
     // Ø20 éclairage/commandes, Ø25 prises, Ø32 spécialisés.
-    addH07(socketSection, points.generalSockets*profile.prise, "Prises générales", "gaine_icta_25");
-    addH07(2.5, points.kitchenSockets*profile.prise, "Prises cuisine", "gaine_icta_25");
-    addH07(1.5, points.lightPoints*profile.eclairage, "Éclairage", "gaine_icta");
-    addH07(1.5, points.switches*profile.interrupteur, "Interrupteurs / commandes", "gaine_icta");
+    if(!isReno){
+      addH07(socketSection,points.generalSockets*profile.prise,"Prises générales","gaine_icta_25");
+      addH07(2.5,points.kitchenSockets*profile.prise,"Prises cuisine","gaine_icta_25");
+      addH07(1.5,points.lightPoints*profile.eclairage,"Éclairage","gaine_icta");
+      addH07(1.5,points.switches*profile.interrupteur,"Interrupteurs / commandes","gaine_icta");
+    }else{
+      addH07(socketSection,measured("prises"),"Prises rénovées","gaine_icta_25");
+      addH07(1.5,measured("luminaires"),"Éclairage rénové","gaine_icta");
+      addH07(1.5,measured("interrupteurs"),"Commandes rénovées","gaine_icta");
+    }
 
     // Communication : ratios Guillaume + prix moyens Internet 2026 uniquement pour les références absentes du Drive.
-    if(points.rj45>0) materials.push(catalogueMaterial("cable_rj45_cat6","Communication","Câble communication RJ45 Cat.6 F/UTP",Math.ceil(points.rj45*profile.rj45),"ml",`Ratio ${profile.label} — ${profile.rj45.toFixed(2)} ml/U`));
-    if(points.tv>0) materials.push(catalogueMaterial("cable_coax_tv_17vatc","Communication","Câble TV coaxial 17VATC",Math.ceil(points.tv*profile.tv),"ml",`Ratio ${profile.label} — ${profile.tv.toFixed(2)} ml/U`));
+    const rjRoute=isReno?measured("rj45"):points.rj45*profile.rj45;
+    const tvRoute=isReno?measured("tv"):points.tv*profile.tv;
+    if(rjRoute>0)materials.push(catalogueMaterial("cable_rj45_cat6","Communication","Câble communication RJ45 Cat.6 F/UTP",Math.ceil(rjRoute),"ml",isReno?"Parcours mesuré":"Ratio "+profile.label));
+    if(tvRoute>0)materials.push(catalogueMaterial("cable_coax_tv_17vatc","Communication","Câble TV coaxial 17VATC",Math.ceil(tvRoute),"ml",isReno?"Parcours mesuré":"Ratio "+profile.label));
 
     if(n(c.volets)>0) addH07(1.5, n(c.volets)*profile.volet, "Volets roulants", "gaine_icta");
     if(c.vmcType && c.vmcType!=="none") addH07(1.5, profile.vmc, "VMC", "gaine_icta");
@@ -388,7 +404,9 @@
     // Circuits spécialisés : l'annexe donne un métrage par circuit.
     const specialized=circuits.filter(ci=>!["prises","cuisine","eclairage","vmc"].includes(ci.type) && ci.name!=="Volets roulants");
     specialized.forEach(ci=>{
-      const route=profile.special;
+      if(isReno&&!ci.manual)return;
+      const route=ci.manual?Math.max(0,n(ci.route)):profile.special;
+      if(ci.manual&&route===0)blockers.push(ci.name+" : longueur réelle du câble d'alimentation à renseigner.");
       if(ci.supply==="3P"){
         materials.push(catalogueMaterial(null,"Câblage",`Câble triphasé circuit ${ci.name} — ${ci.section} mm²`,Math.ceil(route),"ml","Nombre de conducteurs et référence à confirmer selon appareil / fabricant."));
         blockers.push(`${ci.name} triphasé : câble exact à confirmer selon fabricant.`);
