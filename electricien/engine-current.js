@@ -435,21 +435,25 @@
 
     // Appareillage V5 : la quantité métier reste issue de Guillaume, mais le prix/référence vient
     // du choix indépendant de l'artisan (marque → gamme → modèle / finition).
-    const totalSockets=points.generalSockets+points.kitchenSockets;
-    const socketDist=CS && CS.socketDistribution ? CS.socketDistribution(state,totalSockets) : {simple:totalSockets,double:0,triple:0,valid:true};
+    const totalSockets=billed.generalSockets+billed.kitchenSockets;
+    const finalSockets=points.generalSockets+points.kitchenSockets;
+    const socketDist=CS&&CS.socketDistribution&&(!isReno||totalSockets===finalSockets)
+      ?CS.socketDistribution(state,totalSockets):{simple:totalSockets,double:0,triple:0,valid:true};
+    if(isReno&&totalSockets!==finalSockets&&(n(state.appareillage?.socketDistribution?.double)>0||n(state.appareillage?.socketDistribution?.triple)>0))
+      blockers.push("Rénovation : répartition doubles/triples à préciser pour les seuls mécanismes neufs.");
     if(!socketDist.valid) blockers.push(`Répartition prises invalide : les blocs doubles/triples représentent plus de ${totalSockets} prises.`);
     if(socketDist.simple>0){ const m=configuredMaterial(state,"priseSimple","Appareillage","Prise 16A 2P+T simple",socketDist.simple,"prise_electrique",alerts); if(m) materials.push(m); }
     if(socketDist.double>0){ const m=configuredMaterial(state,"priseDouble","Appareillage","Bloc prise double 2P+T",socketDist.double,"prise_electrique",alerts,"Un bloc double représente 2 prises normatives."); if(m) materials.push(m); }
     if(socketDist.triple>0){ const m=configuredMaterial(state,"priseTriple","Appareillage","Bloc prise triple 2P+T",socketDist.triple,"prise_electrique",alerts,"Un bloc triple représente 3 prises normatives."); if(m) materials.push(m); }
-    if(points.switches>0){ const m=configuredMaterial(state,"interrupteur","Appareillage","Interrupteurs / commandes",points.switches,"interrupteur",alerts); if(m) materials.push(m); }
+    if(points.switches>0){ const m=configuredMaterial(state,"interrupteur","Appareillage","Interrupteurs / commandes",billed.switches,"interrupteur",alerts); if(m) materials.push(m); }
 
-    const nbBoites=points.generalSockets+points.kitchenSockets+points.switches+points.lightPoints;
+    const nbBoites=billed.generalSockets+billed.kitchenSockets+billed.switches+billed.lightPoints;
     if(nbBoites>0) materials.push(catalogueMaterial("boite_encastrement","Appareillage","Boîtes d'encastrement Ø67",nbBoites,"u","Quantité conservée de la logique Électricien existante ; la répartition multi-postes n'altère pas encore ce calcul de validation."));
 
     // Communication : même principe, choix indépendant par famille.
-    if(points.rj45>0){ const m=configuredMaterial(state,"rj45","Communication","Prises RJ45",points.rj45,"prise_rj45_cat6",alerts); if(m) materials.push(m); }
-    if(points.tv>0){ const m=configuredMaterial(state,"tv","Communication","Prises TV / antenne",points.tv,"prise_tv",alerts); if(m) materials.push(m); }
-    if(points.communicationCabinet) materials.push(catalogueMaterial("coffret_communication_g2","Communication","Coffret de communication Grade 2TV - 4 RJ45",1,"u"));
+    if(points.rj45>0){ const m=configuredMaterial(state,"rj45","Communication","Prises RJ45",billed.rj45,"prise_rj45_cat6",alerts); if(m) materials.push(m); }
+    if(points.tv>0){ const m=configuredMaterial(state,"tv","Communication","Prises TV / antenne",billed.tv,"prise_tv",alerts); if(m) materials.push(m); }
+    if(points.communicationCabinet && (!isReno || reno.newCommunicationCabinet)) materials.push(catalogueMaterial("coffret_communication_g2","Communication","Coffret de communication Grade 2TV - 4 RJ45",1,"u"));
 
     if(n(c.volets)>0){ const m=configuredMaterial(state,"volet","Appareillage","Commandes volets roulants",n(c.volets),"interrupteur",alerts); if(m) materials.push(m); }
     if(c.vmcType && c.vmcType!=="none"){ const m=configuredMaterial(state,"vmc","Appareillage","Commande VMC",1,"interrupteur",alerts); if(m) materials.push(m); }
@@ -458,7 +462,10 @@
     if(n(c.exteriorLights)>0 && n(c.exteriorLightMaterialPrice)>0){ materials.push({articleId:"manual:luminaire-exterieur",category:"Éclairage extérieur",name:c.exteriorLightMaterialLabel||(c.exteriorLightType==="spot"?"Spot extérieur":"Applique extérieure"),qty:n(c.exteriorLights),unit:"u",price:n(c.exteriorLightMaterialPrice),total:Math.round(n(c.exteriorLights)*n(c.exteriorLightMaterialPrice)*100)/100,source:"Prix saisi par l'artisan",note:"Luminaire extérieur"}); }
 
     // Protections divisionnaires : prix par calibre lorsqu'une référence moyenne 2026 existe.
+    const fullTable=(state.installation.type||"neuf")==="neuf"||state.tableau.replaceExisting;
+    if(isReno&&!fullTable)alerts.push("Tableau conservé ou partiellement modifié : disjoncteurs existants non facturés automatiquement ; préciser le matériel de modification.");
     circuits.forEach(ci=>{
+      if(!fullTable)return;
       if(ci.supply==="3P"){
         materials.push(catalogueMaterial(null,"Protection",`Disjoncteur tétrapolaire ${ci.breaker}A — ${ci.name}`,1,"u",`Différentiel ${ci.diff} — référence exacte selon marque`));
         blockers.push(`${ci.name} triphasé : disjoncteur tétrapolaire exact à sélectionner.`);
@@ -470,7 +477,6 @@
     if(c.chauffeEau) materials.push(catalogueMaterial("contacteur_jn","Protection","Contacteur jour/nuit chauffe-eau",1,"u"));
 
     // Tableau complet : en neuf, ou en rénovation si remplacement complet demandé.
-    const fullTable = (state.installation.type||"neuf")==="neuf" || state.tableau.replaceExisting;
     if(fullTable){
       materials.push(catalogueMaterial("tableau_electrique","Tableau électrique",`Tableau ${tableau.rows} rangée(s)`,1,"u",`Marque : ${tableau.brand}`));
       if(tableau.diffA>0) materials.push(catalogueMaterial("differentiel_30ma_type_a","Protection","Interrupteur différentiel 30mA Type A",tableau.diffA,"u"));
@@ -530,7 +536,7 @@
     }
 
     // Les forfaits VMC/sonnette intègrent déjà leur main-d'œuvre : pas de double comptage.
-    const specialized=circuits.filter(c=>!["prises","cuisine","eclairage","vmc"].includes(c.type)).length;
+    const specialized=circuits.filter(c=>state.installation.type==="renovation"?c.manual:!["prises","cuisine","eclairage","vmc"].includes(c.type)).length;
     add("Raccordement circuits spécialisés",specialized*1);
 
     const fullTableLabor=installType==="neuf" || state.tableau.replaceExisting;
