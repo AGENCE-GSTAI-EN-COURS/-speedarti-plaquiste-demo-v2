@@ -1,4 +1,4 @@
-# Démo Chiffrage Électricien SpeedArti — V6.1
+# Démo Chiffrage Électricien SpeedArti — V6.2
 
 Cette démo conserve le parcours existant SpeedArti et intègre les règles métier validées avec Guillaume, le catalogue appareillage multi-gammes et les corrections de fiabilisation V6.1.
 
@@ -23,3 +23,18 @@ Cette démo conserve le parcours existant SpeedArti et intègre les règles mét
 - contrôles techniques d'audit disponibles uniquement en interne et jamais affichés dans l'interface artisan.
 
 Démo de validation métier avant intégration dans SpeedArti.
+
+## V6.2 — fiabilisation des chiffrages et tests
+- Rénovation : quantités de mécanismes achetés = création + remplacement ; conservation/déplacement non facturés comme articles neufs. Contrôles de cohérence des quantités finales ; longueurs de recâblage réellement mesurées.
+- Les références d'appareillage incompatibles ou incomplètes ne sont pas transformées silencieusement en prix d'une autre fonction. Filtre strict de gamme ET génération.
+- Coffret multirangées : aucun prix extrapolé depuis le coffret une rangée ; référence et prix réels artisan disponibles.
+- Différentiel Type F, câble et protection 3P : référence/prix manuels exacts disponibles. Les équipements fabricant restent non chiffrables définitivement tant que leurs paramètres sont inconnus.
+- Extérieur : circuits/protections et métrés artisan, luminaires client fournis ou référence/prix, détecteurs avec prix et temps.
+- Contrôles métier `audit()` raccordés aux alertes/bloquants affichés, sans exposer de codes techniques internes.
+- Si manque matériel, référence, métrage ou contrôle bloquant : afficher « sous-total connu — incomplet » et empêcher l'interprétation en devis définitif.
+- Les données sauvegardées localement en V5/V6.1 restent reprises.
+- Tests : `node electricien/tests/engine.test.cjs` puis `node electricien/tests/ui.test.cjs` (Chromium + serveur HTTP local), exécutés par `.github/workflows/electricien-v62.yml`.
+- Vérification : parcours automatisé Chromium desktop 1440px et mobile 390px ; ceci ne remplace pas une recette humaine exhaustive sur appareil réel.
+
+## Ángel — dépendance explicite
+Consulter `ANGEL_KNOWLEDGE_DELTA_V62.md`. Les évolutions métier doivent être réintégrées dans la base de connaissances Ángel **existante**. Ce dépôt démo ne modifie ni le dépôt source SpeedArti, ni sa base Ángel de production ; l'enrichissement reste À TRAITER avant clôture globale.
