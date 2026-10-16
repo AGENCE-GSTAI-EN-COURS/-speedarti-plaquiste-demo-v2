@@ -1,0 +1,38 @@
+name: "Électricien V6.2 - Contrôles métier et navigateur"
+on:
+  push:
+    paths:
+      - "electricien/**"
+      - ".github/workflows/electricien-v62.yml"
+  workflow_dispatch:
+jobs:
+  electricien:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: "Contrôles du moteur et des prix"
+        run: node electricien/tests/engine.test.cjs
+      - name: "Installer Chromium de test"
+        run: |
+          npm install --no-save playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: "Démarrer la copie de démonstration"
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/speedarti-electricien-http.log 2>&1 &
+          echo $! > /tmp/speedarti-electricien-http.pid
+          sleep 2
+      - name: "Parcours desktop 1440 et mobile 390"
+        run: node electricien/tests/ui.test.cjs
+      - name: "Captures de validation"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electricien-v62-captures
+          path: |
+            electricien-desktop-result.png
+            electricien-mobile-result.png
+          if-no-files-found: ignore
