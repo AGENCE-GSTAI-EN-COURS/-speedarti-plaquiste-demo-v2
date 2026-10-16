@@ -3,6 +3,7 @@
   const CS=window.ElectricienCatalogueSelector;
   const STORAGE="speedarti-electricien-demo-v62";
   const LEGACY_STORAGE="speedarti-electricien-demo-v61";
+  const LEGACY_V5_STORAGE="speedarti-electricien-demo-v5";
   const steps=[
     {id:"installation",title:"Installation",sub:"Neuf / rénovation • mono / tri"},
     {id:"logement",title:"Logement",sub:"Pièces & surfaces"},
@@ -75,7 +76,7 @@
   const content=$("#content");
   function load(){
     try{
-      const raw=localStorage.getItem(STORAGE) || localStorage.getItem(LEGACY_STORAGE);
+      const raw=localStorage.getItem(STORAGE) || localStorage.getItem(LEGACY_STORAGE) || localStorage.getItem(LEGACY_V5_STORAGE);
       if(raw) return merge(defaultState(),JSON.parse(raw));
     }catch(e){}
     return defaultState();
