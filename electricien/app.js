@@ -55,7 +55,7 @@
       vmcType:"none",vmcExtraMouths:0,vmcRoof:false
     },
     tableau:{
-      rows:"",brand:"indifferent",replaceExisting:false,partialExisting:false,newMaterialPartial:false,partialHours:"",partialMaterialPrice:"",partialMaterialNote:"",
+      rows:"",brand:"indifferent",panelReference:"",panelPrice:"",replaceExisting:false,partialExisting:false,newMaterialPartial:false,partialHours:"",partialMaterialPrice:"",partialMaterialNote:"",
       ground:false,parafoudre:false,differentielTete:false,consuel:false,diagnostic:false
     },
     renovation:{
@@ -383,6 +383,8 @@
       ${input("tableau.rows","Nombre de rangées (vide = AUTO)",{cls:"c4",min:1})}
       ${select("tableau.brand","Marque",[["indifferent","Indifférent"],["schneider","Schneider Electric"],["legrand","Legrand"],["hager","Hager"]],{cls:"c4"})}
       ${input("pricing.hourlyRate","Taux horaire entreprise (€ HT/h)",{cls:"c4",min:0,step:.5})}
+      ${input("tableau.panelReference","Référence coffret complet (si neuf/remplacement)",{cls:"c6",type:"text"})}
+      ${input("tableau.panelPrice","Prix HT coffret complet (si connu)",{cls:"c6",min:0,step:.01})}
     </div><div class="option-list top-gap">
       ${check("tableau.replaceExisting","Remplacement complet du tableau")}
       ${check("tableau.partialExisting","Modification partielle du tableau")}
