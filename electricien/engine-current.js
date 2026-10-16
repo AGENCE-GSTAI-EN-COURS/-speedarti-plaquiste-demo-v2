@@ -163,9 +163,11 @@
       };
     }
     // Un modèle double/triple, volet, VMC ou extérieur ne reprend jamais un PU d'une autre fonction.
-    const compatibleFallback=["priseSimple","interrupteur","rj45","tv"].includes(familyKey);
+    const selectedBrand=state.appareillage?.families?.[familyKey]?.brand;
+    // Seule la famille prix moyen non contrainte autorise un prix historique de même fonction.
+    const compatibleFallback=(!selectedBrand||selectedBrand==="moyen")&&["priseSimple","interrupteur","rj45","tv"].includes(familyKey);
     return catalogueMaterial(compatibleFallback?fallbackArticleId:null,category,baseName,q,"u",
-      [note,"Référence ou composition compatible indisponible : prix non chiffré."].filter(Boolean).join(" · "));
+      [note,resolved?.partial?"Composition choisie incomplète : plaque/enjoliveur requis.":"Référence ou composition compatible indisponible : prix non chiffré."].filter(Boolean).join(" · "));
   }
 
   function n(v){ const x=Number(v); return Number.isFinite(x)?x:0; }
@@ -496,7 +498,7 @@
   }
 
   function computeTableau(state,circuits){
-    const isF=c=>/\bF\b|type\s*f|fsi/i.test(String(c.diff||""));
+    const isF=c=>!(/recommand/i.test(String(c.diff||""))) && /\bF\b|type\s*f|fsi/i.test(String(c.diff||""));
     const isA=c=>!isF(c) && (/type\s*a/i.test(String(c.diff||"")) || String(c.diff||"").trim()==="A");
     const fCount=circuits.filter(isF).length, aCount=circuits.filter(isA).length;
     const acCount=Math.max(0,circuits.length-aCount-fCount);
@@ -628,7 +630,12 @@
         const actions=r[key]||{};
         const final=["keep","replace","move","create"].reduce((sum,a)=>sum+Math.max(0,n(actions[a])),0);
         if(final!==expected) add("block","ELEC_RENO_"+key.toUpperCase(),key+" : total conservé/remplacé/déplacé/créé ("+final+") différent des points finaux ("+expected+").");
+        const newPaths=Math.max(0,n(actions.create))+Math.max(0,n(actions.move));
+        const route=n(r.routes?.[key]);
+        if(newPaths>0&&route<=0) add("block","ELEC_RENO_ROUTE_"+key.toUpperCase(),key+" : préciser la longueur réelle des cheminements créés ou déplacés.");
+        if(newPaths===0&&route>0) add("warn","ELEC_RENO_ORPHAN_ROUTE_"+key.toUpperCase(),key+" : longueur renseignée sans création ni déplacement.");
       }
+      if(t.replaceExisting&&t.partialExisting)add("block","ELEC_PANEL_DOUBLE","Choisir remplacement complet OU modification partielle du tableau, pas les deux.");
     }
     if(state.installation?.type==="renovation"){
       if(t.replaceExisting&&t.partialExisting) add("block","ELEC_PANEL_CONFLICT","Deux actions tableau incompatibles.");
@@ -647,7 +654,7 @@
     const wet=n(state.rooms?.cuisine)+n(state.rooms?.wc)+n(state.rooms?.wcHand)+n(state.rooms?.sdb)+n(state.rooms?.sde)+n(state.rooms?.cellier)+n(state.rooms?.buanderie);
     if(wet>0&&(!c.vmcType||c.vmcType==="none")) add("warn","ELEC_VMC","Pièces humides sans VMC.");
     if((n(c.vmcExtraMouths)>0||c.vmcRoof)&&(!c.vmcType||c.vmcType==="none")) add("block","ELEC_VMC_ORPHAN","Options VMC sans VMC.");
-    for(const [flag,key,label] of [["pac","pacManual","PAC"],["clim","climManual","Climatisation"],["gainable","gainableManual","Gainable"],["tone","toneManual","T.One"],["irve","irveManual","IRVE"],["pv","pvManual","Photovoltaïque"]]) if(c[flag]){ const m=c[key]||{}; if(!n(m.section)||!n(m.breaker))add("block","ELEC_MANUAL_"+flag.toUpperCase(),label+" : section/protection manquante."); if(n(m.materialPrice)<=0)add("block","ELEC_PRICE_"+flag.toUpperCase(),label+" : prix matériel manquant."); if(!String(m.materialLabel||"").trim())add("block","ELEC_REF_"+flag.toUpperCase(),label+" : référence fabricant manquante."); }
+    for(const [flag,key,label] of [["pac","pacManual","PAC"],["clim","climManual","Climatisation"],["gainable","gainableManual","Gainable"],["tone","toneManual","T.One"],["irve","irveManual","IRVE"],["pv","pvManual","Photovoltaïque"]]) if(c[flag]){ const m=c[key]||{}; if(!n(m.section)||!n(m.breaker))add("block","ELEC_MANUAL_"+flag.toUpperCase(),label+" : section/protection manquante."); if(n(m.materialPrice)<=0)add("block","ELEC_PRICE_"+flag.toUpperCase(),label+" : prix matériel manquant."); if(!String(m.materialLabel||"").trim())add("block","ELEC_REF_"+flag.toUpperCase(),label+" : référence fabricant manquante."); if(n(m.route)<=0)add("block","ELEC_ROUTE_"+flag.toUpperCase(),label+" : longueur réelle de raccordement manquante."); }
     if(state.installation?.phase==="triphase") add("info","ELEC_TRI","Triphasé : équilibrage phases à contrôler.");
     return markers;
   }
