@@ -50,7 +50,7 @@
       tone:false,toneManual:{section:"",breaker:"",diff:"Selon fabricant",supply:"mono",materialLabel:"",materialPrice:""},
       irve:false,irveManual:{section:"",breaker:"",diff:"Selon borne",supply:"mono",materialLabel:"",materialPrice:""},
       pv:false,pvManual:{section:"",breaker:"",diff:"Selon étude",supply:"mono",materialLabel:"",materialPrice:""},
-      exteriorLights:0,exteriorSockets:0,exteriorLightType:"applique",exteriorCommand:"simple_voyant",exteriorDetectors:0,exteriorLightMaterialLabel:"",exteriorLightMaterialPrice:"",
+      exteriorLights:0,exteriorSockets:0,exteriorLightType:"applique",exteriorCommand:"simple_voyant",exteriorDetectors:0,exteriorLightMaterialLabel:"",exteriorLightMaterialPrice:"",exteriorLightClientSupplied:false,exteriorLightRoute:"",exteriorSocketRoute:"",exteriorLightSection:"",exteriorSocketSection:"",exteriorLightBreaker:"",exteriorSocketBreaker:"",exteriorLightCircuitCount:"",exteriorSocketCircuitCount:"",exteriorCommandReference:"",exteriorCommandPrice:"",exteriorDetectorReference:"",exteriorDetectorPrice:"",exteriorDetectorHours:"",
       bellType:"none",
       vmcType:"none",vmcExtraMouths:0,vmcRoof:false
     },
@@ -371,6 +371,20 @@
       ${input("circuits.exteriorDetectors","Détecteurs de mouvement",{cls:"c4",min:0})}
       ${input("circuits.exteriorLightMaterialLabel","Référence luminaire extérieur",{cls:"c4",type:"text",placeholder:"Optionnel"})}
       ${input("circuits.exteriorLightMaterialPrice","Prix luminaire unitaire HT (€)",{cls:"c4",min:0,step:.01})}
+      ${check("circuits.exteriorLightClientSupplied","Luminaires fournis par le client (pose uniquement)")}
+      ${input("circuits.exteriorLightRoute","Parcours câblage éclairage extérieur (ml)",{cls:"c4",min:0,step:.5})}
+      ${input("circuits.exteriorSocketRoute","Parcours câblage prises extérieures (ml)",{cls:"c4",min:0,step:.5})}
+      ${input("circuits.exteriorLightSection","Section éclairage extérieur (mm²)",{cls:"c3",min:0,step:.5})}
+      ${input("circuits.exteriorLightBreaker","Protection éclairage extérieur (A)",{cls:"c3",min:0})}
+      ${input("circuits.exteriorLightCircuitCount","Nombre circuits éclairage extérieur",{cls:"c3",min:0})}
+      ${input("circuits.exteriorSocketSection","Section prises extérieures (mm²)",{cls:"c3",min:0,step:.5})}
+      ${input("circuits.exteriorSocketBreaker","Protection prises extérieures (A)",{cls:"c3",min:0})}
+      ${input("circuits.exteriorSocketCircuitCount","Nombre circuits prises extérieures",{cls:"c3",min:0})}
+      ${input("circuits.exteriorCommandReference","Référence commande extérieur avec voyant",{cls:"c6",type:"text"})}
+      ${input("circuits.exteriorCommandPrice","Prix commande avec voyant HT (€)",{cls:"c3",min:0,step:.01})}
+      ${input("circuits.exteriorDetectorReference","Référence détecteur extérieur",{cls:"c6",type:"text"})}
+      ${input("circuits.exteriorDetectorPrice","Prix détecteur unitaire HT (€)",{cls:"c3",min:0,step:.01})}
+      ${input("circuits.exteriorDetectorHours","Temps total pose détecteurs (h)",{cls:"c3",min:0,step:.25})}
     </div></div>
     <div class="card"><h2>Domotique Somfy / TaHoma</h2><p class="muted">Annexe 5 — matériel indicatif + temps de pose, recalculé avec le taux horaire de l'entreprise.</p>
       <div class="grid">${Object.entries(E.SOMFY).map(([k,v])=>input(`domotique.${k}`,v.label,{cls:"c4",min:0})).join("")}</div>
