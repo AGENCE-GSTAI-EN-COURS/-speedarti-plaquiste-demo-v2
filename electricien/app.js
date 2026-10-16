@@ -1,8 +1,8 @@
 (function(){
   const E=window.ElectricienEngine;
   const CS=window.ElectricienCatalogueSelector;
-  const STORAGE="speedarti-electricien-demo-v61";
-  const LEGACY_STORAGE="speedarti-electricien-demo-v5";
+  const STORAGE="speedarti-electricien-demo-v62";
+  const LEGACY_STORAGE="speedarti-electricien-demo-v61";
   const steps=[
     {id:"installation",title:"Installation",sub:"Neuf / rénovation • mono / tri"},
     {id:"logement",title:"Logement",sub:"Pièces & surfaces"},
@@ -60,7 +60,8 @@
     },
     renovation:{
       prises:emptyAction(),interrupteurs:emptyAction(),luminaires:emptyAction(),rj45:emptyAction(),tv:emptyAction(),
-      gaineManualHours:0,tableauAncien:false,pasDeTerre:false,cablesAlu:false,prisesInsuffisantes:false
+      gaineManualHours:0,routes:{prises:0,interrupteurs:0,luminaires:0,rj45:0,tv:0},newCommunicationCabinet:false,
+      tableauAncien:false,pasDeTerre:false,cablesAlu:false,prisesInsuffisantes:false
     },
     options:{complexity:"moyenne",support:"placo_neuf",accesDifficile:false},
     pricing:{hourlyRate:55},
@@ -273,7 +274,17 @@
       ${rows.map(([k,l])=>`<tr><td><b>${l}</b></td>${["keep","replace","move","create","remove"].map(a=>`<td><input class="mini-input" data-path="renovation.${k}.${a}" type="number" min="0" value="${num(val(`renovation.${k}.${a}`))}"></td>`).join("")}</tr>`).join("")}
       </tbody></table></div>
       <div class="grid top-gap">${input("renovation.gaineManualHours","Temps manuel dépose / repassage gaines (h)",{cls:"c6",min:0,step:.25})}</div>
-      <p class="note">Dépose prise/interrupteur/point lumineux : 15 min. Dépose tableau complet : 3 h. Gaines : temps saisi par l'artisan.</p>
+      <h3>Longueurs réelles des parcours créés ou déplacés</h3>
+      <p class="muted">Ne renseigner que les mètres de nouveaux cheminements : une prise conservée ou simplement remplacée sans recâblage ne doit pas déclencher de métrage automatique.</p>
+      <div class="grid">
+        ${input("renovation.routes.prises","Câbles prises — parcours (ml)",{cls:"c4",min:0,step:.5})}
+        ${input("renovation.routes.interrupteurs","Câbles commandes — parcours (ml)",{cls:"c4",min:0,step:.5})}
+        ${input("renovation.routes.luminaires","Câbles éclairage — parcours (ml)",{cls:"c4",min:0,step:.5})}
+        ${input("renovation.routes.rj45","Câble RJ45 (ml)",{cls:"c4",min:0,step:.5})}
+        ${input("renovation.routes.tv","Câble TV/coaxial (ml)",{cls:"c4",min:0,step:.5})}
+      </div>
+      <div class="option-list">${check("renovation.newCommunicationCabinet","Installer un nouveau coffret de communication")}</div>
+      <p class="note">Renseigner les cinq lignes pour que conserver + remplacer + déplacer + créer corresponde au nombre final de points. Une dépose seule n'entre pas dans le total final. Dépose prise/interrupteur/point lumineux : 15 min. Dépose tableau : 3 h.</p>
     </div>`;
   }
 
@@ -310,6 +321,7 @@
       ${input(`${dataPath}.diff`,"Différentiel / remarque",{cls:"c3",type:"text"})}
       ${input(`${dataPath}.materialLabel`,"Référence / modèle fabricant",{cls:"c6",type:"text",placeholder:"Ex. référence fabricant"})}
       ${input(`${dataPath}.materialPrice`,"Prix matériel HT (€)",{cls:"c3",min:0,step:.01})}
+      ${input(`${dataPath}.route`,"Longueur réelle de câblage (ml)",{cls:"c3",min:0,step:.5})}
     </div></div>`;
   }
 
@@ -403,9 +415,10 @@
       <div class="metric"><span>Rangées tableau</span><strong>${r.tableau.rows}</strong></div>
       <div class="metric"><span>Main-d'œuvre</span><strong>${r.labor.hours.toFixed(1)} h</strong><small>coef. ${r.labor.coefficient.toFixed(2)}</small></div>
       <div class="metric"><span>Matériaux chiffrés</span><strong>${euro(r.materialTotal)}</strong></div>
-      <div class="metric"><span>Total calculé*</span><strong>${euro(r.knownTotal)}</strong></div>
+      <div class="metric"><span>${r.pricingComplete?"Total calculé*":"Sous-total connu — incomplet*"}</span><strong>${euro(r.knownTotal)}</strong></div>
     </div>
-    <p class="note">* Total calculé à partir des données et tarifs actuellement renseignés. Les éventuels éléments fabricant sans prix restent à compléter avant devis définitif.</p>
+    ${!r.pricingComplete?'<div class="alert err"><strong>Chiffrage provisoire — non utilisable comme devis définitif.</strong> Corriger les points bloquants et compléter les fournitures sans prix.</div>':""}
+    <p class="note">* Calcul basé sur les données et tarifs renseignés ; validité réglementaire et validation artisan indispensables.</p>
     ${r.blockers.length?`<div class="card"><h2>⛔ Points bloqués / non chiffrés</h2>${r.blockers.map(x=>`<div class="alert err">${esc(x)}</div>`).join("")}</div>`:""}
     ${r.alerts.length?`<div class="card"><h2>⚠️ Alertes & contrôles</h2>${r.alerts.map(x=>`<div class="alert warn">${esc(x)}</div>`).join("")}</div>`:""}
     <div class="card"><h2>Points retenus</h2><div class="metrics">
