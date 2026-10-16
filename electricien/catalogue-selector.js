@@ -68,10 +68,9 @@
     const def=FAMILY_DEFS[key]; if(!def) return [];
     return items.filter(i=>def.match(i) && ["Complet","Semi-complet","Mécanisme"].includes(i.type));
   }
-  function gammeRoot(g){ return txt(g).replace(/\s+20(24|25|26)$/i,"").trim(); }
-  function sameGamme(a,b){ return gammeRoot(a)===gammeRoot(b); }
+  function sameGamme(a,b){ return txt(a.gamme)===txt(b.gamme) && txt(a.generation)===txt(b.generation); }
   function platesFor(base){
-    return items.filter(p=>p.brand===base.brand && sameGamme(p.gamme,base.gamme) && p.type==="Plaque" && p.postes===base.postes);
+    return items.filter(p=>p.brand===base.brand && sameGamme(p,base) && p.type==="Plaque" && p.postes===base.postes);
   }
   function finishKey(v){
     const x=txt(v).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -80,7 +79,7 @@
   }
   function accessoryCandidates(base,key){
     const wanted=ACCESSORY_FUNCTION[key]||"";
-    return items.filter(a=>a.brand===base.brand && sameGamme(a.gamme,base.gamme) && a.type==="Enjoliveur" && a.fonction.toLowerCase().includes(wanted));
+    return items.filter(a=>a.brand===base.brand && sameGamme(a,base) && a.type==="Enjoliveur" && a.fonction.toLowerCase().includes(wanted));
   }
   function accessoryFor(base,key,plate){
     const arr=accessoryCandidates(base,key);
@@ -139,7 +138,7 @@
   function brands(key){ return [...new Set(familyBaseItems(key).map(i=>i.brand))].sort(); }
   function gammes(key,brand){ return [...new Set(familyBaseItems(key).filter(i=>!brand||i.brand===brand).map(i=>i.gamme))].sort(); }
   function allGammes(brand){ return [...new Set(items.filter(i=>i.brand===brand).map(i=>i.gamme))].sort(); }
-  function average(list){ return list.length?Math.round(list.reduce((s,c)=>s+c.price,0)/list.length*100)/100:null; }
+  function average(list){ const valid=list.filter(c=>c.exact&&!c.partial); return valid.length?Math.round(valid.reduce((s,c)=>s+c.price,0)/valid.length*100)/100:null; }
   function getCfg(state,key){ return state?.appareillage?.families?.[key] || {brand:"moyen",gamme:"",choiceId:""}; }
   function resolve(state,key){
     const cfg=getCfg(state,key); const brand=cfg.brand||"moyen";
