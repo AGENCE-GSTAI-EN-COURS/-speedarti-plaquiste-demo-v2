@@ -144,7 +144,7 @@
     const q=Math.max(0,n(qty));
     if(!q) return null;
     const resolved=CS && CS.resolve ? CS.resolve(state,familyKey) : null;
-    if(resolved && resolved.price!=null){
+    if(resolved && resolved.price!=null && !resolved.partial){
       const ref=resolved.ref ? `Réf. ${resolved.ref}` : "Prix moyen catalogue";
       if(!resolved.exact){
         const cfg=state?.appareillage?.families?.[familyKey];
@@ -162,7 +162,10 @@
         note:[ref,resolved.note,note].filter(Boolean).join(" · ")
       };
     }
-    return catalogueMaterial(fallbackArticleId,category,baseName,q,"u",note);
+    // Un modèle double/triple, volet, VMC ou extérieur ne reprend jamais un PU d'une autre fonction.
+    const compatibleFallback=["priseSimple","interrupteur","rj45","tv"].includes(familyKey);
+    return catalogueMaterial(compatibleFallback?fallbackArticleId:null,category,baseName,q,"u",
+      [note,"Référence ou composition compatible indisponible : prix non chiffré."].filter(Boolean).join(" · "));
   }
 
   function n(v){ const x=Number(v); return Number.isFinite(x)?x:0; }
@@ -482,7 +485,7 @@
   }
 
   function computeLabor(state,points,circuits,alerts,blockers){
-    const rate=n(state.pricing.hourlyRate)||55; // valeur existante du module, modifiable
+    const rate=n(state.pricing.hourlyRate); // taux entreprise : jamais remplacer silencieusement un zéro par 55
     let baseHours=0;
     const detail=[];
     const add=(label,h)=>{ if(h>0){ baseHours+=h; detail.push({label,hours:h}); } };
@@ -562,7 +565,7 @@
     Object.entries(SOMFY).forEach(([key,item])=>{
       const qty=n(d[key]);
       if(!qty) return;
-      const price=(item.material + item.hours*(n(state.pricing.hourlyRate)||55))*qty;
+      const price=(item.material + item.hours*n(state.pricing.hourlyRate))*qty;
       rows.push({label:`${item.label} × ${qty}`,price,indicative:true}); total+=price;
     });
     return {rows,total};
@@ -596,6 +599,14 @@
     const sd=CS&&CS.socketDistribution?CS.socketDistribution(state,points.generalSockets+points.kitchenSockets):{valid:true};
     if(!sd.valid) add("block","ELEC_SOCKET_DIST","Répartition prises invalide.");
     if(state.installation?.type==="renovation"){
+      const mapping={prises:points.generalSockets+points.kitchenSockets,interrupteurs:points.switches,luminaires:points.lightPoints,rj45:points.rj45,tv:points.tv};
+      for(const [key,expected] of Object.entries(mapping)){
+        const actions=r[key]||{};
+        const final=["keep","replace","move","create"].reduce((sum,a)=>sum+Math.max(0,n(actions[a])),0);
+        if(final!==expected) add("block","ELEC_RENO_"+key.toUpperCase(),key+" : total conservé/remplacé/déplacé/créé ("+final+") différent des points finaux ("+expected+").");
+      }
+    }
+    if(state.installation?.type==="renovation"){
       if(t.replaceExisting&&t.partialExisting) add("block","ELEC_PANEL_CONFLICT","Deux actions tableau incompatibles.");
       if(r.tableauAncien&&!t.replaceExisting&&!t.partialExisting) add("warn","ELEC_OLD_PANEL","Tableau ancien sans action.");
       if(r.pasDeTerre&&!t.ground) add("warn","ELEC_GROUND","Absence de terre sans création.");
@@ -603,13 +614,16 @@
       if(t.partialExisting&&n(t.partialHours)<=0) add("block","ELEC_PARTIAL_HOURS","Temps tableau partiel manquant.");
       if(t.partialExisting&&t.newMaterialPartial&&n(t.partialMaterialPrice)<=0) add("block","ELEC_PARTIAL_PRICE","Prix matériel tableau partiel manquant.");
     }
-    if(t.differentielTete) add("warn","ELEC_HEAD_DIFF","Différentiel de tête à préciser.");
+    if(t.differentielTete) add("warn","ELEC_HEAD_DIFF","Différentiel de tête à préciser."); if(t.brand!=="indifferent")add("warn","ELEC_PANEL_BRAND","Marque tableau sélectionnée : les prix actuels restent des moyennes non spécifiques à cette marque.");
     if(n(t.rows)>0){ const autoRows=Math.max(1,ceilDiv(buildCircuits(state,points,[],[]).length,13)); if(n(t.rows)<autoRows)add("block","ELEC_ROWS","Rangées insuffisantes."); }
     if(n(state.pricing?.hourlyRate)<=0) add("block","ELEC_RATE","Taux horaire invalide.");
+    if(n(state.installation?.height)<=0) add("block","ELEC_HEIGHT","Hauteur sous plafond invalide.");
+    if(n(state.installation?.levels)>1||n(state.installation?.height)>3)
+      add("warn","ELEC_ACCESS","Plusieurs niveaux ou grande hauteur : vérifier les longueurs AUTO et le coefficient de difficulté avec les conditions réelles.");
     const wet=n(state.rooms?.cuisine)+n(state.rooms?.wc)+n(state.rooms?.wcHand)+n(state.rooms?.sdb)+n(state.rooms?.sde)+n(state.rooms?.cellier)+n(state.rooms?.buanderie);
     if(wet>0&&(!c.vmcType||c.vmcType==="none")) add("warn","ELEC_VMC","Pièces humides sans VMC.");
     if((n(c.vmcExtraMouths)>0||c.vmcRoof)&&(!c.vmcType||c.vmcType==="none")) add("block","ELEC_VMC_ORPHAN","Options VMC sans VMC.");
-    for(const [flag,key,label] of [["pac","pacManual","PAC"],["clim","climManual","Climatisation"],["gainable","gainableManual","Gainable"],["tone","toneManual","T.One"],["irve","irveManual","IRVE"],["pv","pvManual","Photovoltaïque"]]) if(c[flag]){ const m=c[key]||{}; if(!n(m.section)||!n(m.breaker))add("block","ELEC_MANUAL_"+flag.toUpperCase(),label+" : section/protection manquante."); if(n(m.materialPrice)<=0)add("warn","ELEC_PRICE_"+flag.toUpperCase(),label+" : prix matériel manquant."); }
+    for(const [flag,key,label] of [["pac","pacManual","PAC"],["clim","climManual","Climatisation"],["gainable","gainableManual","Gainable"],["tone","toneManual","T.One"],["irve","irveManual","IRVE"],["pv","pvManual","Photovoltaïque"]]) if(c[flag]){ const m=c[key]||{}; if(!n(m.section)||!n(m.breaker))add("block","ELEC_MANUAL_"+flag.toUpperCase(),label+" : section/protection manquante."); if(n(m.materialPrice)<=0)add("block","ELEC_PRICE_"+flag.toUpperCase(),label+" : prix matériel manquant."); if(!String(m.materialLabel||"").trim())add("block","ELEC_REF_"+flag.toUpperCase(),label+" : référence fabricant manquante."); }
     if(state.installation?.phase==="triphase") add("info","ELEC_TRI","Triphasé : équilibrage phases à contrôler.");
     return markers;
   }
@@ -624,8 +638,13 @@
     const fixed=computeFixedServices(state);
     normAlerts(state,points,alerts);
 
+    // Contrôles métier internes : exposer uniquement les messages compréhensibles, jamais les codes ELEC_.
+    const markers=audit(state);
+    markers.filter(m=>m.level==="block").forEach(m=>blockers.push(m.message));
+    markers.filter(m=>m.level==="warn").forEach(m=>alerts.push(m.message));
     const materialTotal=materials.reduce((sum,m)=>sum+(m.total===null?0:m.total),0);
     const unknownMaterials=materials.filter(m=>m.price===null);
+    if(unknownMaterials.length) blockers.push("Fournitures non chiffrées : compléter les références et prix avant tout devis définitif.");
     if(unknownMaterials.length) alerts.push(`${unknownMaterials.length} ligne(s) matériau ne disposent toujours pas d'un prix validé : elles restent non chiffrées.`);
 
     return {
