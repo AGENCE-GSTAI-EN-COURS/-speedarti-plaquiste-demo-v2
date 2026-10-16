@@ -163,4 +163,44 @@ test('audit métier non imprimé dans HTML applicatif',()=>{
   assert(!/Balises de contrôle/.test(app));
   assert(!/catalogue-protections\.js/.test(fs.readFileSync(path.join(root,'index.html'),'utf8')));
 });
+test('triphasé fabricant avec références câbles et protections chiffrées',()=>{
+  const s=base();s.installation.phase='triphase';s.circuits.irve=true;
+  s.circuits.irveManual={section:6,breaker:32,diff:'A',supply:'3P',route:18,
+    materialLabel:'BORNE-TRI',materialPrice:900,cableLabel:'R2V-5G6',cablePrice:5.5,
+    protectionLabel:'DISJ-3P-32A',protectionPrice:85};
+  const r=E.calculate(s);
+  assert(r.materials.some(m=>m.articleId==='manual:cable-3p:IRVE'&&m.total===99));
+  assert(r.materials.some(m=>m.articleId==='manual:breaker-3p:IRVE'&&m.total===85));
+  assert(!r.blockers.some(m=>m.includes('IRVE triphasé')));
+});
+test('PAC différentielle Type F avec référence prix exacts',()=>{
+  const s=base();s.circuits.pac=true;
+  s.circuits.pacManual={section:2.5,breaker:20,diff:'F',supply:'mono',route:8,
+    materialLabel:'PAC-MODELE',materialPrice:2000};
+  s.tableau.diffFReference='DIF-F-30MA';s.tableau.diffFPrice=105;
+  const r=E.calculate(s);
+  const m=r.materials.find(m=>m.articleId==='manual:diff-f');
+  assert(m&&m.price===105&&m.qty>=1);
+  assert(!r.blockers.some(x=>x.includes('Différentiel Type F requis')));
+});
+test('mention selon fabricant insuffisante : différentiel requis',()=>{
+  const s=base();s.circuits.pac=true;
+  s.circuits.pacManual={section:2.5,breaker:20,diff:'F selon configuration',
+    supply:'mono',route:8,materialLabel:'PAC-MODELE',materialPrice:2000};
+  const r=E.calculate(s);
+  assert(r.blockers.some(x=>x.includes('type différentiel exact')));
+});
+test('rénovation partielle: matériel manuel, sans coffret complet',()=>{
+  const s=renovate();s.tableau.partialExisting=true;s.tableau.partialHours=4;
+  s.tableau.newMaterialPartial=true;s.tableau.partialMaterialPrice=155;
+  s.tableau.partialMaterialNote='DISJ-RÉNOVATION';
+  const r=E.calculate(s);
+  assert(r.materials.some(m=>m.articleId==='manual:tableau-partiel'&&m.price===155));
+  assert(!r.materials.some(m=>m.articleId==='manual:coffret'));
+});
+test('au-delà de 40 circuits : palier de temps bloqué',()=>{
+  const s=base();s.pointOverrides.generalSockets=600;
+  const r=E.calculate(s);
+  assert(r.blockers.some(x=>x.includes("s'arrête à 40 circuits")));
+});
 console.log('OK '+passed+' contrôles moteur');
