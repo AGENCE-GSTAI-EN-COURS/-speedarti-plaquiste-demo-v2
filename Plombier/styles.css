@@ -174,3 +174,12 @@
   .equipment-option-values .grid,.annexe2-fields{display:block}
   .slot-preference-action{margin-top:8px}
 }
+
+
+/* v0.8.1 — éléments similaires */
+.apply-similar-actions{display:flex;align-items:flex-start;justify-content:flex-end;max-width:440px}
+.apply-similar-btn{white-space:normal;text-align:center;line-height:1.25}
+@media(max-width:800px){
+  .apply-similar-actions{width:100%;max-width:none;justify-content:stretch;margin-top:10px}
+  .apply-similar-btn{width:100%}
+}
