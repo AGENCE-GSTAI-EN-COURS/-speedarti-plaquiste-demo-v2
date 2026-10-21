@@ -47,3 +47,11 @@ Consulter `ANGEL_KNOWLEDGE_DELTA_V62.md`. Les évolutions métier doivent être 
 - Pour une pièce supplémentaire de ces catégories (autre cuisine, WC, SDB/SDE), +1 bouche automatique et +115 € HT ; l'artisan peut saisir d'autres bouches (cellier, buanderie, etc.) dans un champ distinct. Chaque supplément n'est compté qu'une seule fois.
 - Les 3 bouches et le détail des ajouts apparaissent à l'étape Circuits et au résultat, sans ligne fictive à 0 €.
 - Tests de non-régression moteur et tests Chromium desktop/mobile étendus à ces fonctionnalités.
+
+## V6.4 — Audit des références et complément catalogue en ligne
+- Audit effectué sur les 258 entrées d'appareillage déjà présentes ; voir [AUDIT_REFERENCES_V64.md](./AUDIT_REFERENCES_V64.md) pour les défauts, références confirmées et limites.
+- Ajout d'un **JSON public versionné** [catalogue-en-ligne.json](./catalogue-en-ligne.json), alimenté à partir de fiches spécifiques 123elec et Elec44, sous forme d'appendice à la base historique : 12 nouveaux produits et 2 sources de fiches actualisées (270 entrées au total).
+- **Prises simples blanches** disponibles en premier par défaut, y compris en prix moyen multi-marques ; sélection par marque/gamme/couleur/modèle exact et accès à la fiche fournisseur.
+- Contrôle de composition marque, gamme, génération et finition avant d'additionner mécanisme / enjoliveur / plaque. Un produit sans prix (dont Mosaic blanc simple) reste affiché comme **prix à compléter**, jamais converti en devis définitif.
+- Chargement séquentiel : base historique → JSON complément (avec repli si indisponible) → sélecteur → moteur → interface.
+- La démo n'est **pas un service de synchronisation de fournisseurs en temps réel**. Le catalogue personnel/standard de la production SpeedArti n'a pas été modifié ; intégration à planifier avec l'équipe.
