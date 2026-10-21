@@ -62,6 +62,10 @@ function tilePriceInfo(p){
   if(Number.isFinite(exact)&&exact>0){
     return {value:round(exact,2),source:p.pricing?.source||'Prix modèle sourcé',kind:p.pricing?.price_type||'sourced',exact:true};
   }
+  const estimated=Number(p?.pricing?.unit_price_ht_estimated);
+  if(Number.isFinite(estimated)&&estimated>0){
+    return {value:round(estimated,2),source:p.pricing?.source||'Benchmark marché du modèle',kind:p.pricing?.price_type||'public_market_benchmark',exact:false};
+  }
   const family=norm(p?.family);
   const familyKey=family.includes('canal')?'canal':family.includes('plate')?'plate':family.includes('petit')?'petit_moule':family.includes('grand')?'grand_moule':'default';
   const mean=Number(p?.technical?.tiles_per_m2?.mean);
@@ -214,5 +218,5 @@ class CouvreurCalculateur{
    return {product:p,input,surfaces:{totale:roofArea,nette:roofArea,avec_pertes:round(roofArea*(1+waste/100),2),detail_par_face:{toiture:roofArea}},materiaux:items,main_oeuvre:{temps_estime_heures:duration,heures_homme:totalHH,decomposition:decomp,taux_horaire:Number(o.taux_horaire)||48,nombre_ouvriers:workers,cout_total:labor},totaux:{materiaux_ht:material,securite_ht:security,main_oeuvre_ht:labor,total_ht:total,tva:vat,total_ttc:round(total+vat,2)},stock_status:{disponible:true,articles_manquants:[]},recommandations:[`Modèle : ${p.manufacturer} ${p.model}`,`Fixation : ${fixing.reason}`,`Ventilation : ${vent.count} chatière(s) calculée(s)`],alertes:alerts,technical:{tiles_per_m2:tpm||null,tiles_per_m2_min:tileInfo.min,tiles_per_m2_max:tileInfo.max,tiles_per_m2_source:tileInfo.source,tile_unit_price_ht:tilePrice,tile_price_source:tilePriceInfoData.source,tile_price_kind:tilePriceInfoData.kind,battens_ml_m2:bpm||null,battens_source:batten.source,battens_method:batten.method,gauge_mm:gauge||null,min_pitch:mp.value,validation:p.validation?.status||'unknown'}};
  }
 }
-window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,getBattenInfo:battenInfo,getTilePriceInfo:tilePriceInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.5.2'};
+window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,getBattenInfo:battenInfo,getTilePriceInfo:tilePriceInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.5.3'};
 })();
