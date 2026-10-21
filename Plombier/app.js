@@ -10,8 +10,8 @@ const steps=[
   ['Configuration & options','Réglages facultatifs'],
   ['Résultats','Contrôle avant devis']
 ];
-const storeKey='speedarti-plombier-demo-v080';
-const legacyStoreKeys=['speedarti-plombier-demo-v071','speedarti-plombier-demo-v070','speedarti-plombier-demo-v069','speedarti-plombier-demo-v068','speedarti-plombier-demo-v067','speedarti-plombier-demo-v066','speedarti-plombier-demo-v065','speedarti-plombier-demo-v064','speedarti-plombier-demo-v063','speedarti-plombier-demo-v061','speedarti-plombier-demo-v060','speedarti-plombier-demo-v052','speedarti-plombier-demo-v051','speedarti-plombier-demo-v040','speedarti-plombier-demo-v031'];
+const storeKey='speedarti-plombier-demo-v081';
+const legacyStoreKeys=['speedarti-plombier-demo-v080','speedarti-plombier-demo-v071','speedarti-plombier-demo-v070','speedarti-plombier-demo-v069','speedarti-plombier-demo-v068','speedarti-plombier-demo-v067','speedarti-plombier-demo-v066','speedarti-plombier-demo-v065','speedarti-plombier-demo-v064','speedarti-plombier-demo-v063','speedarti-plombier-demo-v061','speedarti-plombier-demo-v060','speedarti-plombier-demo-v052','speedarti-plombier-demo-v051','speedarti-plombier-demo-v040','speedarti-plombier-demo-v031'];
 let step=0;
 let d=load()||initial();
 const q=s=>document.querySelector(s);
@@ -163,7 +163,7 @@ function renderNetworkPreview(){
   const net=d.installation.network||{};const p=API.previewNetwork(d);
   const specificWithoutNetwork=(d.installation.equipments||[]).filter(eq=>eq.kind==='element_specifique'&&!eq.ef&&!eq.ec&&!eq.evac);
   const specialNotice=specificWithoutNetwork.length?`<div class="alert warn"><b>Élément spécifique :</b> aucune platine ni longueur réseau n’est calculée tant qu’EF, EC ou évacuation n’est pas activé dans sa configuration. ${specificWithoutNetwork.length} élément(s) sont actuellement sans raccordement défini.</div>`:'';
-  const distanceNotice=`<div class="network-source-notes"><span>Distance SDB : <b>${fmt(net.distance_ce_sdb)} m</b> ${p.hasHotBathroom?'ajoutée à EF + EC (nourrices près du chauffe-eau)':'non utilisée (aucun sanitaire EF+EC SDB)'}</span><span>Distance cuisine : <b>${fmt(net.distance_ce_cuisine)} m</b> ${p.hasHotKitchen?'ajoutée à EF + EC':'non utilisée (aucun évier EF+EC)'}</span></div>`;
+  const distanceNotice=`<div class="network-source-notes"><span>Distance moyenne salle de bain : <b>${fmt(net.distance_ce_sdb)} m</b> ${p.hasHotBathroom?'ajoutée à EF + EC (nourrices près du chauffe-eau)':'non utilisée (aucun sanitaire EF+EC SDB)'}</span><span>Distance cuisine : <b>${fmt(net.distance_ce_cuisine)} m</b> ${p.hasHotKitchen?'ajoutée à EF + EC':'non utilisée (aucun évier EF+EC)'}</span></div>`;
   const generalEvacNotice=p.autoGeneralEvac>0?`<div class="alert warn"><b>Évacuation générale / spécifique :</b> SpeedArti calcule la longueur, mais ne choisit plus automatiquement un DN. Le diamètre et la référence doivent être définis sur l’élément spécifique concerné avant finalisation.</div>`:'';
   const migrationNotice=(p.legacyEvacAmbiguous||p.legacyPlatineEvacAmbiguous)?`<div class="alert warn"><b>Ancien brouillon :</b> une ancienne valeur globale d’évacuation doit être confirmée dans les nouveaux champs DN100/DN40 et local/général.</div>`:'';
   return `<div class="card network-live"><div class="row between wrap"><div><h2>Quantités réseau proposées</h2><p class="muted">SpeedArti sépare maintenant le raccordement local du sanitaire et le réseau général. Toutes les quantités restent modifiables par l’artisan.</p></div><span class="pill ok-pill">Calcul automatique</span></div>
@@ -175,7 +175,7 @@ function renderNetworkPreview(){
 function renderInstallationBase(){
   const z=d.installation.zones||{};
   const dim=`<div class="card"><h2>1. Dimensionnement du chantier</h2><div class="grid">${textField('Nom du calcul','nom_calcul',d.nom_calcul,'c6')}${numField('Surface du chantier (m²)','installation.surface_maison_m2',d.installation.surface_maison_m2,'c3',0,.1,'ex. 120')}${selectField('Type de canalisation','options.type_tuyau',[['per','PER'],['multicouche','Multicouche'],['cuivre','Cuivre']],d.options.type_tuyau,'c3')}${numField('Ouvriers','options.nb_ouvriers',d.options.nb_ouvriers,'c3',1,1)}</div><p class="subtle surface-note">La surface est conservée comme donnée chantier. Elle ne modifie pas automatiquement les longueurs de tuyaux tant qu’aucune règle métier validée ne relie m² et métrés réseau.</p></div>`;
-  const distances=`<div class="card distance-card"><div class="row between wrap"><div><h2>2. Distances depuis le chauffe-eau</h2><p class="muted">Règle Guillaume : les nourrices étant généralement proches du chauffe-eau, ces distances s’ajoutent aux propositions EF et EC lorsqu’un équipement correspondant existe.</p></div><span class="pill">Base réseau EF + EC</span></div><div class="grid">${numField('Chauffe-eau → salle de bains (m)','installation.network.distance_ce_sdb',d.installation.network.distance_ce_sdb,'c6',0,.1)}${numField('Chauffe-eau → cuisine (m)','installation.network.distance_ce_cuisine',d.installation.network.distance_ce_cuisine,'c6',0,.1)}</div></div>`;
+  const distances=`<div class="card distance-card"><div class="row between wrap"><div><h2>2. Distances depuis le chauffe-eau</h2><p class="muted">Règle Guillaume : les nourrices étant généralement proches du chauffe-eau, ces distances s’ajoutent aux propositions EF et EC lorsqu’un équipement correspondant existe.</p></div><span class="pill">Base réseau EF + EC</span></div><div class="grid">${numField('Chauffe-eau → distance moyenne salle de bain (m)','installation.network.distance_ce_sdb',d.installation.network.distance_ce_sdb,'c6',0,.1)}${numField('Chauffe-eau → cuisine (m)','installation.network.distance_ce_cuisine',d.installation.network.distance_ce_cuisine,'c6',0,.1)}</div></div>`;
   const zones=`<div class="card"><h2>3. Type d’installation</h2><p class="muted">Chaque case est indépendante : tu peux combiner plusieurs zones sur le même chantier.</p><div class="zone-grid">${zoneCard('installation.zones.rdc_sans','RDC','RDC — Sans sanitaire','Eau froide + eau chaude + évacuation encastrable')}${zoneCard('installation.zones.r1_sans','R+1','R+1 — Sans sanitaire','Eau froide + eau chaude + évacuation encastrable')}${zoneCard('installation.zones.rdc_avec','RDC','RDC — Avec sanitaires','Eau froide + eau chaude + évacuation + sanitaires')}${zoneCard('installation.zones.r1_avec','R+1','R+1 — Avec sanitaires','Eau froide + eau chaude + évacuation + sanitaires')}</div></div>`;
   content.innerHTML=head('Étape 1','Base chantier','Commence par les dimensions, les distances du chauffe-eau et les zones du chantier.')+projectSelector()+dim+distances+zones;
 }
@@ -202,7 +202,9 @@ function renderConfiguration(){
   if(configurable&&!eqs.some(x=>x.id===activeEquipmentId))activeEquipmentId=eqs[0].id;
   if(!configurable)activeEquipmentId=null;
   const active=configurable?eqs.find(x=>x.id===activeEquipmentId):null;const idx=active?eqs.findIndex(x=>x.id===active.id):-1;
-  const config=active?`<div class="card equipment-config-focus"><div class="row between wrap"><div><span class="eyebrow">Configuration sanitaire</span><h2><span class="title-icon">${equipmentIcon(active.kind)}</span>${esc(labelForKind(active.kind))} ${instanceNumber(eqs,idx)}</h2><p class="muted">Si l’artisan ne modifie rien, les réglages de base de cet élément sont conservés.</p></div></div>${equipmentEditor(active,idx,'installation')}</div>`:'';
+  const similarityKey=active?API.similarEquipmentKey?.(active):'';const similarCount=active&&similarityKey?eqs.filter(x=>x.id!==active.id&&API.similarEquipmentKey?.(x)===similarityKey).length:0;
+  const applySimilar=similarCount>0?`<button type="button" class="btn secondary compact apply-similar-btn" data-apply-similar="${esc(active.id)}">Appliquer les caractéristiques aux ${similarCount} élément${similarCount>1?'s':''} similaire${similarCount>1?'s':''}</button>`:'';
+  const config=active?`<div class="card equipment-config-focus"><div class="row between wrap"><div><span class="eyebrow">Configuration sanitaire</span><h2><span class="title-icon">${equipmentIcon(active.kind)}</span>${esc(labelForKind(active.kind))} ${instanceNumber(eqs,idx)}</h2><p class="muted">Si l’artisan ne modifie rien, les réglages de base de cet élément sont conservés.</p></div><div class="apply-similar-actions">${applySimilar}</div></div>${equipmentEditor(active,idx,'installation')}</div>`:'';
   const emptyConfig=configurable?'':`<div class="card"><h2>Configuration sanitaire</h2><div class="empty-state">${hasSanitaryZone?'Aucun sanitaire sélectionné : aucune configuration d’élément n’est affichée.':'Installation sans sanitaire : aucune configuration sanitaire n’est nécessaire.'}</div></div>`;
   content.innerHTML=head('Étape 3','Configuration & options','La configuration des sanitaires et les options du chantier sont réunies sur cette page.')+
     `<div class="layout-with-cart"><div class="layout-main">${config||emptyConfig}${artisanOptions()}</div>${configurable?selectedCart(eqs,true):''}</div>`;
@@ -491,7 +493,7 @@ function invalidateCatalogueOnConfigChange(path){
 }
 
 function clickHandler(e){
-  const el=e.target.closest('[data-choice],[data-step],[data-add-equipment],[data-remove-equipment],[data-edit-equipment],[data-add-prestation],[data-remove-prestation],[data-create-prestation-equipment],[data-edit-prestation-equipment],[data-gamme],[data-complexite],[data-tva],[data-export-appro-csv],[data-export-appro-json],[data-copy-appro-json],[data-configure-equipment],[data-remove-catalogue-item],[data-reset-auto]');
+  const el=e.target.closest('[data-choice],[data-step],[data-add-equipment],[data-remove-equipment],[data-edit-equipment],[data-add-prestation],[data-remove-prestation],[data-create-prestation-equipment],[data-edit-prestation-equipment],[data-gamme],[data-complexite],[data-tva],[data-export-appro-csv],[data-export-appro-json],[data-copy-appro-json],[data-configure-equipment],[data-apply-similar],[data-remove-catalogue-item],[data-reset-auto]');
   if(!el)return;
   if(el.dataset.choice!==undefined){d.options.type_projet=el.dataset.choice;save();render();return}
   if(el.dataset.addEquipment){d.installation.equipments.push(newEquipment(el.dataset.addEquipment,el.dataset.zone||''));save();render();return}
@@ -502,6 +504,15 @@ function clickHandler(e){
   if(el.dataset.createPrestationEquipment){const p=d.petits_travaux.prestations.find(x=>x.id===el.dataset.createPrestationEquipment);if(p){p.equipment=newEquipment(el.dataset.equipmentKind||'element_specifique');save();render()}return}
   if(el.dataset.editPrestationEquipment){step=2;render();return}
   if(el.dataset.configureEquipment){activeEquipmentId=el.dataset.configureEquipment;step=2;render();return}
+  if(el.dataset.applySimilar){
+    const source=(d.installation.equipments||[]).find(x=>x.id===el.dataset.applySimilar);if(!source)return;
+    const key=API.similarEquipmentKey?.(source);let count=0;
+    d.installation.equipments=(d.installation.equipments||[]).map(target=>{
+      if(target.id===source.id||!key||API.similarEquipmentKey?.(target)!==key)return target;
+      const copy=API.copyEquipmentCharacteristics?.(source,target);if(!copy)return target;count++;return copy;
+    });
+    save(false);render();flash(count?`Caractéristiques appliquées à ${count} élément${count>1?'s':''} similaire${count>1?'s':''}`:'Aucun élément similaire à mettre à jour',count?'ok':'warn');return;
+  }
   if(el.dataset.removeCatalogueItem!==undefined){const path=el.dataset.catalogueArray;const arr=get(d,path);if(Array.isArray(arr)){arr.splice(Number(el.dataset.removeCatalogueItem),1);set(d,path,arr);save(false);render()}return}
   if(el.dataset.resetAuto){set(d,el.dataset.resetAuto,undefined);save(false);render();return}
   if(el.dataset.gamme){d.options.gamme=el.dataset.gamme;save();render();return}
