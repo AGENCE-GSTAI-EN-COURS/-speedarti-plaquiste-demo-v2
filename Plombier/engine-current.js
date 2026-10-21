@@ -270,6 +270,21 @@
     const prefKey=slotPreferenceKey(eq,key);const pref=d?.settings?.slot_preferences?.[prefKey];
     return {prefKey,selection:hasCatalogue(pref)?pref:null,source:hasCatalogue(pref)?'preference_entreprise':'introuvable'};
   }
+  function similarEquipmentKey(eq){
+    if(!eq?.kind)return '';
+    const subtype=String(eq.subtype||'');
+    const config=eq.kind==='evier'?String(eq.config||'simple'):'';
+    const specificLabel=eq.kind==='element_specifique'?String(eq.label||'').trim().toLowerCase():'';
+    return [String(eq.kind),subtype,config,specificLabel].join('|');
+  }
+  function copyEquipmentCharacteristics(source,target){
+    if(!source||!target||!source.id||!target.id)return null;
+    if(similarEquipmentKey(source)!==similarEquipmentKey(target))return null;
+    const clone=JSON.parse(JSON.stringify(source));
+    clone.id=target.id;
+    clone.zone=target.zone||'';
+    return clone;
+  }
   function sanitaryTimeKey(eq){
     if(!eq||!eq.kind||['lave_linge','lave_vaisselle','element_specifique'].includes(eq.kind))return '';
     if(eq.kind==='wc')return 'wc_'+(eq.subtype||'poser');
@@ -955,5 +970,5 @@ function annexe2For(kind,subtype=''){let key=kind;if(kind==='wc'){if(subtype==='
     if(!d.nom_calcul)throw new Error('Le nom du calcul est requis');
     return d.options?.type_projet==='petits_travaux'?petits(d):complete(d);
   }
-  window.SpeedArtiPlombierCurrent={calculate,previewNetwork:(d)=>{const x=computeNetwork(d,d?.installation?.equipments||[]);return {...x,autoTimeH:networkTimeProposal(x,(d.options?.type_tuyau||'per').toLowerCase())}},ANNEXE1_DEFAULTS,FORFAITS_DEFAULTS,PIPE_FALLBACK,TECH_REF_CODES,resolveTechnicalReference,EQUIPMENT_AVERAGE_PRICES,equipmentAveragePrice,ANNEXE2_COMPONENTS,annexe2For,AUTO_COMPONENT_PREFERENCES,AUTO_COMPONENT_DEFAULTS,autoComponentKind,isAutoComponent,autoComponentProposal,companyComponentPreference,slotPreferenceKey,slotPreferenceSelection,sanitaryTimeKey,companyTimePreference};
+  window.SpeedArtiPlombierCurrent={calculate,previewNetwork:(d)=>{const x=computeNetwork(d,d?.installation?.equipments||[]);return {...x,autoTimeH:networkTimeProposal(x,(d.options?.type_tuyau||'per').toLowerCase())}},ANNEXE1_DEFAULTS,FORFAITS_DEFAULTS,PIPE_FALLBACK,TECH_REF_CODES,resolveTechnicalReference,EQUIPMENT_AVERAGE_PRICES,equipmentAveragePrice,ANNEXE2_COMPONENTS,annexe2For,AUTO_COMPONENT_PREFERENCES,AUTO_COMPONENT_DEFAULTS,autoComponentKind,isAutoComponent,autoComponentProposal,companyComponentPreference,slotPreferenceKey,slotPreferenceSelection,similarEquipmentKey,copyEquipmentCharacteristics,sanitaryTimeKey,companyTimePreference};
 })();
