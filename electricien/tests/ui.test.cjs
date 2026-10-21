@@ -24,6 +24,7 @@ async function run(){
     await page.locator('button[data-step="1"]').click();
     await change(page,'input[data-path="rooms.chambre"]',4);
     await page.locator('button[data-step="2"]').click();
+    assert.equal(await page.locator('select[data-catalog-finition="priseSimple"]').inputValue(),'blanc','default price averages white outlets');
     await change(page,'input[data-path="pointOverrides.generalSockets"]',26);
     await change(page,'input[data-path="pointOverrides.kitchenSockets"]',6);
     await change(page,'input[data-path="appareillage.socketDistribution.double"]',4);
