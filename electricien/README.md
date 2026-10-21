@@ -1,4 +1,4 @@
-# Démo Chiffrage Électricien SpeedArti — V6.2
+# Démo Chiffrage Électricien SpeedArti — V6.3
 
 Cette démo conserve le parcours existant SpeedArti et intègre les règles métier validées avec Guillaume, le catalogue appareillage multi-gammes et les corrections de fiabilisation V6.1.
 
@@ -38,3 +38,12 @@ Démo de validation métier avant intégration dans SpeedArti.
 
 ## Ángel — dépendance explicite
 Consulter `ANGEL_KNOWLEDGE_DELTA_V62.md`. Les évolutions métier doivent être réintégrées dans la base de connaissances Ángel **existante**. Ce dépôt démo ne modifie ni le dépôt source SpeedArti, ni sa base Ángel de production ; l'enrichissement reste À TRAITER avant clôture globale.
+
+## V6.3 — commandes d'éclairage et forfait VMC à 3 bouches
+- Étape Points : quantités « simples allumages », « va-et-vient » et « éclairages à 3 points de commande » indépendantes, éditables (champ vide = retour à l'AUTO).
+- Le moteur recalcule les points lumineux, les commandes (1/simple, 2/va-et-vient, 3/éclairage 3 points), les métrés, les circuits, les fournitures, les temps et le total. Les anciennes corrections globales de points lumineux/commandes sont mises de côté dès qu'un groupe est personnalisé.
+- Bouton « Réinitialiser les éclairages en AUTO ». Les autres réglages et les choix d'appareillage restent conservés.
+- Forfait VMC : **3 bouches incluses**, affectées à **1 cuisine, 1 WC et 1 SDB ou SDE** (aucune quatrième bouche cellule incluse).
+- Pour une pièce supplémentaire de ces catégories (autre cuisine, WC, SDB/SDE), +1 bouche automatique et +115 € HT ; l'artisan peut saisir d'autres bouches (cellier, buanderie, etc.) dans un champ distinct. Chaque supplément n'est compté qu'une seule fois.
+- Les 3 bouches et le détail des ajouts apparaissent à l'étape Circuits et au résultat, sans ligne fictive à 0 €.
+- Tests de non-régression moteur et tests Chromium desktop/mobile étendus à ces fonctionnalités.
