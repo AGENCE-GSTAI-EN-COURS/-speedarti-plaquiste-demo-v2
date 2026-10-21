@@ -15,3 +15,6 @@
 .catalog-resolved>small{font-size:10px;color:#64748b;line-height:1.35;overflow-wrap:anywhere}
 .full-btn{width:100%;height:40px}.fake-label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}
 @media(max-width:900px){.catalog-families{grid-template-columns:1fr}.catalog-family .c4{grid-column:span 6}}
+
+/* V6.5 : catalogue consultable sur téléphone sans débordement de page. */
+.catalog-inventory{max-width:100%;overflow-x:auto;margin:12px 0}.catalog-inventory table{min-width:620px}.catalog-inventory td{vertical-align:top;white-space:normal}.catalog-card details{margin:16px 0}.catalog-card summary{cursor:pointer;font-weight:700;padding:10px 0}

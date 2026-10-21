@@ -31,7 +31,10 @@
         priseSimple:{brand:"moyen",gamme:"",finition:"blanc",choiceId:""},
         priseDouble:{brand:"moyen",gamme:"",choiceId:""},
         priseTriple:{brand:"moyen",gamme:"",choiceId:""},
-        interrupteur:{brand:"moyen",gamme:"",choiceId:""},
+        interrupteur:{brand:"moyen",gamme:"",finition:"blanc",choiceId:""},
+        vaEtVient:{brand:"moyen",gamme:"",finition:"blanc",choiceId:""},
+        permutateur:{brand:"moyen",gamme:"",finition:"blanc",choiceId:""},
+        poussoir:{brand:"moyen",gamme:"",finition:"blanc",choiceId:""},
         rj45:{brand:"moyen",gamme:"",choiceId:""},
         tv:{brand:"moyen",gamme:"",choiceId:""},
         volet:{brand:"moyen",gamme:"",choiceId:""},
@@ -148,7 +151,7 @@
       ["priseSimple","Prises simples",dist.simple],
       ["priseDouble","Prises doubles",dist.double],
       ["priseTriple","Prises triples",dist.triple],
-      ["interrupteur","Interrupteurs / commandes",num(points.switches)],
+      ...Object.entries(E.commandQuantities(state,points)).filter(([key])=>key!=="unclassified").map(([key,qty])=>[key,CS.FAMILY_DEFS[key].label,qty]),
       ["rj45","RJ45",num(points.rj45)],
       ["tv","TV / antenne",num(points.tv)],
       ["volet","Commandes volets roulants",num(c.volets)],
@@ -162,18 +165,26 @@
     const brands=CS.brands(key);
     const brandOpts=[["moyen","Prix moyen"]].concat(brands.map(b=>[b,b]));
     const gammeOpts=cfg.brand!=="moyen"?CS.gammes(key,cfg.brand):[];
-    const choiceOpts=cfg.brand!=="moyen"?CS.choices(key,cfg.brand,cfg.gamme||"",cfg.finition||""):[];
+    const choiceOpts=cfg.brand!=="moyen"?CS.choices(key,cfg.brand,cfg.gamme||"",cfg.finition||"",cfg.pose||"Encastré",cfg.generation||""):[];
     const resolved=CS.resolve(state,key);
     return `<div class="catalog-family">
-      <div class="catalog-family-head"><div><b>${esc(label)}</b><span>${qty} unité(s) à chiffrer</span></div><strong>${resolved&&resolved.price!=null?euro(resolved.price)+" / u":"Non chiffré"}</strong></div>
+      <div class="catalog-family-head"><div><b>${esc(label)}</b><span>${qty} unité(s) à chiffrer</span></div><strong>${resolved&&resolved.price!=null?euro(resolved.price)+" HT / u":"Non chiffré"}</strong></div>
       <div class="grid catalog-fields">
         <div class="field c4"><label>Marque</label><select class="select" data-catalog-brand="${esc(key)}">${optionTags(brandOpts,cfg.brand)}</select></div>
         ${cfg.brand!=="moyen"?`<div class="field c4"><label>Gamme</label><select class="select" data-catalog-gamme="${esc(key)}">${optionTags(gammeOpts.map(g=>[g,g]),cfg.gamme,"Toutes les gammes / moyenne")}</select></div>`:`<div class="c4 surfacebox"><b>Prix moyen</b><br>${resolved&&resolved.price!=null?euro(resolved.price):"—"}<br><span class="muted">Toutes marques compatibles.</span></div>`}
-        <div class="field c4"><label>Couleur</label><select class="select" data-catalog-finition="${esc(key)}">${optionTags([["","Toutes couleurs"],["blanc","Blanc / blanc craie / Pure"],["anthracite","Anthracite"],["noir","Noir"],["aluminium","Aluminium"],["gris","Gris"]],cfg.finition||"")}</select></div>
-        ${cfg.brand!=="moyen"?`<div class="field c8"><label>Référence et modèle exact</label><select class="select" data-catalog-choice="${esc(key)}">${optionTags(choiceOpts.map(c=>[c.id,`${c.label} — ${c.price===null?"Prix à compléter":euro(c.price)}`]),cfg.choiceId,choiceOpts.length?"Choisir une référence / moyenne":"Aucun modèle compatible : prix non chiffré")}</select></div>`:""}
+        <div class="field c4"><label>Couleur</label><select class="select" data-catalog-finition="${esc(key)}">${optionTags([["","Toutes couleurs"],...CS.finishes(key,cfg.brand==="moyen"?"":cfg.brand,cfg.gamme||"").map(f=>[f,f==="blanc"?"Blanc / blanc craie / Pure":f])],cfg.finition||"")}</select></div>
+        <div class="field c4"><label>Pose</label><select class="select" data-catalog-pose="${esc(key)}">${optionTags([["Encastré","Encastré"],["Saillie","Saillie"]],cfg.pose||"Encastré")}</select></div>
+        ${cfg.brand!=="moyen"&&CS.generations(key,cfg.brand,cfg.gamme||"").length?`<div class="field c4"><label>Génération</label><select class="select" data-catalog-generation="${esc(key)}">${optionTags(CS.generations(key,cfg.brand,cfg.gamme||"").map(g=>[g,g]),cfg.generation||"","Toutes les générations")}</select></div>`:""}
+        ${cfg.brand!=="moyen"?`<div class="field c8"><label>Référence et modèle exact</label><select class="select" data-catalog-choice="${esc(key)}">${optionTags(choiceOpts.map(c=>[c.id,`${c.label} — ${c.price===null?"Prix à compléter":euro(c.price)}${c.provisional?" · historique à confirmer":""}`]),cfg.choiceId,choiceOpts.length?"Choisir une référence / moyenne":"Aucun modèle compatible : prix non chiffré")}</select></div>`:""}
       </div>
-      <div class="catalog-resolved"><span>${resolved?.exact?"Référence exacte chiffrée":resolved?.price===null?"Pas de référence complète chiffrée":"Prix moyen indicatif"}</span><b>${esc(resolved?.label||"")}</b>${resolved?.ref?`<small>Réf. ${esc(resolved.ref)}</small>`:""}${resolved?.note?`<small>${esc(resolved.note)}</small>`:""}${resolved?.source && /^https:\/\//.test(resolved.source)?`<small><a href="${esc(resolved.source)}" target="_blank" rel="noopener noreferrer">Vérifier chez le fournisseur ↗</a></small>`:""}</div>
+      <div class="catalog-resolved"><span>${resolved?.provisional?"Référence historique : prix et composition à confirmer":resolved?.exact?"Référence exacte chiffrée":resolved?.price===null?"Pas de référence complète chiffrée":"Prix moyen indicatif"}</span><b>${esc(resolved?.label||"")}</b>${resolved?.ref?`<small>Réf. ${esc(resolved.ref)}</small>`:""}${resolved?.note?`<small>${esc(resolved.note)}</small>`:""}${resolved?.source && /^https:\/\//.test(resolved.source)?`<small><a href="${esc(resolved.source)}" target="_blank" rel="noopener noreferrer">Vérifier chez le fournisseur ↗</a></small>`:""}</div>
     </div>`;
+  }
+  function inventoryRows(query=""){
+    const q=query.trim().toLocaleLowerCase("fr");
+    const found=CS.items.filter(i=>!q||[i.ref,i.brand,i.gamme,i.generation,i.finition,i.fonction,...i.manufacturerRefs].join(" ").toLocaleLowerCase("fr").includes(q));
+    return `<p class="note">${found.length} référence(s) trouvée(s)${found.length>30?" — 30 premières affichées, préciser la recherche":""}. Prix des composants seuls indiqués pour consultation ; choisir un ensemble complet dans la famille du chantier.</p>
+      <div class="catalog-inventory"><table><thead><tr><th>Référence</th><th>Produit</th><th>Prix public HT</th><th>Contrôle</th></tr></thead><tbody>${found.slice(0,30).map(i=>`<tr><td>${esc(i.ref)}</td><td>${esc([i.brand,i.gamme,i.generation,i.fonction,i.finition,i.type].filter(Boolean).join(" · "))}<br>${esc(i.manufacturerRefs.join(" + "))}</td><td>${i.priceHT===null?"À compléter":euro(i.priceHT)}</td><td>${i.verified?"Fiche vérifiée":"Historique à confirmer"}${/^https:\/\//.test(i.source)?`<br><a href="${esc(i.source)}" target="_blank" rel="noopener noreferrer">Fiche fournisseur ↗</a>`:""}</td></tr>`).join("")}</tbody></table></div>`;
   }
   function renderAppareillage(points){
     if(!CS) return note("Catalogue multi-gammes indisponible dans cette copie de démo.","alert err");
@@ -189,7 +200,8 @@
     const online=window.SpeedArtiCatalogueEnLigne||{};
     return `<div class="card catalog-card"><div class="row between"><div><h2>Appareillage & finitions</h2><p class="muted">Chaque famille peut avoir sa propre marque, gamme et finition. Le choix global ci-dessous est uniquement un raccourci.</p></div><span class="status-chip">Catalogue appareillage + web</span></div>
       <p class="note">${online.status==="ready"?`Complément en ligne : ${online.added} références ajoutées, ${online.updated} références actualisées ; relevé du ${esc(online.verifiedAt||"")}.`:"Complément web momentanément inaccessible : catalogue historique conservé."}
-      <a href="./catalogue-en-ligne.json" target="_blank" rel="noopener noreferrer">Sources et références vérifiées ↗</a> — Prix indicatifs relevés sur les fiches ; pas des tarifs fournisseur en direct.</p>
+      ${online.invalid?`<strong>${online.invalid} entrée(s) rejetée(s) : vérifier le complément catalogue.</strong>`:""}
+      <a href="./catalogue-en-ligne.json" target="_blank" rel="noopener noreferrer">Sources et références vérifiées ↗</a> — Prix publics indicatifs HT. Les références historiques restent à confirmer ; seules les fiches validées entrent dans les moyennes.</p>
       <div class="catalog-global"><div class="grid">
         <div class="field c4"><label>Choix global rapide</label><select class="select" data-path="appareillage.global.brand">${optionTags([["moyen","Prix moyen"]].concat(allBrands.map(b=>[b,b])),g.brand)}</select></div>
         ${g.brand!=="moyen"?`<div class="field c4"><label>Gamme globale</label><select class="select" data-path="appareillage.global.gamme">${optionTags(globalGammes.map(x=>[x,x]),g.gamme,"Choisir / laisser libre")}</select></div>`:""}
@@ -204,7 +216,9 @@
         ${!dist.valid?`<div class="alert err">La répartition dépasse le nombre de prises calculé. Réduis les blocs doubles/triples.</div>`:""}
       </div>
       <div class="catalog-families">${families.map(([k,l,q])=>renderFamilySelector(k,l,q)).join("")}</div>
-      <p class="note">Règle de prix : tarif artisan/fournisseur → référence exacte choisie → moyenne marque/gamme → moyenne générale. Les câbles et gaines restent au prix moyen.</p>
+      <details><summary>Parcourir les ${CS.items.length} références et composants</summary><label for="catalog-search">Rechercher une référence, une gamme, une couleur ou une fonction</label><input id="catalog-search" class="input" type="search" placeholder="Ex. WE100, blanc, poussoir…"><div id="catalog-inventory-results">${inventoryRows()}</div></details>
+      <details><summary>Voir les autres familles du catalogue</summary><p class="note">Ces familles ne sont pas utilisées dans ce chantier. Leurs choix seront conservés pour les besoins correspondants. Un poussoir ne remplace pas automatiquement un va-et-vient ou un permutateur.</p><div class="catalog-families">${CS.familyKeys().filter(k=>!families.some(f=>f[0]===k)).map(k=>renderFamilySelector(k,CS.FAMILY_DEFS[k].label,0)).join("")}</div></details>
+      <p class="note">Prix HT de la référence choisie ou moyenne des ensembles complets validés. Un prix absent reste à compléter. Les câbles et gaines restent au prix moyen.</p>
     </div>`;
   }
 
@@ -499,6 +513,10 @@
   }
 
   function bind(){
+    const search=document.querySelector("#catalog-search");
+    if(search)search.addEventListener("input",()=>{
+      document.querySelector("#catalog-inventory-results").innerHTML=inventoryRows(search.value);
+    });
     document.querySelectorAll("[data-path]").forEach(el=>{
       el.addEventListener("change",()=>{
         let v;
@@ -526,7 +544,7 @@
     document.querySelectorAll("[data-catalog-brand]").forEach(el=>{
       el.addEventListener("change",()=>{
         const cfg=familyCfg(el.dataset.catalogBrand); cfg.brand=el.value; cfg.gamme=""; cfg.choiceId="";
-        cfg.finition=el.dataset.catalogBrand==="priseSimple" && el.value!=="moyen"?"blanc":"";
+        cfg.finition="blanc";cfg.generation="";
         save(false);render();
       });
     });
@@ -542,6 +560,14 @@
         save(false);render();
       });
     });
+    for(const field of ["pose","generation"]){
+      document.querySelectorAll(`[data-catalog-${field}]`).forEach(el=>{
+        el.addEventListener("change",()=>{
+          const cfg=familyCfg(el.getAttribute(`data-catalog-${field}`));
+          cfg[field]=el.value;cfg.choiceId="";save(false);render();
+        });
+      });
+    }
     document.querySelectorAll("[data-catalog-choice]").forEach(el=>{
       el.addEventListener("change",()=>{
         const cfg=familyCfg(el.dataset.catalogChoice); cfg.choiceId=el.value;
@@ -553,7 +579,7 @@
         const g=state.appareillage.global||{brand:"moyen",gamme:""};
         CS.familyKeys().forEach(key=>{
           const cfg=familyCfg(key); cfg.brand=g.brand||"moyen"; cfg.choiceId="";
-          cfg.finition=key==="priseSimple" && cfg.brand!=="moyen"?"blanc":"";
+          cfg.finition="blanc";cfg.generation="";
           if(cfg.brand==="moyen") cfg.gamme="";
           else cfg.gamme=CS.gammes(key,cfg.brand).includes(g.gamme)?g.gamme:"";
         });

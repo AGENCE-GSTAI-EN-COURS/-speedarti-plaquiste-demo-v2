@@ -11,13 +11,13 @@
   const modules=["./catalogue-selector.js","./engine-current.js","./app.js","../shared/field-navigation.js"];
 
   function validateRow(x){
-    return x&&typeof x==="object"&&
-      ["ID","Marque","Gamme","Fonction","Référence fabricant","Source URL"].every(k=>typeof x[k]==="string"&&x[k].trim()) &&
+    return x&&typeof x==="object"&& /^202[0-9]-[0-9]{2}-[0-9]{2}$/.test(x["Date relevé"]) &&
+      ["ID","Marque","Gamme","Fonction","Référence fabricant","Source URL","Date relevé"].every(k=>typeof x[k]==="string"&&x[k].trim()) &&
       /^https:\/\/(www\.)?(123elec\.com|elec44\.fr)\//i.test(x["Source URL"]) &&
       (
         (x["Prix TTC"]===null && x["Prix HT"]===null) ||
-        (typeof x["Prix TTC"]==="number" && x["Prix TTC"]>0 &&
-          typeof x["Prix HT"]==="number" && x["Prix HT"]>0 &&
+        (Number.isFinite(x["Prix TTC"]) && x["Prix TTC"]>0 &&
+          Number.isFinite(x["Prix HT"]) && x["Prix HT"]>0 &&
           Math.abs(x["Prix TTC"]/1.2-x["Prix HT"])<.02)
       );
   }
@@ -34,15 +34,18 @@
   }
   (async()=>{
     try{
-      const res=await fetch("./catalogue-en-ligne.json",{cache:"no-cache"});
+      const res=await fetch("./catalogue-en-ligne.json",{cache:"no-cache",signal:AbortSignal.timeout(8000)});
       if(!res.ok)throw Error("HTTP "+res.status);
       const remote=await res.json();
       if(!Array.isArray(remote.items)||remote.schemaVersion!==1)throw Error("Schéma catalogue incompatible");
       const seen=new Map(base.items.map((item,index)=>[key(item),index]));
+      const ids=new Map(base.items.map(item=>[item.ID,key(item)]));
       let added=0,updated=0,invalid=0;
       remote.items.forEach(item=>{
         if(!validateRow(item)){invalid++;return;}
         const k=key(item),current=seen.get(k);
+        if(ids.has(item.ID)&&ids.get(item.ID)!==k){invalid++;return;}
+        ids.set(item.ID,k);
         if(current!==undefined){
           base.items[current]={...base.items[current],...item};
           updated++;

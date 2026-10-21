@@ -1,4 +1,4 @@
-name: "Électricien V6.3 - Commandes éclairage et VMC"
+name: "Électricien V6.5 - Catalogue et compositions"
 on:
   push:
     paths:
@@ -15,7 +15,9 @@ jobs:
         with:
           node-version: "22"
       - name: "Contrôles du moteur et des prix"
-        run: node electricien/tests/engine.test.cjs
+        run: |
+          node electricien/tests/engine.test.cjs
+          node electricien/tests/loader.test.cjs
       - name: "Installer Chromium de test"
         run: |
           npm install --no-save playwright@1.55.1
@@ -31,7 +33,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: electricien-v63-captures
+          name: electricien-v65-captures
           path: |
             electricien-desktop-result.png
             electricien-mobile-result.png

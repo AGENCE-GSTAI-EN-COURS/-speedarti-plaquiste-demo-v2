@@ -1,4 +1,4 @@
-# Démo Chiffrage Électricien SpeedArti — V6.3
+# Démo Chiffrage Électricien SpeedArti — V6.5
 
 Cette démo conserve le parcours existant SpeedArti et intègre les règles métier validées avec Guillaume, le catalogue appareillage multi-gammes et les corrections de fiabilisation V6.1.
 
@@ -55,3 +55,17 @@ Consulter `ANGEL_KNOWLEDGE_DELTA_V62.md`. Les évolutions métier doivent être 
 - Contrôle de composition marque, gamme, génération et finition avant d'additionner mécanisme / enjoliveur / plaque. Un produit sans prix (dont Mosaic blanc simple) reste affiché comme **prix à compléter**, jamais converti en devis définitif.
 - Chargement séquentiel : base historique → JSON complément (avec repli si indisponible) → sélecteur → moteur → interface.
 - La démo n'est **pas un service de synchronisation de fournisseurs en temps réel**. Le catalogue personnel/standard de la production SpeedArti n'a pas été modifié ; intégration à planifier avec l'équipe.
+
+
+## V6.5 — catalogue traçable et commandes séparées
+Voir [AUDIT_REFERENCES_V65.md](./AUDIT_REFERENCES_V65.md) et son inventaire ligne par ligne [JSON](./AUDIT_REFERENCES_V65.json).
+
+- 297 entrées conservées/enrichies : 27 ajouts, 175 fiches vérifiées, 122 références historiques à confirmer.
+- Prix publics HT/TTC corrigés ; aucun tarif temps réel ni tarif personnel prétendu.
+- Familles distinctes simples allumages, va-et-vient, poussoirs et permutateurs. Trois commandes : 2 va-et-vient + 1 permutateur.
+- Pose et génération filtrables. Référence disparue : prix inconnu, sans substitution par une moyenne.
+- Recherche dans toutes les références et tous les composants. Compositions explicites vérifiées ; mécanismes seuls non facturés comme ensembles complets.
+- Les valeurs historiques non confirmées restent consultables ; elles n'entrent pas dans les moyennes et une sélection historique garde le devis provisoire.
+- Audit reproductible : `node electricien/tools/audit-catalogue.cjs` (historique Git complet requis).
+- Vérifications : tests moteur, chargement et navigateur desktop/mobile. Le rapport précise ce qui a réellement été exécuté.
+- Ángel : delta [V6.5](./ANGEL_KNOWLEDGE_DELTA_V65.md), à intégrer dans la base existante avec l'équipe ; aucune écriture en production.

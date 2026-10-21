@@ -159,13 +159,14 @@
         name:`${baseName} — ${resolved.label||resolved.brand||"Catalogue"}`, qty:q, unit:"u",
         price:resolved.price,total:Math.round(q*resolved.price*100)/100,
         source:resolved.source||"Catalogue appareillage multi-gammes 2026",
+        unverified:resolved.provisional===true,
         note:[ref,resolved.note,note].filter(Boolean).join(" · ")
       };
     }
     // Un modèle double/triple, volet, VMC ou extérieur ne reprend jamais un PU d'une autre fonction.
     const selectedBrand=state.appareillage?.families?.[familyKey]?.brand;
     // Seule la famille prix moyen non contrainte autorise un prix historique de même fonction.
-    const compatibleFallback=(!selectedBrand||selectedBrand==="moyen")&&["priseSimple","interrupteur","rj45","tv"].includes(familyKey);
+    const compatibleFallback=!CS&&(!selectedBrand||selectedBrand==="moyen")&&["priseSimple","interrupteur","rj45","tv"].includes(familyKey);
     return catalogueMaterial(compatibleFallback?fallbackArticleId:null,category,baseName,q,"u",
       [note,resolved?.partial?"Composition choisie incomplète : plaque/enjoliveur requis.":"Référence ou composition compatible indisponible : prix non chiffré."].filter(Boolean).join(" · "));
   }
@@ -259,6 +260,16 @@
     };
     out.communicationCabinet=(out.rj45+out.tv)>0 ? 1 : 0;
     return out;
+  }
+
+  function commandQuantities(state,points,total=points.switches){
+    const simple=n(points.simple),vv=n(points.vv),three=n(points.three);
+    if(total===simple+2*vv+3*three){
+      return {interrupteur:simple,vaEtVient:2*vv+2*three,permutateur:three,poussoir:0};
+    }
+    // Les achats rénovation et les anciens totaux manuels ne décrivent pas le type.
+    // Conserver leur quantité, avec une validation artisan explicite nécessaire.
+    return {interrupteur:total,vaEtVient:0,permutateur:0,poussoir:0,unclassified:total>0};
   }
 
   // Forfaits VMC validés : trois bouches de base comprises, affectées aux trois familles.
@@ -499,7 +510,13 @@
     if(socketDist.simple>0){ const m=configuredMaterial(state,"priseSimple","Appareillage","Prise 16A 2P+T simple",socketDist.simple,"prise_electrique",alerts); if(m) materials.push(m); }
     if(socketDist.double>0){ const m=configuredMaterial(state,"priseDouble","Appareillage","Bloc prise double 2P+T",socketDist.double,"prise_electrique",alerts,"Un bloc double représente 2 prises normatives."); if(m) materials.push(m); }
     if(socketDist.triple>0){ const m=configuredMaterial(state,"priseTriple","Appareillage","Bloc prise triple 2P+T",socketDist.triple,"prise_electrique",alerts,"Un bloc triple représente 3 prises normatives."); if(m) materials.push(m); }
-    if(points.switches>0){ const m=configuredMaterial(state,"interrupteur","Appareillage","Interrupteurs / commandes",billed.switches,"interrupteur",alerts); if(m) materials.push(m); }
+    const commandQty=commandQuantities(state,points,billed.switches);
+    const commandLabels={interrupteur:"Interrupteurs simples",vaEtVient:"Va-et-vient",permutateur:"Permutateurs",poussoir:"Poussoirs"};
+    for(const key of Object.keys(commandLabels)){
+      const m=configuredMaterial(state,key,"Appareillage",commandLabels[key],commandQty[key],null,alerts);
+      if(m){if(commandQty.unclassified)m.unverified=true; materials.push(m);}
+    }
+    if(commandQty.unclassified) alerts.push("Types des commandes achetées à confirmer : le total manuel ou les achats rénovation ne détaillent pas les simples allumages, va-et-vient et permutateurs.");
 
     const nbBoites=billed.generalSockets+billed.kitchenSockets+billed.switches+billed.lightPoints;
     if(nbBoites>0) materials.push(catalogueMaterial("boite_encastrement","Appareillage","Boîtes d'encastrement Ø67",nbBoites,"u","Quantité conservée de la logique Électricien existante ; la répartition multi-postes n'altère pas encore ce calcul de validation."));
@@ -806,8 +823,10 @@
     if(unknownMaterials.length) blockers.push("Fournitures non chiffrées : compléter les références et prix avant tout devis définitif.");
     if(unknownMaterials.length) alerts.push(`${unknownMaterials.length} ligne(s) matériau ne disposent toujours pas d'un prix validé : elles restent non chiffrées.`);
 
+    const unverifiedMaterials=materials.filter(m=>m.unverified);
+    if(unverifiedMaterials.length) blockers.push("Références historiques ou types de commandes à confirmer avant tout devis définitif.");
     return {
-      points,circuits,tableau,materials,labor,fixed,materialTotal,unknownMaterials,
+      points,circuits,tableau,materials,labor,fixed,materialTotal,unknownMaterials,unverifiedMaterials,
       knownTotal: materialTotal+labor.total+fixed.total,
       alerts:[...new Set(alerts)],
       blockers:[...new Set(blockers)],
@@ -816,6 +835,6 @@
   }
 
   window.ElectricienEngine={
-    ROOM_PROFILES,HEATING,SOMFY,FIXED,LENGTH_RATIOS,DIFFICULTY,TABLEAU_HOURS,CONTROL_FIXED_PRICE,CATALOGUE_PRICES,lengthProfileForSurface,computeAutoPoints,effectivePoints,vmcMouthsFor,audit,calculate
+    ROOM_PROFILES,HEATING,SOMFY,FIXED,LENGTH_RATIOS,DIFFICULTY,TABLEAU_HOURS,CONTROL_FIXED_PRICE,CATALOGUE_PRICES,lengthProfileForSurface,computeAutoPoints,effectivePoints,commandQuantities,vmcMouthsFor,audit,calculate
   };
 })();

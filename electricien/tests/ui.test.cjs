@@ -58,8 +58,8 @@ async function run(){
     await page.locator('select[data-catalog-gamme="priseSimple"]').selectOption('Dooxie');
     const online=await page.evaluate(()=>window.SpeedArtiCatalogueEnLigne);
     assert.equal(online.status,'ready','online curated JSON loaded');
-    assert.equal(online.added,12,'12 new online references');
-    assert.equal(online.updated,2,'2 existing references updated');
+    assert(online.added>=33,'catalogue V6.5 loaded with original appendice and new references');
+    assert(online.updated>=138,'historical sources updated'); assert.equal(online.invalid,0,'no rejected curated row');
     assert.equal(await page.locator('select[data-catalog-finition="priseSimple"]').inputValue(),'blanc','white preselected for simple sockets');
     const choices=page.locator('select[data-catalog-choice="priseSimple"] option');
     assert(await choices.count()>1,'Dooxie models');
@@ -69,6 +69,16 @@ async function run(){
     assert((await page.locator('select[data-catalog-choice="priseSimple"] option').allTextContents()).some(t=>t.includes('WE100P')),'white Essensya WE100P exposed');
     await page.locator('select[data-catalog-choice="priseSimple"]').selectOption('WEB-2026-005');
     assert((await page.locator('#content').innerText()).includes('WE100P'),'exact Hager brand reference selected');
+    assert((await page.locator('#content').innerText()).includes('WE100 + WE401'),'manufacturer BOM visible');
+    await page.locator('select[data-catalog-brand="vaEtVient"]').selectOption('Hager');
+    await page.locator('select[data-catalog-gamme="vaEtVient"]').selectOption('Essensya');
+    const vvOptions=await page.locator('select[data-catalog-choice="vaEtVient"] option').allTextContents();
+    assert(vvOptions.some(t=>t.includes('WE001P')),'complete Hager switch available');
+    assert(!vvOptions.some(t=>t.includes('WE010P')),'permutator is not a switch');
+    await page.locator('select[data-catalog-brand="permutateur"]').selectOption('Hager');
+    await page.locator('select[data-catalog-gamme="permutateur"]').selectOption('Essensya');
+    const perOptions=await page.locator('select[data-catalog-choice="permutateur"] option').allTextContents();
+    assert(perOptions.some(t=>t.includes('WE010P')),'permutator complete Hager selectable');
     assert((await page.locator('a[href*="elec44.fr"]').count())>0,'vendor link for verified reference');
     await page.locator('select[data-catalog-brand="priseSimple"]').selectOption('Legrand');
     await page.locator('select[data-catalog-gamme="priseSimple"]').selectOption('Dooxie');
@@ -86,6 +96,7 @@ async function run(){
     assert((await page.locator('#content').innerText()).includes('Résultat du chiffrage'));
     assert((await page.locator('#content').innerText()).includes('3 bouches comprises'),'VMC package shown in final result');
     assert((await page.locator('#content').innerText()).includes('Va-et-vient'),'detailed lighting in result');
+    assert((await page.locator('#content').innerText()).includes('Permutateurs'),'permutator supplies in result');
     await page.reload({waitUntil:'networkidle'});
     assert((await page.locator('#content').innerText()).includes('Résultat du chiffrage'),'result state retained');
     assert.deepEqual(consoleErrors,[],'no JavaScript page errors');

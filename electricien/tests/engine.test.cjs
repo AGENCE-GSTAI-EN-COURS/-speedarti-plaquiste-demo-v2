@@ -215,7 +215,7 @@ test('simple, va-et-vient et éclairage 3 points personnalisables indépendammen
   assert.equal(p.switches,10);
   const r=E.calculate(s);
   assert.equal(r.points.switches,10);
-  assert(r.materials.some(m=>m.name.includes('Interrupteurs / commandes')&&m.qty===10));
+  assert.equal(r.materials.filter(m=>/^catalogue:(interrupteur|vaEtVient|permutateur):/.test(m.articleId)||['Interrupteurs simples','Va-et-vient','Permutateurs'].includes(m.name)).reduce((n,m)=>n+m.qty,0),10);
 });
 test('changer va-et-vient modifie câblage, main d’oeuvre et prix',()=>{
   const s1=base();s1.pointOverrides={simple:3,vv:0,three:1};
@@ -294,10 +294,11 @@ for(const item of online.items){
 vm.runInNewContext(fs.readFileSync(path.join(root,'catalogue-selector.js'),'utf8'),combined,{filename:'catalogue-selector.js'});
 vm.runInNewContext(fs.readFileSync(path.join(root,'engine-current.js'),'utf8'),combined,{filename:'engine-current.js'});
 const WEB=combined.window.ElectricienCatalogueSelector, WEB_ENGINE=combined.window.ElectricienEngine;
-test('catalogue en ligne : 12 nouvelles références, 2 mises à jour, aucun doublon',()=>{
-  assert.equal(online.items.length,14);
-  assert.equal(WEB.items.length,270);
-  assert.equal(new Set(WEB.items.map(x=>[x.brand,x.gamme,x.generation,x.ref,x.type].join('|'))).size,270);
+test('catalogue V6.5 : historique préservé et aucune identité doublonnée',()=>{
+  const audit=JSON.parse(fs.readFileSync(path.join(root,'AUDIT_REFERENCES_V65.json')));
+  assert.equal(WEB.items.length,audit.audited);
+  assert.equal(WEB.items.length,270+audit.added);
+  assert.equal(new Set(WEB.items.map(x=>[x.brand,x.gamme,x.generation,x.ref,x.type].join('|'))).size,WEB.items.length);
 });
 test('URLs et prix du catalogue vérifié traçables',()=>{
   for(const item of online.items){
@@ -332,8 +333,8 @@ test('Legrand Mosaic : simple blanche, double et triple référencées sans inve
   assert.equal(single.price,null,'tarif exact inconnu : ne pas reprendre le dès 5,99');
   const dbl=WEB.choices('priseDouble','Legrand','Mosaic','blanc');
   const triple=WEB.choices('priseTriple','Legrand','Mosaic','blanc');
-  assert(dbl.some(x=>x.ref==='277804L-2221-C'&&x.price===11.28));
-  assert(triple.some(x=>x.ref==='277806L-3311-C'&&x.price===28.57));
+  assert(dbl.some(x=>x.ref==='277804L-2221-C'&&x.price===Number((online.items.find(i=>i['Référence fabricant']==='277804L-2221-C')['Prix HT']).toFixed(2))));
+  assert(triple.some(x=>x.ref==='277806L-3311-C'&&x.price===Number((online.items.find(i=>i['Référence fabricant']==='277806L-3311-C')['Prix HT']).toFixed(2))));
 });
 test('prise blanche Mosaic sans prix reste ligne à chiffrer, pas devis définitif',()=>{
   const s=base();s.appareillage.families={
@@ -365,7 +366,7 @@ test('prix blanc exact alimente le calcul et conserve la référence fournisseur
   const r=WEB_ENGINE.calculate(s);
   const m=r.materials.find(x=>x.articleId==='catalogue:priseSimple:WEB-2026-005');
   assert(m);
-  assert.equal(m.price,2.89);
+  assert.equal(m.price,3.48);
   assert(m.note.includes('WE100P'));
   assert(m.source.includes('elec44.fr'));
 });
@@ -375,4 +376,69 @@ test('aucune composition incomplète ne chiffre sa plaque comme prise complète'
   if(semi){assert.equal(semi.partial,true);assert.equal(semi.price,null);}
 });
 
+test('fonctions de commandes séparées, pas de poussoir ou de double dans les va-et-vient',()=>{
+  for(const key of ['interrupteur','vaEtVient']){
+    assert(WEB.choices(key).every(c=>!c.components.some(i=>i.fonction==='Poussoir'||i.fonction==='Permutateur'||/double/i.test(i.modele))));
+  }
+  assert(WEB.choices('permutateur').every(c=>c.components[0].fonction==='Permutateur'));
+});
+test('montage 3 commandes : 2 va-et-vient et 1 permutateur par éclairage',()=>{
+  const s=base();s.pointOverrides={simple:3,vv:2,three:1};
+  const r=WEB_ENGINE.calculate(s);
+  assert.equal(WEB_ENGINE.commandQuantities(s,r.points).interrupteur,3);
+  assert.equal(WEB_ENGINE.commandQuantities(s,r.points).vaEtVient,6);
+  assert.equal(WEB_ENGINE.commandQuantities(s,r.points).permutateur,1);
+  assert(r.materials.some(m=>m.name.startsWith('Permutateurs')&&m.qty===1));
+});
+test('référence sauvegardée disparue : aucun remplacement par une moyenne',()=>{
+  const s=base();s.appareillage.families.priseSimple={brand:'Hager',gamme:'Essensya',choiceId:'disparue'};
+  assert.equal(WEB.resolve(s,'priseSimple').price,null);
+  assert(WEB_ENGINE.calculate(s).unknownMaterials.some(m=>m.name.includes('Prise')));
+});
+test('S920062 et S920072 sont des composants, jamais des prises complètes',()=>{
+  for(const [key,ref] of [['priseDouble','S920062'],['priseTriple','S920072']]){
+    const c=WEB.choices(key).find(c=>c.ref===ref);assert(c);assert(c.partial);assert.equal(c.price,null);
+  }
+});
+test('aucune génération ni pose étrangère dans les choix filtrés',()=>{
+  for(const gen of ['2011','2025']) assert(WEB.choices('priseSimple','Schneider Electric','Odace','blanc','Encastré',gen).every(c=>c.generation===gen&&c.pose==='Encastré'));
+  assert(!WEB.choices('priseTriple','Legrand','Mosaic','blanc','Encastré').some(c=>c.ref==='277806L-3311-C'));
+});
+test('finition mixte blanche et grise exclue du blanc par défaut',()=>{
+  assert(!WEB.isWhite('Blanc craie / gris galet'));
+  assert(!WEB.choices('priseSimple','','','blanc').some(c=>c.ref==='S920052-PCGG'));
+});
+test('prix public Hager TTC : conversion HT sans double conversion',()=>{
+  const x=online.items.find(x=>x['Référence fabricant']==='WE100P');
+  assert.equal(x['Prix TTC'],4.17);assert.equal(x['Prix HT'],3.48);
+  assert.equal(online.items.find(x=>x['Référence fabricant']==='S920052-P')['Prix TTC'],5.94);
+});
+test('prix historique choisi reste provisoire et exclu des moyennes',()=>{
+  const c=WEB.choices('priseExtSimple','Hager','Cubyko').find(c=>!c.partial);assert(c);
+  const s=base();s.circuits.exteriorSockets=1; s.appareillage.families.priseExtSimple={brand:c.brand,gamme:c.gamme,pose:c.pose,choiceId:c.id};
+  assert.equal(WEB.resolve(s,'priseExtSimple').provisional,true);
+  assert(!WEB_ENGINE.calculate(s).pricingComplete);
+  s.appareillage.families.priseExtSimple.choiceId='';assert.equal(WEB.resolve(s,'priseExtSimple').price,null);
+});
+test('audit individuel et prix valides : correspondance de chaque article chargé',()=>{
+  const a=JSON.parse(fs.readFileSync(path.join(root,'AUDIT_REFERENCES_V65.json')));
+  assert.equal(a.rows.length,WEB.items.length);
+  for(const x of WEB.items){assert(a.rows.some(r=>r.id===x.id));if(x.verified)assert(/^https:/.test(x.source));}
+});
+test('fiches validées complètes ont une nomenclature fournisseur explicite',()=>{
+  for(const x of WEB.items.filter(x=>x.verified&&x.type==='Complet')){
+    assert(x.manufacturerRefs.length>0,x.ref);assert(x.composition?.length>0,x.ref);
+  }
+});
+test('compositions contrôlées : prix = somme des composants, sans facture de mécanisme seul',()=>{
+  for(const row of online.items.filter(r=>r['Type article']==='Composition')){
+    const key=row['Fonction']==='Permutateur'?'permutateur':row['Nb postes']===2?'priseDouble':'priseTriple';
+    const c=WEB.choices(key,row.Marque,row.Gamme).find(c=>c.id===row.ID);assert(c?.verified&&c.exact,row.ID);
+    assert.equal(c.price,Math.round(row['Composants validés'].reduce((s,p)=>s+p.ht*p.qty,0)*100)/100);
+    for(const part of row['Composants validés'])assert(part.qty===1&&/^https:\/\//.test(part.url));
+  }
+});
+test('Unica : support et plaque absents ne sont pas inventés',()=>{
+  const c=WEB.choices('priseSimple','Schneider Electric','Unica').find(c=>c.ref==='NU305918');assert(c);assert(c.partial);assert.equal(c.price,null);
+});
 console.log('OK '+passed+' contrôles moteur');
