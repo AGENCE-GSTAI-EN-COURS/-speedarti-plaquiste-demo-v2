@@ -1,6 +1,14 @@
 (function(){
   const C=window.SpeedArtiRoofCatalog;
   if(!C||!Array.isArray(C.products)) return;
+  const battenCorrections={
+    'edilians-mediane-plus':{min:2.66,mean:2.72,max:2.78,gauge_min_mm:360,gauge_mean_mm:368,gauge_max_mm:376,source:'EDILIANS Encyclopédie 2026 — MÉDIANE PLUS Gélis'},
+    'edilians-double-tenord':{min:3.70,mean:3.85,max:4.00,gauge_min_mm:250,gauge_mean_mm:260,gauge_max_mm:270,source:'EDILIANS Encyclopédie 2026 — DOUBLE TÉNORD'},
+    'edilians-hp-13-evolutive':{min:2.85,mean:3.17,max:3.57,gauge_min_mm:280,gauge_mean_mm:315,gauge_max_mm:350,source:'EDILIANS Encyclopédie 2026 — HP 13 ÉVOLUTIVE'},
+    'edilians-losangee-ste-foy':{min:2.63,mean:2.81,max:3.03,gauge_min_mm:330,gauge_mean_mm:355,gauge_max_mm:380,source:'EDILIANS Encyclopédie 2026 — LOSANGÉE Ste Foy'},
+    'edilians-plein-sud-reabilis':{min:2.47,mean:2.55,max:2.63,gauge_min_mm:380,gauge_mean_mm:392,gauge_max_mm:404,source:'EDILIANS Encyclopédie 2026 — PLEIN SUD RÉABILIS'},
+    'edilians-plate-artis-17x27':{min:10.00,mean:10.53,max:11.11,gauge_min_mm:90,gauge_mean_mm:95,gauge_max_mm:100,source:'EDILIANS Encyclopédie 2026 — PLATE ARTIS 17X27'}
+  };
   const corrections={
     'edilians-beauvoise-graphite':{min:20.2,max:20.7,source:'EDILIANS Encyclopédie 2026 — BEAUVOISE GRAPHITE'},
     'edilians-plate-17x27':{min:59.5,max:66.1,source:'EDILIANS Encyclopédie 2026 — PLATE 17X27'},
@@ -42,6 +50,14 @@
     'edilians-arboise-ecaille':{min:22.5,max:22.5,source:'EDILIANS Encyclopédie 2026 — ARBOISE ÉCAILLE'}
   };
   for(const p of C.products){
+    const bc=battenCorrections[p.id];
+    if(bc){
+      p.technical=p.technical||{};
+      p.technical.battens_linear_m_per_m2={min:bc.min,max:bc.max,mean:bc.mean};
+      p.technical.battens_linear_m_per_m2_source=bc.source;
+      p.technical.gauge={min:bc.gauge_min_mm,max:bc.gauge_max_mm,mean:bc.gauge_mean_mm};
+      p.technical.gauge_unit='mm';
+    }
     const c=corrections[p.id];
     if(!c||p.technical?.tiles_per_m2) continue;
     p.technical=p.technical||{};
@@ -53,5 +69,5 @@
     }
     p.validation.catalogue_correction='source_fabricant_auditee';
   }
-  C.corrections={version:'2026-10-13-v4',count:Object.keys(corrections).length};
+  C.corrections={version:'2026-10-21-v5',count:Object.keys(corrections).length,batten_count:Object.keys(battenCorrections).length};
 })();
