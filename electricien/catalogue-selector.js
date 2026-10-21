@@ -102,7 +102,7 @@
     const plates=platesFor(base);
     // Si la gamme ne propose aucune plaque dans notre base, garder le composant comme sélection partielle explicite.
     if(!plates.length){
-      const c=directChoice(base,key); c.exact=false; c.partial=true; c.note="Composition incomplète : plaque/cadre compatible absent de la base de démo."; return [c];
+      const c=directChoice(base,key); c.exact=false; c.partial=true; c.price=null; c.note="Composition incomplète : plaque/cadre compatible absent de la base de démo."; return [c];
     }
     const needsAccessory=base.type==="Mécanisme" && accessoryCandidates(base,key).length>0;
     const out=[];
@@ -128,7 +128,7 @@
       });
     });
     if(out.length) return out;
-    const c=directChoice(base,key); c.exact=false; c.partial=true; c.note="Composition incomplète : aucun enjoliveur/plaque de finition compatible n'est présent dans la base de démo."; return [c];
+    const c=directChoice(base,key); c.exact=false; c.partial=true; c.price=null; c.note="Composition incomplète : aucun enjoliveur/plaque de finition compatible n'est présent dans la base de démo."; return [c];
   }
   function isWhite(v){ return /blanc|pure|craie/i.test(txt(v)); }
   function matchesFinish(v,finish){
