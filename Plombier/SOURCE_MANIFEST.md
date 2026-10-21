@@ -1,4 +1,23 @@
-# SpeedArti — Plombier v0.8.0 — Sources du Sprint E
+# SpeedArti — Plombier v0.8.1 — Sources Sprint F
+
+## Demande métier — 21 octobre 2026
+
+- remplacer le libellé « Distance chauffe-eau → salle de bain » par « Distance chauffe-eau → distance moyenne salle de bain » ;
+- pouvoir répliquer toute la configuration d’un sanitaire complet vers les autres éléments similaires.
+
+## Règle de copie sécurisée
+
+Une cible est similaire si :
+- même `kind` ;
+- même `subtype` ;
+- pour un évier : même `config` ;
+- pour un élément spécifique : même désignation.
+
+La copie conserve toujours :
+- `id` cible ;
+- `zone` cible.
+
+Tout le reste des caractéristiques configurables du sanitaire source est recopié. Aucun rapprochement entre sous-types différents n’est autorisé.
 
 ## Source métier principale
 
