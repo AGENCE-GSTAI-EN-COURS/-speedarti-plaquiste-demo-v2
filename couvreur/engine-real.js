@@ -7,7 +7,7 @@ const PRICE={
   underlay:2.60,counterBatten:1.35,batten:1.25,eavesApron:5.80,ridge:5.90,rake:6.20,closer:7.50,eavesComb:2.90,valley:11.50,flashing:13,
   ventTile:29,outlet125:79,outlet160:88,roofWindow:520,chimneyFlashing:175,fixing:0.12,
   gutter:{zinc:18.5,pvc:9.5,aluminium:21,cuivre:52},gutterHook:2.3,gutterOutlet:14,gutterEnd:6.5,gutterJoint:5.5,downpipe:18,elbow:8.5,collar:4.2,dolphin:26,
-  boxGutter:42,fascia:{bois:15,pvc:22,aluminium:29,zinc:33},
+  boxGutter:42,fascia:{bois:15,pvc:22,aluminium:29,zinc:33},fasciaCladding:{pvc:13,aluminium:18,zinc:22},fasciaCornerOuter:9,fasciaCornerInner:9,fasciaJoint:4.5,fasciaEnd:3.5,soffit:{pvc:24,bois:28,aluminium:35},soffitProfile:5.5,soffitVent:6.5,
   scaffold:14,lifeline:260,guardrail:18,safetyNet:9,roofLadder:85,materialLift:420,anchor:34
 };
 const round=(v,d=2)=>Math.round((Number(v)||0)*10**d)/10**d; const ceil=v=>Math.ceil(Math.max(0,Number(v)||0));
@@ -165,7 +165,25 @@ class CouvreurCalculateur{
    }
    // Zinguerie - lengths are always explicit, never derived from hidden doubles
    if(o.gouttieres){const gl=Math.max(0,Number(dm.longueur_gouttiere)||0),gt=o.type_gouttiere||'zinc',gp=PRICE.gutter[gt]||PRICE.gutter.zinc,nd=Math.max(0,Number(dm.nombre_descentes)||0),hd=Math.max(0,Number(dm.hauteur_descentes)||0);if(gl){items.push(item('gutter',`Gouttière ${gt}`,'Zinguerie',gl,'ml',gp));items.push(item('gutter_hooks','Crochets de gouttière','Zinguerie',gl/Math.max(.1,Number(o.ecartement_crochets_m)||.5),'u',PRICE.gutterHook,'Entraxe saisi'));items.push(item('gutter_ends','Fonds de gouttière','Zinguerie',Math.max(2,Number(o.nombre_fonds)||2),'u',PRICE.gutterEnd));items.push(item('gutter_joints','Jonctions de gouttière','Zinguerie',Math.max(0,Number(o.nombre_jonctions)||0),'u',PRICE.gutterJoint))}if(nd){items.push(item('gutter_outlet','Naissances','Zinguerie',nd,'u',PRICE.gutterOutlet));items.push(item('downpipes','Descentes EP','Zinguerie',nd*hd,'ml',PRICE.downpipe));items.push(item('elbows','Coudes de descente','Zinguerie',nd*Math.max(0,Number(o.coudes_par_descente)||2),'u',PRICE.elbow));items.push(item('collars','Colliers de descente','Zinguerie',nd*Math.ceil(hd/Math.max(.1,Number(o.ecartement_colliers_m)||1.5)),'u',PRICE.collar));items.push(item('dolphins','Dauphins / raccords bas','Zinguerie',nd,'u',PRICE.dolphin))}}
-   if(Number(dm.longueur_cheneau)>0)items.push(item('box_gutter','Chéneau','Zinguerie',dm.longueur_cheneau,'ml',PRICE.boxGutter));if(Number(dm.longueur_planche_rive)>0){const typ=o.type_planche_rive||'bois';items.push(item('fascia',`Planche de rive ${typ}`,'Zinguerie',dm.longueur_planche_rive,'ml',PRICE.fascia[typ]||PRICE.fascia.bois))}
+   if(Number(dm.longueur_cheneau)>0)items.push(item('box_gutter','Chéneau','Zinguerie',dm.longueur_cheneau,'ml',PRICE.boxGutter));
+   if(Number(dm.longueur_planche_rive)>0){
+     const typ=o.type_planche_rive||'bois',len=Math.max(0,Number(dm.longueur_planche_rive)||0);
+     items.push(item('fascia',`Planche de rive ${typ}`,'Finitions de rive',len,'ml',PRICE.fascia[typ]||PRICE.fascia.bois,'Base de démonstration'));
+     const hab=o.habillage_planche_rive||'aucun';
+     if(hab!=='aucun')items.push(item('fascia_cladding',`Habillage planche de rive ${hab}`,'Finitions de rive',len,'ml',PRICE.fasciaCladding[hab]||0,'Base de démonstration'));
+     const ext=Math.max(0,Number(o.angles_exterieurs_rive)||0),inn=Math.max(0,Number(o.angles_interieurs_rive)||0),joins=Math.max(0,Number(o.jonctions_rive)||0),ends=Math.max(0,Number(o.embouts_rive)||0);
+     if(ext)items.push(item('fascia_outer_corners','Angles extérieurs planche de rive','Finitions de rive',ext,'u',PRICE.fasciaCornerOuter));
+     if(inn)items.push(item('fascia_inner_corners','Angles intérieurs planche de rive','Finitions de rive',inn,'u',PRICE.fasciaCornerInner));
+     if(joins)items.push(item('fascia_joints','Jonctions / éclisses de finition','Finitions de rive',joins,'u',PRICE.fasciaJoint));
+     if(ends)items.push(item('fascia_ends','Embouts / finitions de rive','Finitions de rive',ends,'u',PRICE.fasciaEnd));
+   }
+   if(o.dessous_toit){
+     const len=Math.max(0,Number(dm.longueur_dessous_toit)||0),depth=Math.max(0,Number(dm.profondeur_dessous_toit)||0),area=round(len*depth,2),typ=o.type_dessous_toit||'pvc';
+     if(area)items.push(item('soffit',`Dessous de toit ${typ}`,'Dessous de toit',area,'m²',PRICE.soffit[typ]||PRICE.soffit.pvc,'Surface longueur × profondeur'));
+     else alerts.push({level:'warning',message:'Dessous de toit activé : renseignez la longueur et la profondeur.'});
+     if(len&&o.profils_depart_dessous_toit)items.push(item('soffit_profiles','Profils de départ / finition dessous de toit','Dessous de toit',len*2,'ml',PRICE.soffitProfile,'Deux rives longitudinales estimées'));
+     const vents=Math.max(0,Number(o.grilles_ventilation_dessous_toit)||0);if(vents)items.push(item('soffit_vents','Grilles de ventilation dessous de toit','Dessous de toit',vents,'u',PRICE.soffitVent));
+   }
    // Safety explicit dimensions
    if(o.echafaudage){const area=Math.max(0,Number(dm.longueur_echafaudage)||0)*Math.max(0,Number(dm.hauteur_echafaudage)||0);if(area)items.push(item('scaffold','Échafaudage de façade','Sécurité',area,'m²',PRICE.scaffold,'Dimensions saisies'));else alerts.push({level:'warning',message:'Échafaudage activé : renseignez longueur et hauteur.'})}
    if(o.ligne_vie)items.push(item('lifeline','Ligne de vie temporaire','Sécurité',1,'u',PRICE.lifeline));if(o.garde_corps&&Number(dm.longueur_garde_corps)>0)items.push(item('guardrail','Garde-corps périphériques','Sécurité',dm.longueur_garde_corps,'ml',PRICE.guardrail));if(o.filets&&Number(dm.surface_filets)>0)items.push(item('nets','Filets antichute','Sécurité',dm.surface_filets,'m²',PRICE.safetyNet));if(o.echelle_toit)items.push(item('roof_ladder','Échelle de toit','Sécurité',Math.max(1,Number(o.nombre_echelles)||1),'u',PRICE.roofLadder));if(o.monte_materiaux)items.push(item('lift','Monte-matériaux','Sécurité',1,'u',PRICE.materialLift));if(Number(o.nombre_ancrages)>0)items.push(item('anchors','Points d’ancrage','Sécurité',o.nombre_ancrages,'u',PRICE.anchor));
@@ -179,5 +197,5 @@ class CouvreurCalculateur{
    return {product:p,input,surfaces:{totale:roofArea,nette:roofArea,avec_pertes:round(roofArea*(1+waste/100),2),detail_par_face:{toiture:roofArea}},materiaux:items,main_oeuvre:{temps_estime_heures:duration,heures_homme:totalHH,decomposition:decomp,taux_horaire:Number(o.taux_horaire)||48,nombre_ouvriers:workers,cout_total:labor},totaux:{materiaux_ht:material,securite_ht:security,main_oeuvre_ht:labor,total_ht:total,tva:vat,total_ttc:round(total+vat,2)},stock_status:{disponible:true,articles_manquants:[]},recommandations:[`Modèle : ${p.manufacturer} ${p.model}`,`Fixation : ${fixing.reason}`,`Ventilation : ${vent.count} chatière(s) calculée(s)`],alertes:alerts,technical:{tiles_per_m2:tpm||null,tiles_per_m2_min:tileInfo.min,tiles_per_m2_max:tileInfo.max,tiles_per_m2_source:tileInfo.source,battens_ml_m2:bpm||null,battens_source:batten.source,battens_method:batten.method,gauge_mm:gauge||null,min_pitch:mp.value,validation:p.validation?.status||'unknown'}};
  }
 }
-window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,getBattenInfo:battenInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.5.0'};
+window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,getBattenInfo:battenInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.5.1'};
 })();
