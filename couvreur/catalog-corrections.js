@@ -30,6 +30,15 @@
     'edilians-plein-sud-reabilis':{min:2.47,mean:2.55,max:2.63,gauge_min_mm:380,gauge_mean_mm:392,gauge_max_mm:404,source:'EDILIANS Encyclopédie 2026 — PLEIN SUD RÉABILIS'},
     'edilians-plate-artis-17x27':{min:10.00,mean:10.53,max:11.11,gauge_min_mm:90,gauge_mean_mm:95,gauge_max_mm:100,source:'EDILIANS Encyclopédie 2026 — PLATE ARTIS 17X27'}
   };
+  const priceCorrections={
+    'edilians-mediane-plus':{
+      unit_price_ht:4.38,
+      currency:'EUR',
+      price_type:'public_catalogue_benchmark',
+      source:'Point.P — prix catalogue public Médiane Plus Rouergue relevé 2026-10-21, conversion TTC vers HT à 20%',
+      source_url:'https://www.pointp.fr/p/couverture/tuile-mediane-plus-gelis-101-rouergue-84-A6427698'
+    }
+  };
   const corrections={
     'edilians-beauvoise-graphite':{min:20.2,max:20.7,source:'EDILIANS Encyclopédie 2026 — BEAUVOISE GRAPHITE'},
     'edilians-plate-17x27':{min:59.5,max:66.1,source:'EDILIANS Encyclopédie 2026 — PLATE 17X27'},
@@ -71,6 +80,10 @@
     'edilians-arboise-ecaille':{min:22.5,max:22.5,source:'EDILIANS Encyclopédie 2026 — ARBOISE ÉCAILLE'}
   };
   for(const p of C.products){
+    const pc=priceCorrections[p.id];
+    if(pc){
+      p.pricing={...(p.pricing||{}),...pc};
+    }
     const bc=battenCorrections[p.id];
     if(bc){
       p.technical=p.technical||{};
@@ -90,5 +103,5 @@
     }
     p.validation.catalogue_correction='source_fabricant_auditee';
   }
-  C.corrections={version:'2026-10-21-v6',count:Object.keys(corrections).length,batten_count:Object.keys(battenCorrections).length};
+  C.corrections={version:'2026-10-21-v7',count:Object.keys(corrections).length,batten_count:Object.keys(battenCorrections).length,price_count:Object.keys(priceCorrections).length};
 })();
