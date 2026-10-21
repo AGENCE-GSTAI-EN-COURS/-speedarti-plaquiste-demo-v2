@@ -29,7 +29,7 @@
         velux_hauteur_cm:vp?.height_cm||null
       },
       _integration:{
-        schema:'couvreur-demo-0.4.0',
+        schema:'couvreur-demo-0.5.1',
         requires_production_contract_extension:true,
         reason:'Ne pas rabattre surface_toiture et le modèle exact sur les anciens champs génériques.'
       }
@@ -105,7 +105,7 @@
     const vp=root.SpeedArtiCouvreurReal?.getVeluxProduct?.(state?.options?.velux_product_id)||null;
     return {
       metier:'couvreur',
-      module_version:'0.4.0',
+      module_version:'0.5.1',
       nom_calcul:state?.nom_calcul||'',
       produit:p?{id:p.id,fabricant:p.manufacturer,modele:p.model,famille:p.family,source:p.source}:null,
       fenetre_toit:vp?{id:vp.id,fabricant:'VELUX',modele:vp.model,gamme:vp.range,dimension:vp.size_code,largeur_cm:vp.width_cm,hauteur_cm:vp.height_cm,prix_artisan_estime_ht:vp.artisan_ht}:null,
@@ -134,5 +134,5 @@
     return {total:tests.length,passed:tests.filter(t=>t.ok).length,failed:tests.filter(t=>!t.ok).length,tests};
   }
 
-  root.SpeedArtiCouvreurAdapter={buildDonneesChantierDraft,buildResultatCalculDraft,buildStockCandidates,buildAngelContext,runContractTests,version:'0.4.0'};
+  root.SpeedArtiCouvreurAdapter={buildDonneesChantierDraft,buildResultatCalculDraft,buildStockCandidates,buildAngelContext,runContractTests,version:'0.5.1'};
 })(typeof window!=='undefined'?window:globalThis);
