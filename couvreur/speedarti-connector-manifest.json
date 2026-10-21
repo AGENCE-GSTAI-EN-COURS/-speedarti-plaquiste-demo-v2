@@ -2,7 +2,7 @@
   "metadata": {
     "id": "speedarti-couvreur-connector-manifest",
     "module": "couvreur",
-    "module_version": "0.5.1",
+    "module_version": "0.5.2",
     "status": "ADAPTER_READY_NOT_CONNECTED",
     "generated_from_read_only_audit": "GSTAI-Sp/speedarti-v2@869c845cea5e8066d713baea21b57be913da18d6",
     "audit_date": "2026-10-13",
@@ -105,6 +105,11 @@
       "severity": "FIXED_IN_DEMO",
       "finding": "Les planches de rive étaient mélangées aux gouttières et les dessous de toit absents.",
       "required_change": "Conserver les catégories indépendantes Finitions de rive et Dessous de toit."
+    },
+    {
+      "severity": "FIXED_IN_DEMO",
+      "finding": "Le prix des tuiles était calculé par famille et un prix manuel pouvait suivre un autre modèle.",
+      "required_change": "Conserver un prix et une clé d'override propres à chaque product_id; privilégier les tarifs fournisseur/catalogue sourcés."
     }
   ],
   "connectors": [
