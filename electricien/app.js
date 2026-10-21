@@ -28,7 +28,7 @@
       global:{brand:"moyen",gamme:""},
       socketDistribution:{double:0,triple:0},
       families:{
-        priseSimple:{brand:"moyen",gamme:"",choiceId:""},
+        priseSimple:{brand:"moyen",gamme:"",finition:"blanc",choiceId:""},
         priseDouble:{brand:"moyen",gamme:"",choiceId:""},
         priseTriple:{brand:"moyen",gamme:"",choiceId:""},
         interrupteur:{brand:"moyen",gamme:"",choiceId:""},
@@ -169,7 +169,8 @@
       <div class="grid catalog-fields">
         <div class="field c4"><label>Marque</label><select class="select" data-catalog-brand="${esc(key)}">${optionTags(brandOpts,cfg.brand)}</select></div>
         ${cfg.brand!=="moyen"?`<div class="field c4"><label>Gamme</label><select class="select" data-catalog-gamme="${esc(key)}">${optionTags(gammeOpts.map(g=>[g,g]),cfg.gamme,"Toutes les gammes / moyenne")}</select></div>`:`<div class="c4 surfacebox"><b>Prix moyen</b><br>${resolved&&resolved.price!=null?euro(resolved.price):"—"}<br><span class="muted">Toutes marques compatibles.</span></div>`}
-        ${cfg.brand!=="moyen"?`<div class="field c4"><label>Couleur</label><select class="select" data-catalog-finition="${esc(key)}">${optionTags([["","Toutes couleurs"],["blanc","Blanc / blanc craie / Pure"],["anthracite","Anthracite"],["noir","Noir"],["aluminium","Aluminium"],["gris","Gris"]],cfg.finition||"")}</select></div><div class="field c8"><label>Référence et modèle exact</label><select class="select" data-catalog-choice="${esc(key)}">${optionTags(choiceOpts.map(c=>[c.id,`${c.label} — ${c.price===null?"Prix à compléter":euro(c.price)}`]),cfg.choiceId,choiceOpts.length?"Choisir une référence / moyenne":"Aucun modèle compatible : prix non chiffré")}</select></div>`:""}
+        <div class="field c4"><label>Couleur</label><select class="select" data-catalog-finition="${esc(key)}">${optionTags([["","Toutes couleurs"],["blanc","Blanc / blanc craie / Pure"],["anthracite","Anthracite"],["noir","Noir"],["aluminium","Aluminium"],["gris","Gris"]],cfg.finition||"")}</select></div>
+        ${cfg.brand!=="moyen"?`<div class="field c8"><label>Référence et modèle exact</label><select class="select" data-catalog-choice="${esc(key)}">${optionTags(choiceOpts.map(c=>[c.id,`${c.label} — ${c.price===null?"Prix à compléter":euro(c.price)}`]),cfg.choiceId,choiceOpts.length?"Choisir une référence / moyenne":"Aucun modèle compatible : prix non chiffré")}</select></div>`:""}
       </div>
       <div class="catalog-resolved"><span>${resolved?.exact?"Référence exacte chiffrée":resolved?.price===null?"Pas de référence complète chiffrée":"Prix moyen indicatif"}</span><b>${esc(resolved?.label||"")}</b>${resolved?.ref?`<small>Réf. ${esc(resolved.ref)}</small>`:""}${resolved?.note?`<small>${esc(resolved.note)}</small>`:""}${resolved?.source && /^https:\/\//.test(resolved.source)?`<small><a href="${esc(resolved.source)}" target="_blank" rel="noopener noreferrer">Vérifier chez le fournisseur ↗</a></small>`:""}</div>
     </div>`;
