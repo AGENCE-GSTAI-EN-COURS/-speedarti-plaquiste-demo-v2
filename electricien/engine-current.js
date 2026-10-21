@@ -241,10 +241,41 @@
 
   function effectivePoints(state){
     const a=computeAutoPoints(state), o=state.pointOverrides||{};
-    const val=(key,auto)=> o[key]===null || o[key]===undefined || o[key]==="" ? auto : n(o[key]);
-    const out={...a,generalSockets:val("generalSockets",a.generalSockets),kitchenSockets:val("kitchenSockets",a.kitchenSockets),lightPoints:val("lightPoints",a.lightPoints),switches:val("switches",a.switches),rj45:val("rj45",a.rj45),tv:val("tv",a.tv)};
+    const isManual=key=>o[key]!==null&&o[key]!==undefined&&o[key]!=="";
+    const val=(key,auto)=>isManual(key)?Math.max(0,Math.floor(n(o[key]))):auto;
+    // Un va-et-vient = deux commandes ; un éclairage à 3 points = trois commandes.
+    // Dès qu'une catégorie est corrigée par l'artisan, les totaux dérivent de cette répartition.
+    const lightingManual=["simple","vv","three"].some(isManual);
+    const simple=val("simple",a.simple),vv=val("vv",a.vv),three=val("three",a.three);
+    const derivedLightPoints=simple+vv+three+a.extraLight;
+    const derivedSwitches=simple+vv*2+three*3;
+    const out={...a,
+      generalSockets:val("generalSockets",a.generalSockets),
+      kitchenSockets:val("kitchenSockets",a.kitchenSockets),
+      simple,vv,three,lightingManual,
+      lightPoints:lightingManual?derivedLightPoints:val("lightPoints",a.lightPoints),
+      switches:lightingManual?derivedSwitches:val("switches",a.switches),
+      rj45:val("rj45",a.rj45),tv:val("tv",a.tv)
+    };
     out.communicationCabinet=(out.rj45+out.tv)>0 ? 1 : 0;
     return out;
+  }
+
+  // Forfaits VMC validés : trois bouches de base comprises, affectées aux trois familles.
+  // Les pièces additionnelles de ces mêmes familles et les autres bouches saisies sont facturées séparément.
+  function vmcMouthsFor(state){
+    const r=state.rooms||{},c=state.circuits||{};
+    const installed=Boolean(c.vmcType&&c.vmcType!=="none");
+    const kitchen=Math.max(0,Math.floor(n(r.cuisine)));
+    const wc=Math.max(0,Math.floor(n(r.wc)+n(r.wcHand)));
+    const bathing=Math.max(0,Math.floor(n(r.sdb)+n(r.sde)));
+    const extraAuto=installed
+      ?Math.max(0,kitchen-1)+Math.max(0,wc-1)+Math.max(0,bathing-1):0;
+    const extraManual=installed?Math.max(0,Math.floor(n(c.vmcExtraMouths))):0;
+    return {installed,included:installed?3:0,kitchen,wc,bathing,
+      extraAuto,extraManual,extra:extraAuto+extraManual,
+      total:installed?3+extraAuto+extraManual:0,
+      extraPrice:(extraAuto+extraManual)*FIXED.vmc.extraMouth};
   }
 
   function buildCircuits(state, points, alerts, blockers){
@@ -646,12 +677,22 @@
       const labels={carillon:"Carillon simple",visio:"Visiophone sans ouverture",visioGate:"Visiophone avec commande portail/portillon"};
       rows.push({label:labels[c.bellType],price}); total+=price;
     }
-    if(c.vmcType && c.vmcType!=="none"){
+    const vmc=vmcMouthsFor(state);
+    if(vmc.installed){
       const price=FIXED.vmc[c.vmcType];
       const labels={auto:"VMC simple flux autoréglable",hygro:"VMC simple flux hygroréglable",double:"VMC double flux"};
-      rows.push({label:labels[c.vmcType],price}); total+=price;
-      const extra=n(c.vmcExtraMouths);
-      if(extra){ const p=extra*FIXED.vmc.extraMouth; rows.push({label:`${extra} bouche(s) VMC supplémentaire(s)`,price:p}); total+=p; }
+      rows.push({label:labels[c.vmcType]+" — 3 bouches comprises : 1 cuisine, 1 WC, 1 SDB/SDE",price});
+      total+=price;
+      if(vmc.extraAuto){
+        const p=vmc.extraAuto*FIXED.vmc.extraMouth;
+        rows.push({label:vmc.extraAuto+" bouche(s) en plus selon la composition du logement",price:p});
+        total+=p;
+      }
+      if(vmc.extraManual){
+        const p=vmc.extraManual*FIXED.vmc.extraMouth;
+        rows.push({label:vmc.extraManual+" autre(s) bouche(s) ajoutée(s) par l’artisan",price:p});
+        total+=p;
+      }
       if(c.vmcRoof){ rows.push({label:"Sortie toiture VMC",price:FIXED.vmc.roof}); total+=FIXED.vmc.roof; }
     }
 
@@ -665,7 +706,7 @@
       const price=(item.material + item.hours*n(state.pricing.hourlyRate))*qty;
       rows.push({label:`${item.label} × ${qty}`,price,indicative:true}); total+=price;
     });
-    return {rows,total};
+    return {rows,total,vmc};
   }
 
   function normAlerts(state,points,alerts){
@@ -727,6 +768,11 @@
     const wet=n(state.rooms?.cuisine)+n(state.rooms?.wc)+n(state.rooms?.wcHand)+n(state.rooms?.sdb)+n(state.rooms?.sde)+n(state.rooms?.cellier)+n(state.rooms?.buanderie);
     if(wet>0&&(!c.vmcType||c.vmcType==="none")) add("warn","ELEC_VMC","Pièces humides sans VMC.");
     if((n(c.vmcExtraMouths)>0||c.vmcRoof)&&(!c.vmcType||c.vmcType==="none")) add("block","ELEC_VMC_ORPHAN","Options VMC sans VMC.");
+    if(c.vmcType&&c.vmcType!=="none"){
+      const v=vmcMouthsFor(state);
+      if(v.kitchen===0||v.wc===0||v.bathing===0)
+        add("warn","ELEC_VMC_BASE_ROOMS","VMC : le forfait comprend 1 bouche cuisine, 1 WC et 1 salle de bains/salle d’eau. Vérifier les pièces réellement desservies.");
+    }
     for(const [key,qty,label] of [["exteriorLight",n(c.exteriorLights),"Éclairage extérieur"],["exteriorSocket",n(c.exteriorSockets),"Prises extérieures"]]){
       if(qty>0 && n(c[key+"Route"])<=0)add("block","ELEC_OUT_ROUTE_"+key,label+" : longueur réelle du câblage absente.");
       if(qty>0 && (n(c[key+"Section"])<=0||n(c[key+"Breaker"])<=0||n(c[key+"CircuitCount"])<=0))
@@ -770,6 +816,6 @@
   }
 
   window.ElectricienEngine={
-    ROOM_PROFILES,HEATING,SOMFY,FIXED,LENGTH_RATIOS,DIFFICULTY,TABLEAU_HOURS,CONTROL_FIXED_PRICE,CATALOGUE_PRICES,lengthProfileForSurface,computeAutoPoints,effectivePoints,audit,calculate
+    ROOM_PROFILES,HEATING,SOMFY,FIXED,LENGTH_RATIOS,DIFFICULTY,TABLEAU_HOURS,CONTROL_FIXED_PRICE,CATALOGUE_PRICES,lengthProfileForSurface,computeAutoPoints,effectivePoints,vmcMouthsFor,audit,calculate
   };
 })();
