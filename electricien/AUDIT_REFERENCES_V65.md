@@ -78,7 +78,7 @@ Au niveau de chacune des trois marques, au moins une solution blanche encastrée
 - Tests chargement local : **4 scénarios PASS** (complément réel ; indisponibilité réseau ; prix/origine/ID invalides ; schéma inconnu).
 - `git diff --check` et vérifications de syntaxe JavaScript : PASS.
 - Tests Chromium automatisés ordinateur 1440 × 900 et mobile 390 × 844 : **PASS sur le commit `09ffb00e`**, [exécution 39621142881](https://github.com/thibaultmourlane7/-speedarti-plaquiste-demo-v2/actions/runs/39621142881), captures desktop/mobile conservées dans les artefacts.
-- Parcours dans le navigateur connecté sur la démo publiée : **à effectuer après publication**.
+- Parcours dans le navigateur connecté sur la démo publiée : **contrôle visuel effectué** : nouvelle interface V6.5 chargée (commandes séparées, prix HT, pose/génération et recherche des 297 entrées). Les sélections, calculs et sauvegardes sur ordinateur/mobile sont couverts par les tests Chromium ci-dessus ; pas de recette exhaustive de chaque référence sur téléphone physique..
 
 Les tests automatiques ne valent pas une recette artisan de chaque combinaison ni un essai sur téléphone physique.
 
@@ -94,7 +94,7 @@ Conserver une trace de chaque relevé et du prix précédent, puis exécuter les
 
 ## Commit livré
 
-Code fonctionnel V6.5 : `09ffb00e2e9eccf5f8928cf53390ffb5e72408c7`, poussé sur `main`. Un correctif de cache suit ce commit. Le commit courant du rapport est visible dans son historique GitHub ; les résultats ne sont pas présumés pour un commit non testé.
+Code fonctionnel V6.5 : `09ffb00e2e9eccf5f8928cf53390ffb5e72408c7`, poussé sur `main`. Correctif de cache : `112917a68e98ebbbd71bac3904e811e0912ddfd5`, validé par la seconde exécution. Le commit courant du rapport est visible dans son historique GitHub ; les résultats ne sont pas présumés pour un commit non testé.
 
 
-Correctif de cache publié : `112917a68e98ebbbd71bac3904e811e0912ddfd5`. Les 59 contrôles moteur et 4 scénarios de chargement sont également PASS après ce correctif. La recette du site public est en cours ; elle sera consignée après vérification.
+Correctif de cache publié : `112917a68e98ebbbd71bac3904e811e0912ddfd5`. Les 59 contrôles moteur et 4 scénarios de chargement sont également PASS après ce correctif. Le site public affiche la nouvelle interface. Le [second passage GitHub Actions 39621757298](https://github.com/thibaultmourlane7/-speedarti-plaquiste-demo-v2/actions/runs/39621757298) est PASS sur ce correctif : moteur, chargement, parcours ordinateur et mobile. Les captures sont disponibles dans les artefacts de cette exécution.
