@@ -1,10 +1,10 @@
-# Couvreur — Couche d'intégration SpeedArti V0.5.1
+# Couvreur — Couche d'intégration SpeedArti V0.5.2
 
 Le dépôt `GSTAI-Sp/speedarti-v2` a été audité **uniquement en lecture**. Cette couche prépare le raccordement sans modifier le dépôt source.
 
 ## Quantité de tuiles
 
-La V0.5.1 utilise le modèle fabricant exact :
+La V0.5.2 utilise le modèle fabricant exact :
 
 - valeur fabricant exacte quand elle existe ;
 - plage fabricant quand elle varie avec recouvrement / pureau ;
@@ -14,7 +14,7 @@ La V0.5.1 utilise le modèle fabricant exact :
 
 ## Fenêtres de toit VELUX
 
-La démo V0.5.1 ajoute une bibliothèque VELUX avec modèle/gamme, code dimension, dimensions physiques et prix web public sourcé. Le prix artisan affiché applique une estimation de -15 % demandée pour le chiffrage de démonstration. Ce n'est pas un tarif professionnel VELUX contractuel : un tarif fournisseur/pro réel doit toujours primer.
+La démo V0.5.2 ajoute une bibliothèque VELUX avec modèle/gamme, code dimension, dimensions physiques et prix web public sourcé. Le prix artisan affiché applique une estimation de -15 % demandée pour le chiffrage de démonstration. Ce n'est pas un tarif professionnel VELUX contractuel : un tarif fournisseur/pro réel doit toujours primer.
 
 ## Raccords et accessoires VELUX
 
@@ -54,3 +54,8 @@ Les 129 modèles de couverture de la démo disposent d'une consommation de litea
 ## Planches de rive et dessous de toit
 
 Ces postes sont séparés des gouttières. Le bloc Finitions de rive gère la planche, l'habillage, les angles, jonctions et embouts. Le bloc Dessous de toit calcule la surface à partir de la longueur × profondeur et ajoute matériau, profils et grilles de ventilation.
+
+
+## Prix des tuiles par modèle
+
+Le moteur V0.5.2 ne partage plus un prix de tuile entre tous les modèles d'une même famille. Chaque modèle possède sa propre clé de prix manuel. Les prix sourcés sont prioritaires ; à défaut, la démo affiche une base indicative calculée au modèle et clairement signalée comme telle.
