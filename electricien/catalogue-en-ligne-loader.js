@@ -28,7 +28,7 @@
   function loadNextScripts(){
     return modules.reduce((previous,url)=>previous.then(()=>new Promise((resolve,reject)=>{
       const el=document.createElement("script");
-      el.src=url;el.onload=resolve;el.onerror=()=>reject(new Error("Module introuvable: "+url));
+      el.src=url+"?v=6.5.1";el.onload=resolve;el.onerror=()=>reject(new Error("Module introuvable: "+url));
       document.body.appendChild(el);
     })),Promise.resolve());
   }

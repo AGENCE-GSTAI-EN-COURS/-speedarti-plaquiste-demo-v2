@@ -21,7 +21,7 @@ async function load(data,fail=false){
   assert.equal(valid.status.status,'ready');assert.equal(valid.status.invalid,0);
   const audit=JSON.parse(fs.readFileSync(path.join(root,'AUDIT_REFERENCES_V65.json')));
   assert.equal(valid.items.length,audit.audited);
-  assert.deepEqual(valid.loaded,['./catalogue-selector.js','./engine-current.js','./app.js','../shared/field-navigation.js']);
+  assert.deepEqual(valid.loaded,['./catalogue-selector.js','./engine-current.js','./app.js','../shared/field-navigation.js'].map(s=>s+'?v=6.5.1'));
   console.log('PASS complément réel chargé intégralement avant moteur et interface');
   const fallback=await load(null,true);assert.equal(fallback.items.length,258);assert.equal(fallback.status.status,'offline');assert.equal(fallback.loaded.length,4);
   console.log('PASS réseau indisponible : socle historique et interface maintenus sans faux succès');

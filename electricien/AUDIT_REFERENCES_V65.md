@@ -31,6 +31,7 @@ L'inventaire [AUDIT_REFERENCES_V65.json](./AUDIT_REFERENCES_V65.json) contient u
 - **Référence sauvegardée introuvable** : prix inconnu et demande de nouveau choix ; plus de remplacement silencieux par une moyenne.
 - **Pose/génération/finition** : filtres explicites. Une plaque grise avec mécanisme blanc n'entre pas dans la finition blanche par défaut. Le Mosaic triple en saillie n'entre pas dans une sélection encastrée.
 - **État des connaissances** : les références historiques non confirmées sont exclues des moyennes. Leur sélection exacte garde le résultat provisoire.
+- **Cache navigateur** : ressources CSS/JS versionnées (`v=6.5.1`) pour éviter une page V6.5 avec des scripts de V6.4 restés en cache.
 - **Réseau** : délai de chargement limité à huit secondes, repli explicite sur le socle, contrôle des origines/prix/collisions ID. Un échec du complément ne signifie pas un catalogue à jour.
 
 ## Compositions contrôlées ajoutées
@@ -76,7 +77,7 @@ Au niveau de chacune des trois marques, au moins une solution blanche encastrée
 - Tests moteur et catalogue locaux : **59 contrôles PASS**.
 - Tests chargement local : **4 scénarios PASS** (complément réel ; indisponibilité réseau ; prix/origine/ID invalides ; schéma inconnu).
 - `git diff --check` et vérifications de syntaxe JavaScript : PASS.
-- Tests Chromium automatisés ordinateur 1440 × 900 et mobile 390 × 844 : **exécution sur GitHub Actions à contrôler après publication**.
+- Tests Chromium automatisés ordinateur 1440 × 900 et mobile 390 × 844 : **PASS sur le commit `09ffb00e`**, [exécution 39621142881](https://github.com/thibaultmourlane7/-speedarti-plaquiste-demo-v2/actions/runs/39621142881), captures desktop/mobile conservées dans les artefacts.
 - Parcours dans le navigateur connecté sur la démo publiée : **à effectuer après publication**.
 
 Les tests automatiques ne valent pas une recette artisan de chaque combinaison ni un essai sur téléphone physique.
@@ -93,4 +94,4 @@ Conserver une trace de chaque relevé et du prix précédent, puis exécuter les
 
 ## Commit livré
 
-À renseigner après création du commit de livraison. Les états de publication et de tests ne sont pas présumés réussis.
+Code fonctionnel V6.5 : `09ffb00e2e9eccf5f8928cf53390ffb5e72408c7`, poussé sur `main`. Un correctif de cache suit ce commit. Le commit courant du rapport est visible dans son historique GitHub ; les résultats ne sont pas présumés pour un commit non testé.
