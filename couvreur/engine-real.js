@@ -32,6 +32,31 @@ function tileConsumptionInfo(p,o={}){
   }
   return {calculable:true,value:r.mean,min:r.min,max:r.max,exact:false,defaulted:true,source:'Moyenne de la plage fabricant retenue par défaut'};
 }
+function battenInfo(p,o={}){
+  const direct=numericRange(p?.technical?.battens_linear_m_per_m2);
+  if(direct){
+    const manual=Number(o.liteaux_ml_m2_manuel);
+    const value=Number.isFinite(manual)&&manual>0?manual:direct.mean;
+    return {calculable:true,value,min:direct.min,max:direct.max,source:Number.isFinite(manual)&&manual>0?'Valeur manuelle artisan':(p.technical?.battens_linear_m_per_m2_source||'Fiche fabricant'),method:'manufacturer'};
+  }
+  const manual=Number(o.liteaux_ml_m2_manuel);
+  if(Number.isFinite(manual)&&manual>0)return {calculable:true,value:manual,min:manual,max:manual,source:'Valeur manuelle artisan',method:'manual'};
+  const g=Number(p?.technical?.gauge?.mean);
+  if(Number.isFinite(g)&&g>0){
+    let value=null,source='Calcul automatique depuis le pureau fabricant';
+    if(g>=80)value=1000/g;
+    else if(g>=20)value=100/g;
+    else if(g>=2){value=g;source='Valeur ml/m² récupérée du catalogue fabricant'}
+    if(value)return {calculable:true,value:round(value,2),min:null,max:null,source,method:'derived_gauge'};
+  }
+  const uw=Number(p?.technical?.useful_width),t=Number(p?.technical?.tiles_per_m2?.mean);
+  if(Number.isFinite(uw)&&uw>0&&Number.isFinite(t)&&t>0){
+    const widthM=uw>=80?uw/1000:uw>=10?uw/100:uw;
+    const value=t*widthM;
+    if(value>0)return {calculable:true,value:round(value,2),min:null,max:null,source:'Calcul automatique depuis consommation tuiles × largeur utile fabricant',method:'derived_density_width'};
+  }
+  return {calculable:false,value:null,min:null,max:null,source:'Donnée liteaux non déterminable',method:'missing'};
+}
 function product(id){return PRODUCTS.find(p=>p.id===id)}
 function veluxProduct(id){return (VELUX.products||[]).find(p=>p.id===id)}
 function veluxProducts(){return (VELUX.products||[]).slice().sort((a,b)=>`${a.model} ${a.size_code} ${a.range}`.localeCompare(`${b.model} ${b.size_code} ${b.range}`,'fr'))}
@@ -80,7 +105,7 @@ class CouvreurCalculateur{
    const o=d.options||{},dm=d.dimensions||{},p=product(o.product_id);if(!p)throw new Error('Sélectionnez un modèle de couverture.');
    const roofArea=Math.max(0,Number(dm.surface_toiture)||0);if(!roofArea)throw new Error('Renseignez la surface de toiture à chiffrer.');
    const input={geometry:{roof_area_m2:roofArea,pitch_percent:Number(dm.pente_pourcent)||0,ridge_length_m:Number(dm.longueur_faitiere)||0,hip_length_m:Number(dm.longueur_aretiers)||0,valley_length_m:Number(dm.longueur_noues)||0,left_rake_length_m:Number(dm.rive_gauche)||0,right_rake_length_m:Number(dm.rive_droite)||0,eaves_length_m:Number(dm.longueur_egout)||0,wall_flashing_length_m:Number(dm.longueur_solin)||0},context:{zone:Number(o.zone)||1,exposure:o.exposition||'normal',underlay:o.ecran_sous_toiture!==false,coastal:!!o.bord_mer,mountain:!!o.montagne,high_vibration:!!o.vibrations,isolation_case:Number(o.cas_isolation)||1},openings:{roof_windows:Number(o.nombre_velux)||0,chimneys:Number(o.nombre_cheminees)||0,vmc_outlets_125:Number(o.sorties_vmc_125)||0,vmc_outlets_160:Number(o.sorties_vmc_160)||0,other_outlets:Number(o.autres_sorties)||0}};
-   const items=[],alerts=[],waste=Math.max(0,Number(o.perte_tuiles_pct)||0),tileInfo=tileConsumptionInfo(p,o),tpm=tileInfo.value,bpm=avg(p.technical.battens_linear_m_per_m2),gauge=avg(p.technical.gauge);
+   const items=[],alerts=[],waste=Math.max(0,Number(o.perte_tuiles_pct)||0),tileInfo=tileConsumptionInfo(p,o),tpm=tileInfo.value,batten=battenInfo(p,o),bpm=batten.value,gauge=avg(p.technical.gauge);
    const family=norm(p.family);const tilePrice=family.includes('canal')?PRICE.tile.canal:family.includes('plate')?PRICE.tile.plate:family.includes('petit')?PRICE.tile.petit_moule:family.includes('grand')?PRICE.tile.grand_moule:PRICE.tile.default;
    let tiles=0;if(tpm){
      tiles=ceil(roofArea*tpm*(1+waste/100));
@@ -90,7 +115,7 @@ class CouvreurCalculateur{
    }else alerts.push({level:'blocking',message:'Nombre de tuiles au m² absent de la fiche exploitable : ce modèle reste visible mais le poste tuiles est bloqué pour éviter une quantité inventée.'});
    if(o.ecran_sous_toiture!==false)items.push(item('underlay','Écran sous-toiture HPV','Sous-toiture',roofArea*(1+(Number(o.perte_ecran_pct)||0)/100),'m²',PRICE.underlay,'Quantité géométrique','Majoration saisie'));
    if(o.demi_liteaux){const ratio=Math.max(0,Number(o.demi_liteaux_ml_m2)||0);if(ratio)items.push(item('counter_battens','Demi-liteaux / contre-liteaux','Sous-toiture',roofArea*ratio,'ml',PRICE.counterBatten,'Ratio saisi par l’artisan',`${ratio} ml/m²`));else alerts.push({level:'warning',message:'Demi-liteaux activés mais ratio ml/m² non renseigné.'})}
-   if(o.liteaux!==false){const ratio=bpm||Math.max(0,Number(o.liteaux_ml_m2_manuel)||0);if(ratio)items.push(item('battens','Liteaux','Sous-toiture',roofArea*ratio*1.05,'ml',PRICE.batten,bpm?'Fiche fabricant':'Ratio manuel','+5% de coupe'));else alerts.push({level:'warning',message:'Consommation de liteaux absente : renseignez le ratio manuel.'})}
+   if(o.liteaux!==false){const ratio=bpm;if(ratio)items.push(item('battens','Liteaux','Sous-toiture',roofArea*ratio*1.05,'ml',PRICE.batten,batten.source,`${round(ratio,2)} ml/m²; +5% de coupe`));else alerts.push({level:'blocking',message:'Consommation de liteaux non déterminable automatiquement pour ce modèle : renseignez le ratio manuel.'})}
    if(o.bavette_egout)items.push(item('eaves_apron','Bavette d’égout','Sous-toiture',input.geometry.eaves_length_m,'ml',PRICE.eavesApron));
    const rr=rateForLinear(p,['faîtière','faitiere','faîteau','faiteau'],Math.max(.1,Number(o.faitieres_par_ml)||2.5));const ridgeLen=input.geometry.ridge_length_m+input.geometry.hip_length_m;if(ridgeLen)items.push(item('ridge_hips','Faîtières / arêtiers compatibles','Accessoires',ridgeLen*rr.rate,'u',PRICE.ridge,rr.source,`${rr.rate}/ml`,rr.ref));
    const rak=rateForLinear(p,['rive'],Math.max(.1,Number(o.rives_par_ml)||3));const rakeLen=input.geometry.left_rake_length_m+input.geometry.right_rake_length_m;if(rakeLen)items.push(item('rakes','Rives compatibles','Accessoires',rakeLen*rak.rate,'u',PRICE.rake,rak.source,`${rak.rate}/ml`,rak.ref));
@@ -151,8 +176,8 @@ class CouvreurCalculateur{
    // Labor: visible rates, no hidden topology lengths
    const cm={simple:.9,moyenne:1,complexe:1.25}[o.complexite]||1;const prep=roofArea*Math.max(0,Number(o.mo_preparation_h_m2)||.04),sub=(o.ecran_sous_toiture!==false||o.demi_liteaux||o.liteaux!==false)?roofArea*Math.max(0,Number(o.mo_sous_toiture_h_m2)||.08):0,lay=roofArea*Math.max(0,Number(o.mo_couverture_h_m2)||.16),lin=(ridgeLen+rakeLen+input.geometry.valley_length_m+input.geometry.eaves_length_m+input.geometry.wall_flashing_length_m)*Math.max(0,Number(o.mo_accessoires_h_ml)||.12),pen=(input.openings.roof_windows+input.openings.chimneys+input.openings.vmc_outlets_125+input.openings.vmc_outlets_160+input.openings.other_outlets)*Math.max(0,Number(o.mo_penetration_h_u)||1.5),gut=o.gouttieres?Math.max(0,Number(dm.longueur_gouttiere)||0)*Math.max(0,Number(o.mo_gouttiere_h_ml)||.18):0,safe=(o.echafaudage?Math.max(0,Number(o.mo_echafaudage_h)||8):0)+(o.ligne_vie?Math.max(0,Number(o.mo_ligne_vie_h)||2):0);const laborOverrides=d.manualLaborHours||{};const decomp=[['Préparation et calepinage',prep],['Écran, demi-liteaux et liteaux',sub],['Pose couverture',lay],['Accessoires linéaires',lin],['Pénétrations et sorties',pen],['Gouttières et descentes',gut],['Mise en sécurité',safe]].filter(x=>x[1]>0).map(x=>{const auto=round(x[1]*cm,1),manual=laborOverrides[x[0]];return{poste:x[0],temps_heures:manual!==undefined?round(Math.max(0,Number(manual)||0),1):auto,temps_auto_heures:auto,manuel:manual!==undefined}});const totalHH=round(decomp.reduce((s,x)=>s+x.temps_heures,0),1),workers=Math.max(1,Number(o.nb_ouvriers)||1),duration=round(totalHH/workers,1),labor=round(totalHH*Math.max(0,Number(o.taux_horaire)||48),2);
    const material=round(items.reduce((s,x)=>s+x.total_ht,0),2),security=round(items.filter(x=>x.category==='Sécurité').reduce((s,x)=>s+x.total_ht,0),2),total=round(material+labor,2),vatRate=Math.max(0,Number(o.taux_tva)||20),vat=round(total*vatRate/100,2);
-   return {product:p,input,surfaces:{totale:roofArea,nette:roofArea,avec_pertes:round(roofArea*(1+waste/100),2),detail_par_face:{toiture:roofArea}},materiaux:items,main_oeuvre:{temps_estime_heures:duration,heures_homme:totalHH,decomposition:decomp,taux_horaire:Number(o.taux_horaire)||48,nombre_ouvriers:workers,cout_total:labor},totaux:{materiaux_ht:material,securite_ht:security,main_oeuvre_ht:labor,total_ht:total,tva:vat,total_ttc:round(total+vat,2)},stock_status:{disponible:true,articles_manquants:[]},recommandations:[`Modèle : ${p.manufacturer} ${p.model}`,`Fixation : ${fixing.reason}`,`Ventilation : ${vent.count} chatière(s) calculée(s)`],alertes:alerts,technical:{tiles_per_m2:tpm||null,tiles_per_m2_min:tileInfo.min,tiles_per_m2_max:tileInfo.max,tiles_per_m2_source:tileInfo.source,battens_ml_m2:bpm||null,gauge_mm:gauge||null,min_pitch:mp.value,validation:p.validation?.status||'unknown'}};
+   return {product:p,input,surfaces:{totale:roofArea,nette:roofArea,avec_pertes:round(roofArea*(1+waste/100),2),detail_par_face:{toiture:roofArea}},materiaux:items,main_oeuvre:{temps_estime_heures:duration,heures_homme:totalHH,decomposition:decomp,taux_horaire:Number(o.taux_horaire)||48,nombre_ouvriers:workers,cout_total:labor},totaux:{materiaux_ht:material,securite_ht:security,main_oeuvre_ht:labor,total_ht:total,tva:vat,total_ttc:round(total+vat,2)},stock_status:{disponible:true,articles_manquants:[]},recommandations:[`Modèle : ${p.manufacturer} ${p.model}`,`Fixation : ${fixing.reason}`,`Ventilation : ${vent.count} chatière(s) calculée(s)`],alertes:alerts,technical:{tiles_per_m2:tpm||null,tiles_per_m2_min:tileInfo.min,tiles_per_m2_max:tileInfo.max,tiles_per_m2_source:tileInfo.source,battens_ml_m2:bpm||null,battens_source:batten.source,battens_method:batten.method,gauge_mm:gauge||null,min_pitch:mp.value,validation:p.validation?.status||'unknown'}};
  }
 }
-window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.4.1'};
+window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,getBattenInfo:battenInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.5.0'};
 })();
