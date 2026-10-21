@@ -375,7 +375,7 @@ assert(appSrc.includes('data-configure-equipment')&&appSrc.includes('configurabl
 assert(appSrc.includes('selectedCart(eqs,false)'),'Page Équipements & réseau affiche le panier sans bouton Configurer');
 assert(appSrc.includes('configurable?selectedCart(eqs,true)'), 'Page Configuration & options affiche Configurer seulement si une zone avec sanitaires contient des éléments');
 assert(appSrc.includes('Distances depuis le chauffe-eau'),'Distances chauffe-eau visibles sur la Base chantier');
-assert(appSrc.includes('Chauffe-eau → salle de bains (m)')&&appSrc.includes('Chauffe-eau → cuisine (m)'),'Deux distances chauffe-eau conservées et modifiables');
+assert(appSrc.includes('Chauffe-eau → distance moyenne salle de bain (m)')&&appSrc.includes('Chauffe-eau → cuisine (m)'),'Deux distances chauffe-eau conservées et modifiables');
 assert(appSrc.includes('Quantités réseau proposées'),'Réseau automatique visible sur la page Équipements & réseau');
 assert(appSrc.includes('function equipmentIcon(kind)')&&appSrc.includes('<svg ${common}>'),'Icônes sanitaires SVG intégrées');
 assert(appSrc.includes("if(el.dataset.configureEquipment){activeEquipmentId=el.dataset.configureEquipment;step=2"),'Configurer ouvre bien la page 3');
