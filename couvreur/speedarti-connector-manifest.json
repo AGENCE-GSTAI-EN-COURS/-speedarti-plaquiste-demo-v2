@@ -2,7 +2,7 @@
   "metadata": {
     "id": "speedarti-couvreur-connector-manifest",
     "module": "couvreur",
-    "module_version": "0.4.0",
+    "module_version": "0.4.1",
     "status": "ADAPTER_READY_NOT_CONNECTED",
     "generated_from_read_only_audit": "GSTAI-Sp/speedarti-v2@869c845cea5e8066d713baea21b57be913da18d6",
     "audit_date": "2026-10-13",
@@ -90,6 +90,11 @@
       "severity": "FIXED_IN_DEMO",
       "finding": "La bibliothèque tuiles n'avait pas de recherche par modèle.",
       "required_change": "Conserver sélection marque + recherche modèle + liste existante."
+    },
+    {
+      "severity": "FIXED_IN_DEMO",
+      "finding": "Les fixations étaient regroupées en une seule quantité difficile à interpréter.",
+      "required_change": "Conserver des lignes séparées rives/égout et partie courante, avec mode explicite."
     }
   ],
   "connectors": [
