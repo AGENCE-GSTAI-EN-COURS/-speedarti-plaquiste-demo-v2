@@ -22,7 +22,8 @@
       buanderie:0,cellier:0,cuisine:1,cuisineSurface:10,sejour:1,sejourSurface:30,suite:0,dressing:0,
       sde:0,degagement:1,chambre:3,bureau:0,sdb:1
     },
-    pointOverrides:{generalSockets:null,kitchenSockets:null,lightPoints:null,switches:null,rj45:null,tv:null},
+    pointOverrides:{generalSockets:null,kitchenSockets:null,lightPoints:null,switches:null,
+      simple:null,vv:null,three:null,rj45:null,tv:null},
     appareillage:{
       global:{brand:"moyen",gamme:""},
       socketDistribution:{double:0,triple:0},
@@ -296,19 +297,28 @@
       <div class="grid">
         ${overrideInput("generalSockets","Prises générales",a.generalSockets)}
         ${overrideInput("kitchenSockets","Prises cuisine",a.kitchenSockets)}
-        ${overrideInput("lightPoints","Points lumineux",a.lightPoints)}
-        ${overrideInput("switches","Commandes / interrupteurs",a.switches)}
+        ${p.lightingManual
+          ?'<div class="surfacebox c4"><b>Points lumineux</b><br>'+p.lightPoints+' — calculés depuis les types d’éclairage</div><div class="surfacebox c4"><b>Commandes / interrupteurs</b><br>'+p.switches+' — calculés depuis les types d’éclairage</div>'
+          :overrideInput("lightPoints","Points lumineux",a.lightPoints)+overrideInput("switches","Commandes / interrupteurs",a.switches)}
         ${overrideInput("rj45","RJ45",a.rj45)}
         ${overrideInput("tv","TV / antenne",a.tv)}
       </div>
     </div>
-    <div class="card"><h2>Détail de l'AUTO</h2><div class="grid">
-      <div class="surfacebox c3"><b>Simple allumage</b><br>${a.simple}</div>
-      <div class="surfacebox c3"><b>Va-et-vient</b><br>${a.vv}</div>
-      <div class="surfacebox c3"><b>Éclairage 3 points</b><br>${a.three}</div>
-      <div class="surfacebox c3"><b>Coffret communication</b><br>${p.communicationCabinet?"Oui":"Non"}</div>
+    <div class="card"><h2>Répartition des commandes d’éclairage</h2>
+      <p class="muted">Modifie chaque quantité indépendamment. Vide un champ pour retrouver sa valeur AUTO. Les points lumineux, les commandes, les longueurs, les fournitures et la main-d’œuvre sont alors recalculés.</p>
+      <div class="grid">
+        ${overrideInput("simple","Simples allumages (1 commande)",a.simple)}
+        ${overrideInput("vv","Va-et-vient (2 commandes)",a.vv)}
+        ${overrideInput("three","Éclairages 3 points de commande",a.three)}
+        <div class="surfacebox c3"><b>Points lumineux retenus</b><br>${p.lightPoints}</div>
+        <div class="surfacebox c3"><b>Commandes retenues</b><br>${p.switches}</div>
+        <div class="surfacebox c3"><b>Autres points lumineux AUTO</b><br>${a.extraLight}</div>
+        <div class="surfacebox c3"><b>Coffret communication</b><br>${p.communicationCabinet?"Oui":"Non"}</div>
+      </div>
+      <button type="button" class="btn secondary top-gap" data-reset-lighting>Réinitialiser les éclairages en AUTO</button>
+      <p class="note">Chaque simple allumage = 1 commande ; chaque va-et-vient = 2 ; chaque éclairage 3 points = 3 commandes. Un type vaut 1 point lumineux, auxquels s’ajoutent les éventuels points lumineux AUTO indépendants (escalier, etc.).</p>
+      <p class="note">RJ45 : T1=2, T2=3, T3+=4 minimum ; 2 juxtaposées dans le séjour. Dès qu'il existe une RJ45 ou TV, le coffret de communication est créé automatiquement.</p>
     </div>
-    <p class="note">RJ45 : T1=2, T2=3, T3+=4 minimum ; 2 juxtaposées dans le séjour. Dès qu'il existe une RJ45 ou TV, le coffret de communication est créé automatiquement.</p></div>
     ${renderAppareillage(p)}
     ${state.installation.type==="renovation"?renovationMatrix():""}`;
   }
@@ -331,6 +341,7 @@
   }
 
   function renderCircuits(){
+    const vmc=E.vmcMouthsFor(state);
     return head("Étape 4","Circuits & équipements","Les circuits validés sont automatisés. PAC, climatisation, gainable, T.One, IRVE et raccordement photovoltaïque restent saisis selon fabricant quand la règle n'est pas fournie.")+
     `<div class="card"><h2>Circuits prises</h2>
       ${select("circuits.socketMode","Choix conservé pour les prises générales",[["2.5_20","2,5 mm² • 20 A • 12 prises max"],["1.5_16","1,5 mm² • 16 A • 8 prises max"]])}
@@ -366,7 +377,12 @@
     </div>
     <div class="card"><h2>VMC, sonnette & extérieur</h2><div class="grid">
       ${select("circuits.vmcType","VMC",[["none","Aucune"],["auto","Simple flux autoréglable — 600 € HT"],["hygro","Simple flux hygroréglable — 800 € HT"],["double","Double flux — 3 500 € HT"]],{cls:"c4"})}
-      ${input("circuits.vmcExtraMouths","Bouches supplémentaires",{cls:"c4",min:0})}
+      <div class="surfacebox c12"><b>3 bouches comprises dans le forfait VMC :</b> 1 cuisine + 1 WC + 1 salle de bains / salle d’eau.
+        <div class="muted">${vmc.installed
+          ? `Bouches supplémentaires automatiques (autre cuisine, WC ou SDB/SDE) : ${vmc.extraAuto}. Autres ajoutées : ${vmc.extraManual}. Total prévu : ${vmc.total} bouches. Supplément : ${euro(vmc.extraPrice)} HT (${euro(E.FIXED.vmc.extraMouth)} HT / bouche supplémentaire).`
+          : "Sélectionne une VMC pour activer le forfait des 3 bouches. Aucune bouche n’est facturée tant que la VMC est désactivée."}</div>
+      </div>
+      ${input("circuits.vmcExtraMouths","Autres bouches à ajouter (cellier, buanderie, etc.)",{cls:"c4",min:0})}
       <div class="c4 field"><label>Sortie toiture</label>${check("circuits.vmcRoof","Oui (+90 € HT)")}</div>
       ${select("circuits.bellType","Sonnette / visiophone",[["none","Aucun"],["carillon","Carillon simple — 170 € HT"],["visio","Visiophone sans ouverture — 500 € HT"],["visioGate","Visiophone avec ouverture — 750 € HT"]],{cls:"c4"})}
       ${input("circuits.exteriorLights","Points d'éclairage extérieur",{cls:"c4",min:0})}
@@ -448,6 +464,10 @@
       <div class="metric"><span>Prises générales</span><strong>${r.points.generalSockets}</strong></div>
       <div class="metric"><span>Prises cuisine</span><strong>${r.points.kitchenSockets}</strong></div>
       <div class="metric"><span>Éclairage</span><strong>${r.points.lightPoints}</strong></div>
+      <div class="metric"><span>Commandes</span><strong>${r.points.switches}</strong></div>
+      <div class="metric"><span>Simples allumages</span><strong>${r.points.simple}</strong></div>
+      <div class="metric"><span>Va-et-vient</span><strong>${r.points.vv}</strong></div>
+      <div class="metric"><span>Éclairages 3 points</span><strong>${r.points.three}</strong></div>
       <div class="metric"><span>RJ45 / TV</span><strong>${r.points.rj45} / ${r.points.tv}</strong></div>
     </div></div>
     <div class="card"><h2>Circuits</h2><div class="table-wrap"><table class="table"><thead><tr><th>Circuit</th><th>Section</th><th>Disj.</th><th>Diff.</th><th>Phase</th></tr></thead><tbody>
@@ -461,6 +481,7 @@
       ${r.labor.detail.map(x=>`<tr><td>${esc(x.label)}</td><td>${x.hours.toFixed(2)} h</td></tr>`).join("")}
       <tr><td><b>Total main-d'œuvre @ ${euro(r.labor.rate)}/h — coefficient ${r.labor.coefficient.toFixed(2)}</b></td><td><b>${euro(r.labor.total)}</b></td></tr>
     </tbody></table></div></div>
+    ${r.fixed.vmc.installed?`<div class="card"><h2>Bouches de VMC</h2><p><strong>3 bouches comprises dans le forfait</strong> : 1 cuisine, 1 WC, 1 SDB/SDE.</p><p>${r.fixed.vmc.extraAuto} bouche(s) supplémentaire(s) selon la composition + ${r.fixed.vmc.extraManual} ajoutée(s) par l’artisan : ${r.fixed.vmc.total} bouche(s) au total.</p></div>`:""}
     <div class="card"><h2>Forfaits & équipements à prix connu</h2>${r.fixed.rows.length?`<div class="table-wrap"><table class="table"><tbody>${r.fixed.rows.map(x=>`<tr><td>${esc(x.label)}${x.indicative?' <span class="muted">(annexe 5)</span>':''}</td><td>${euro(x.price)}</td></tr>`).join("")}<tr><td><b>Total forfaits</b></td><td><b>${euro(r.fixed.total)}</b></td></tr></tbody></table></div>`:`<p class="muted">Aucun forfait sélectionné.</p>`}</div>`;
   }
 
@@ -481,7 +502,18 @@
         else if(el.type==="number") v=el.value==="" ? "" : Number(el.value);
         else v=el.value;
         set(el.dataset.path,v);
+        if(["pointOverrides.simple","pointOverrides.vv","pointOverrides.three"].includes(el.dataset.path)){
+          // Un réglage détaillé remplace les anciennes corrections globales des totaux.
+          set("pointOverrides.lightPoints",null);
+          set("pointOverrides.switches",null);
+        }
         save(false); render();
+      });
+    });
+    document.querySelectorAll("[data-reset-lighting]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        ["simple","vv","three","lightPoints","switches"].forEach(k=>set("pointOverrides."+k,null));
+        save(false);render();
       });
     });
     document.querySelectorAll("[data-set]").forEach(el=>{
