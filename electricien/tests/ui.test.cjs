@@ -51,10 +51,13 @@ async function run(){
     await change(page,'input[data-path="pointOverrides.vv"]',2);
     await change(page,'input[data-path="pointOverrides.three"]',1);
     await page.locator('select[data-catalog-brand="priseSimple"]').selectOption('Legrand');
+    await page.locator('select[data-catalog-gamme="priseSimple"]').selectOption('Mosaic');
+    const mosaic=await page.locator('select[data-catalog-choice="priseSimple"] option').allTextContents();
+    assert(mosaic.some(x=>x.includes('278111L-1121-C')&&x.includes('Prix à compléter')),'Mosaic white reference without invented price');
     await page.locator('select[data-catalog-gamme="priseSimple"]').selectOption('Dooxie');
     const online=await page.evaluate(()=>window.SpeedArtiCatalogueEnLigne);
     assert.equal(online.status,'ready','online curated JSON loaded');
-    assert.equal(online.added,9,'9 new online references');
+    assert.equal(online.added,12,'12 new online references');
     assert.equal(online.updated,2,'2 existing references updated');
     assert.equal(await page.locator('select[data-catalog-finition="priseSimple"]').inputValue(),'blanc','white preselected for simple sockets');
     const choices=page.locator('select[data-catalog-choice="priseSimple"] option');
