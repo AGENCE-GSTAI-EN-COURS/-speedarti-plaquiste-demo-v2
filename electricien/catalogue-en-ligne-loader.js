@@ -14,9 +14,12 @@
     return x&&typeof x==="object"&&
       ["ID","Marque","Gamme","Fonction","Référence fabricant","Source URL"].every(k=>typeof x[k]==="string"&&x[k].trim()) &&
       /^https:\/\/(www\.)?(123elec\.com|elec44\.fr)\//i.test(x["Source URL"]) &&
-      Number.isFinite(Number(x["Prix TTC"]))&&Number(x["Prix TTC"])>0 &&
-      Number.isFinite(Number(x["Prix HT"]))&&Number(x["Prix HT"])>0 &&
-      Math.abs(Number(x["Prix TTC"])/1.2-Number(x["Prix HT"]))<.02;
+      (
+        (x["Prix TTC"]===null && x["Prix HT"]===null) ||
+        (typeof x["Prix TTC"]==="number" && x["Prix TTC"]>0 &&
+          typeof x["Prix HT"]==="number" && x["Prix HT"]>0 &&
+          Math.abs(x["Prix TTC"]/1.2-x["Prix HT"])<.02)
+      );
   }
   function key(x){
     return [x["Marque"],x["Gamme"],x["Génération"]||"",x["Référence fabricant"],x["Type article"]]
