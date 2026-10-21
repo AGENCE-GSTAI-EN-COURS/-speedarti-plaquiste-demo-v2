@@ -55,7 +55,7 @@ function minPitch(p,input){
   return {value:null,source:'Non déterminée',review:true};
 }
 function fixRatio(p,input){const pitch=input.geometry.pitch_percent,severe=input.context.exposure==='exposed'||input.context.coastal||input.context.mountain,canal=norm(p.family).includes('canal');if(input.context.high_vibration||pitch>60)return {ratio:1,reason:'Toutes les tuiles fixées - validation fabricant requise'};if(canal){if(pitch<=30&&!severe&&input.context.zone<=2)return {ratio:0,reason:'Partie courante non fixée dans le cas favorable; rives et égout fixés'};if(pitch<=40&&!severe)return {ratio:.2,reason:'1 tuile sur 5 en partie courante + rives et égout fixés'};return {ratio:1/3,reason:'1 tuile sur 3 en partie courante + rives et égout fixés'}}return severe||pitch>45?{ratio:1/3,reason:'1 tuile sur 3 en partie courante + rives et égout fixés'}:{ratio:.2,reason:'1 tuile sur 5 en partie courante + rives et égout fixés'} }
-function toMetres(v){const n=Number(v);if(!Number.isFinite(n)||n<=0)return null;return n>10?n/1000:n}
+function toMetres(v){const n=Number(v);if(!Number.isFinite(n)||n<=0)return null;if(n>=80)return n/1000;if(n>2)return n/100;return n}
 function fixingPlan(p,input,tiles,o){
   const auto=fixRatio(p,input),requested=o.mode_fixation_tuiles||'auto';
   let ratio=auto.ratio,reason=auto.reason,mode=requested;
