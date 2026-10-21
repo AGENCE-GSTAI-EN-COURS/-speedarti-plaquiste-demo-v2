@@ -162,16 +162,16 @@
     const brands=CS.brands(key);
     const brandOpts=[["moyen","Prix moyen"]].concat(brands.map(b=>[b,b]));
     const gammeOpts=cfg.brand!=="moyen"?CS.gammes(key,cfg.brand):[];
-    const choiceOpts=cfg.brand!=="moyen"?CS.choices(key,cfg.brand,cfg.gamme||""):[];
+    const choiceOpts=cfg.brand!=="moyen"?CS.choices(key,cfg.brand,cfg.gamme||"",cfg.finition||""):[];
     const resolved=CS.resolve(state,key);
     return `<div class="catalog-family">
       <div class="catalog-family-head"><div><b>${esc(label)}</b><span>${qty} unité(s) à chiffrer</span></div><strong>${resolved&&resolved.price!=null?euro(resolved.price)+" / u":"Non chiffré"}</strong></div>
       <div class="grid catalog-fields">
         <div class="field c4"><label>Marque</label><select class="select" data-catalog-brand="${esc(key)}">${optionTags(brandOpts,cfg.brand)}</select></div>
         ${cfg.brand!=="moyen"?`<div class="field c4"><label>Gamme</label><select class="select" data-catalog-gamme="${esc(key)}">${optionTags(gammeOpts.map(g=>[g,g]),cfg.gamme,"Toutes les gammes / moyenne")}</select></div>`:`<div class="c4 surfacebox"><b>Prix moyen</b><br>${resolved&&resolved.price!=null?euro(resolved.price):"—"}<br><span class="muted">Toutes marques compatibles.</span></div>`}
-        ${cfg.brand!=="moyen"?`<div class="field c4"><label>Modèle / finition</label><select class="select" data-catalog-choice="${esc(key)}">${optionTags(choiceOpts.map(c=>[c.id,`${c.label} — ${euro(c.price)}`]),cfg.choiceId,"Moyenne de cette sélection")}</select></div>`:""}
+        ${cfg.brand!=="moyen"?`<div class="field c4"><label>Couleur</label><select class="select" data-catalog-finition="${esc(key)}">${optionTags([["","Toutes couleurs"],["blanc","Blanc / blanc craie / Pure"],["anthracite","Anthracite"],["noir","Noir"],["aluminium","Aluminium"],["gris","Gris"]],cfg.finition||"")}</select></div><div class="field c8"><label>Référence et modèle exact</label><select class="select" data-catalog-choice="${esc(key)}">${optionTags(choiceOpts.map(c=>[c.id,`${c.label} — ${c.price===null?"Prix à compléter":euro(c.price)}`]),cfg.choiceId,choiceOpts.length?"Choisir une référence / moyenne":"Aucun modèle compatible : prix non chiffré")}</select></div>`:""}
       </div>
-      <div class="catalog-resolved"><span>${resolved?.exact?"Référence exacte":"Prix de repli"}</span><b>${esc(resolved?.label||"")}</b>${resolved?.ref?`<small>Réf. ${esc(resolved.ref)}</small>`:""}${resolved?.note?`<small>${esc(resolved.note)}</small>`:""}</div>
+      <div class="catalog-resolved"><span>${resolved?.exact?"Référence exacte chiffrée":resolved?.price===null?"Pas de référence complète chiffrée":"Prix moyen indicatif"}</span><b>${esc(resolved?.label||"")}</b>${resolved?.ref?`<small>Réf. ${esc(resolved.ref)}</small>`:""}${resolved?.note?`<small>${esc(resolved.note)}</small>`:""}${resolved?.source && /^https:\/\//.test(resolved.source)?`<small><a href="${esc(resolved.source)}" target="_blank" rel="noopener noreferrer">Vérifier chez le fournisseur ↗</a></small>`:""}</div>
     </div>`;
   }
   function renderAppareillage(points){
@@ -185,7 +185,10 @@
     const totalSockets=num(points.generalSockets)+num(points.kitchenSockets);
     const dist=CS.socketDistribution(state,totalSockets);
     const families=activeAppareillageFamilies(points);
-    return `<div class="card catalog-card"><div class="row between"><div><h2>Appareillage & finitions</h2><p class="muted">Chaque famille peut avoir sa propre marque, gamme et finition. Le choix global ci-dessous est uniquement un raccourci.</p></div><span class="status-chip">Catalogue multi-gammes 2026</span></div>
+    const online=window.SpeedArtiCatalogueEnLigne||{};
+    return `<div class="card catalog-card"><div class="row between"><div><h2>Appareillage & finitions</h2><p class="muted">Chaque famille peut avoir sa propre marque, gamme et finition. Le choix global ci-dessous est uniquement un raccourci.</p></div><span class="status-chip">Catalogue appareillage + web</span></div>
+      <p class="note">${online.status==="ready"?`Complément en ligne : ${online.added} références ajoutées, ${online.updated} références actualisées ; relevé du ${esc(online.verifiedAt||"")}.`:"Complément web momentanément inaccessible : catalogue historique conservé."}
+      <a href="./catalogue-en-ligne.json" target="_blank" rel="noopener noreferrer">Sources et références vérifiées ↗</a> — Prix indicatifs relevés sur les fiches ; pas des tarifs fournisseur en direct.</p>
       <div class="catalog-global"><div class="grid">
         <div class="field c4"><label>Choix global rapide</label><select class="select" data-path="appareillage.global.brand">${optionTags([["moyen","Prix moyen"]].concat(allBrands.map(b=>[b,b])),g.brand)}</select></div>
         ${g.brand!=="moyen"?`<div class="field c4"><label>Gamme globale</label><select class="select" data-path="appareillage.global.gamme">${optionTags(globalGammes.map(x=>[x,x]),g.gamme,"Choisir / laisser libre")}</select></div>`:""}
@@ -522,12 +525,19 @@
     document.querySelectorAll("[data-catalog-brand]").forEach(el=>{
       el.addEventListener("change",()=>{
         const cfg=familyCfg(el.dataset.catalogBrand); cfg.brand=el.value; cfg.gamme=""; cfg.choiceId="";
+        cfg.finition=el.dataset.catalogBrand==="priseSimple" && el.value!=="moyen"?"blanc":"";
         save(false);render();
       });
     });
     document.querySelectorAll("[data-catalog-gamme]").forEach(el=>{
       el.addEventListener("change",()=>{
         const cfg=familyCfg(el.dataset.catalogGamme); cfg.gamme=el.value; cfg.choiceId="";
+        save(false);render();
+      });
+    });
+    document.querySelectorAll("[data-catalog-finition]").forEach(el=>{
+      el.addEventListener("change",()=>{
+        const cfg=familyCfg(el.dataset.catalogFinition);cfg.finition=el.value;cfg.choiceId="";
         save(false);render();
       });
     });
@@ -542,6 +552,7 @@
         const g=state.appareillage.global||{brand:"moyen",gamme:""};
         CS.familyKeys().forEach(key=>{
           const cfg=familyCfg(key); cfg.brand=g.brand||"moyen"; cfg.choiceId="";
+          cfg.finition=key==="priseSimple" && cfg.brand!=="moyen"?"blanc":"";
           if(cfg.brand==="moyen") cfg.gamme="";
           else cfg.gamme=CS.gammes(key,cfg.brand).includes(g.gamme)?g.gamme:"";
         });
