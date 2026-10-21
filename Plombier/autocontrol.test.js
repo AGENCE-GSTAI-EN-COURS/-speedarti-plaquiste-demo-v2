@@ -5,7 +5,7 @@ for(const f of ['catalogue-data.js','catalogue-service.js','engine-current.js','
 const CAT=global.SpeedArtiCatalogueService,API=global.SpeedArtiPlombierCurrent,ANGEL=global.SpeedArtiAngelPlombierKnowledge,DB=global.SpeedArtiCataloguePlombier;
 let ok=0;function assert(cond,msg){if(!cond)throw new Error(`ASSERT ${ok+1}: ${msg}`);ok++}
 function approx(a,b,t=.011){return Math.abs(Number(a)-Number(b))<=t}
-function base(){return{metier:'plombier',nom_calcul:'AUTOCONTROLE v0.8.0',options:{type_projet:'installation_complete',gamme:'premium',complexite:'moyen',taux_horaire:52,nb_ouvriers:1,taux_tva:20,type_tuyau:'per',forfaits:{},chauffe_eau:{enabled:false,type:'cumulus',capacity:200},adoucisseur:{enabled:false,price_ht:1000},articles_libres:[]},installation:{surface_maison_m2:100,equipments:[],network:{distance_ce_sdb:5,distance_ce_cuisine:8,ef_only:0,ec_only:0,ef_ec:0,evac_points:0,platines_ef:0,platines_ec:0,platines_ef_ec:0,platines_evac:0,evac_price_ml:6,time_h:4},annexe1:{}},petits_travaux:{prestations:[]},settings:{annexe1:{},forfaits:{},services:{},component_preferences:{},slot_preferences:{},sanitary_time_preferences:{}}}}
+function base(){return{metier:'plombier',nom_calcul:'AUTOCONTROLE v0.8.1',options:{type_projet:'installation_complete',gamme:'premium',complexite:'moyen',taux_horaire:52,nb_ouvriers:1,taux_tva:20,type_tuyau:'per',forfaits:{},chauffe_eau:{enabled:false,type:'cumulus',capacity:200},adoucisseur:{enabled:false,price_ht:1000},articles_libres:[]},installation:{surface_maison_m2:100,equipments:[],network:{distance_ce_sdb:5,distance_ce_cuisine:8,ef_only:0,ec_only:0,ef_ec:0,evac_points:0,platines_ef:0,platines_ec:0,platines_ef_ec:0,platines_evac:0,evac_price_ml:6,time_h:4},annexe1:{}},petits_travaux:{prestations:[]},settings:{annexe1:{},forfaits:{},services:{},component_preferences:{},slot_preferences:{},sanitary_time_preferences:{}}}}
 function selectFirst(ctx,pred=()=>true){const a=CAT.search({context:ctx,limit:100}).find(x=>x.prix>0&&x.code&&pred(x));assert(!!a,`Référence exploitable contexte ${ctx}`);return CAT.selection(a)}
 function netRefs(d){const ctx=d.options.type_tuyau==='cuivre'?'raccord_cuivre':d.options.type_tuyau==='multicouche'?'raccord_multicouche':'raccord_per';d.installation.network.fitting_catalogue=selectFirst(ctx);d.installation.network.stop_valve_catalogue=selectFirst('robinet_arret');}
 
@@ -189,7 +189,7 @@ assert(approx(r1.controle_balises.tva_controlee,r1.totaux.tva),'Contrôle TVA = 
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const posData=html.indexOf('catalogue-data.js'),posService=html.indexOf('catalogue-service.js'),posEngine=html.indexOf('engine-current.js'),posAngel=html.indexOf('angel-knowledge.js'),posApp=html.indexOf('app.js');
 assert(posData>0&&posData<posService&&posService<posEngine&&posEngine<posAngel&&posAngel<posApp,'Ordre de chargement catalogue -> service -> moteur -> Angel -> app');
-assert(/v0\.8\.0/.test(html),'HTML annonce v0.8.0');
+assert(/v0\.8\.1/.test(html),'HTML annonce v0.8.1');
 
 // 22. Contrôles statiques UI / absence de règles cachées
 const appSrc=fs.readFileSync(path.join(root,'app.js'),'utf8'),engSrc=fs.readFileSync(path.join(root,'engine-current.js'),'utf8'),catSrc=fs.readFileSync(path.join(root,'catalogue-service.js'),'utf8'),cssSrc=fs.readFileSync(path.join(root,'styles.css'),'utf8');
@@ -307,8 +307,8 @@ assert(engSrc.includes("version:'BALISES-ABSOLUES-v1.8'"),'Moteur balises v1.8')
 
 
 // 29. Correctifs v0.5.2 issus du contrôle humain
-assert(appSrc.includes("const storeKey='speedarti-plombier-demo-v080'"),'Clé de sauvegarde propre v0.8.0');
-assert(appSrc.includes("legacyStoreKeys=['speedarti-plombier-demo-v071','speedarti-plombier-demo-v070'"),'Migration du brouillon v0.7.1 prévue');
+assert(appSrc.includes("const storeKey='speedarti-plombier-demo-v081'"),'Clé de sauvegarde propre v0.8.1');
+assert(appSrc.includes("legacyStoreKeys=['speedarti-plombier-demo-v080','speedarti-plombier-demo-v071'"),'Migration du brouillon v0.8.0 prévue');
 assert(appSrc.includes('function migrateLegacyDraft'),'Fonction de migration brouillon présente');
 assert(appSrc.includes("delete p.duration_h"),'Migration supprime les anciennes durées CE non validées');
 assert(appSrc.includes("catalogueRenderTimer=setTimeout"),'Recherche catalogue saisie rapide temporisée');
@@ -439,7 +439,7 @@ for(const [kind,price] of Object.entries(avgExpected)){
 }
 const avgLavEco=API.equipmentAveragePrice({kind:'lavabo'},'eco'),avgLavPremium=API.equipmentAveragePrice({kind:'lavabo'},'premium');
 assert(approx(avgLavEco.price,82.66)&&approx(avgLavPremium.price,231.37),'Gammes Éco/Premium lavabo exposées');
-assert(ANGEL&&ANGEL.version==='PLB-ANGEL-KB-v1.7','Base de connaissances Angel Plombier chargée');
+assert(ANGEL&&ANGEL.version==='PLB-ANGEL-KB-v1.8','Base de connaissances Angel Plombier chargée');
 assert(ANGEL.search('prix lavabo sans catalogue',3).some(x=>x.id==='PLB-PRIX-LAVABO'),'Angel retrouve la règle de prix lavabo sans catalogue');
 assert(/165,11/.test(ANGEL.answer('prix lavabo sans catalogue')),'Angel répond avec le prix moyen standard lavabo');
 assert(appSrc.includes('Prix moyen SpeedArti'),'UI affiche explicitement le prix moyen quand le catalogue n’est pas sélectionné');
@@ -684,5 +684,41 @@ assert(appSrc.includes('Ajouté automatiquement au chiffrage'),'Résumé visible
 assert(/nourrices/.test(ANGEL.answer('distance chauffe eau eau froide nourrices')),'Angel v1.7 connaît EF + EC selon distance nourrices');
 assert(/platine EF\+EC/.test(ANGEL.answer('lave main eau chaude froide platine')),'Angel v1.7 connaît lave-main EF+EC');
 assert(/CCL/.test(ANGEL.answer('catalogue CCL fournisseur')),'Angel v1.7 sait que CCL est préparé sans données inventées');
+
+// 40. Sprint F v0.8.1 — distance moyenne SDB + copie vers éléments similaires
+assert(appSrc.includes('Chauffe-eau → distance moyenne salle de bain (m)'),'Libellé distance moyenne salle de bain affiché');
+assert(appSrc.includes('Distance moyenne salle de bain'),'Résumé réseau utilise aussi le nouveau libellé');
+
+const similarSource={
+  id:'wc-source',kind:'wc',subtype:'suspendu',zone:'rdc',
+  catalogue:{code:'WC-SRC',produit:'WC suspendu test',prix:500},
+  price_ht:500,time_h:5,pmr_wc:true,
+  annexe2_items:{fixations:{catalogue:{code:'FIX-SRC',produit:'Fixation test',prix:10},quantite:2}},
+  additional_catalogue_items:[{catalogue:{code:'ADD-SRC',produit:'Accessoire test',prix:20},quantite:1}]
+};
+const similarTarget={id:'wc-target',kind:'wc',subtype:'suspendu',zone:'r1',catalogue:{code:'OLD'},time_h:2};
+const copiedSimilar=API.copyEquipmentCharacteristics(similarSource,similarTarget);
+assert(copiedSimilar?.id==='wc-target'&&copiedSimilar.zone==='r1','Copie similaire conserve ID et zone de la cible');
+assert(copiedSimilar?.catalogue?.code==='WC-SRC'&&copiedSimilar.time_h===5&&copiedSimilar.pmr_wc===true,'Copie similaire reprend les caractéristiques principales');
+assert(copiedSimilar?.annexe2_items?.fixations?.catalogue?.code==='FIX-SRC','Copie similaire reprend les accessoires et références');
+assert(copiedSimilar?.additional_catalogue_items?.[0]?.catalogue?.code==='ADD-SRC','Copie similaire reprend les articles complémentaires');
+assert(API.similarEquipmentKey(similarSource)===API.similarEquipmentKey(similarTarget),'Deux WC suspendus sont similaires');
+
+const wcPoser={id:'wc-poser',kind:'wc',subtype:'poser',zone:'rdc'};
+assert(API.similarEquipmentKey(similarSource)!==API.similarEquipmentKey(wcPoser),'WC suspendu et WC à poser ne sont pas similaires');
+assert(API.copyEquipmentCharacteristics(similarSource,wcPoser)===null,'Aucune copie WC suspendu vers WC à poser');
+
+const sinkSimple={id:'sink-a',kind:'evier',subtype:'inox',config:'simple',zone:'rdc'};
+const sinkDouble={id:'sink-b',kind:'evier',subtype:'inox',config:'double',zone:'rdc'};
+assert(API.similarEquipmentKey(sinkSimple)!==API.similarEquipmentKey(sinkDouble),'Évier simple et double ne sont pas similaires');
+
+const specA={id:'sp-a',kind:'element_specifique',label:'Broyeur',zone:'rdc'};
+const specB={id:'sp-b',kind:'element_specifique',label:'Pompe',zone:'rdc'};
+assert(API.similarEquipmentKey(specA)!==API.similarEquipmentKey(specB),'Éléments spécifiques de désignations différentes ne sont pas similaires');
+
+assert(appSrc.includes('data-apply-similar'),'Bouton appliquer aux éléments similaires présent dans l’UI');
+assert(appSrc.includes('Caractéristiques appliquées à'),'Retour utilisateur après copie présent');
+assert(/éléments similaires/.test(ANGEL.answer('appliquer caracteristiques elements similaires wc suspendu')),'Angel v1.8 connaît la copie des caractéristiques');
+assert(/distance moyenne salle de bain/.test(ANGEL.answer('distance chauffe eau salle de bain')),'Angel v1.8 connaît le nouveau libellé distance moyenne salle de bain');
 
 console.log(JSON.stringify({status:'OK',assertions:ok,catalogueCount:CAT.count,priceCount:CAT.priceCount,knownPrice117_19:known[0].prix,balisesVersion:r1.controle_balises.version,networkOnly:{ef:r2.surfaces.detail_par_face.EF_ml,ec:r2.surfaces.detail_par_face.EC_ml},fittingsOneFixture:fittingsWC.quantite_finale},null,2));
