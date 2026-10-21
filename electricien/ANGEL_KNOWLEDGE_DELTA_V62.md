@@ -26,3 +26,10 @@ Ce document n'est PAS une nouvelle base de connaissances ni un nouvel index. Il 
 - Dépôt de démonstration uniquement : \`thibaultmourlane7/-speedarti-plaquiste-demo-v2/electricien/\`.
 - Version cible : V6.2.
 - Code source SpeedArti production : aucune modification, aucun push.
+
+## Complément V6.3 — à intégrer dans les connaissances Ángel EXISTANTES
+- Les simples allumages, les va-et-vient et les éclairages à trois points de commande sont des quantités modifiables indépendamment, avec retour à l'AUTO en vidant le champ.
+- 1 simple allumage = 1 commande ; 1 va-et-vient = 2 commandes ; 1 éclairage à trois points = 3 commandes. Recalculer les points lumineux, les commandes et tous les postes de chiffrage liés ; ne pas cumuler un ancien total manuel global et une répartition détaillée.
+- Forfait VMC autoréglable / hygro / double flux : **3 bouches comprises, 1 cuisine + 1 WC + 1 salle de bains ou salle d'eau**. Le cellier n'est pas une quatrième bouche incluse.
+- Si plusieurs cuisines, WC ou salles de bains/salles d'eau : toute bouche au-delà de la première dans chaque famille s'ajoute au forfait au prix validé **115 € HT par bouche**. Le champ manuel est réservé aux autres bouches et ne doit pas doubler celles déjà calculées d'après la composition.
+- Le récapitulatif doit préciser explicitement les 3 bouches incluses, les suppléments automatiques, les ajouts manuels et le total. Aucune base Ángel parallèle ; ce delta reste à intégrer en production.
