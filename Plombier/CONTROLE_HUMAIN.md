@@ -1,50 +1,21 @@
-# SpeedArti — Plombier v0.8.0 — Contrôle humain à relancer
+# SpeedArti — Plombier v0.8.1 — Contrôle humain ciblé
 
-Date : 2026-10-08
+Date : 2026-10-21
 
-## Retour Guillaume repris intégralement
+## À vérifier dans le navigateur
 
-À retester dans le navigateur :
-
-1. **Étape 2 — distances**
-   - modifier distance SDB puis cuisine ;
-   - vérifier que EF et EC évoluent ensemble ;
-   - vérifier suppression d’un équipement SDB/cuisine.
-
-2. **Lave-main**
-   - vérifier EF + EC automatiques ;
-   - vérifier platine EF+EC ;
-   - vérifier qu’il n’existe plus de mode EF seul.
-
-3. **Étape 3 — affichage**
-   - contrôler desktop, tablette et mobile ;
-   - aucun chevauchement de champ, carte, catalogue, bouton ou composition.
-
-4. **Robinet Oui / Non**
-   - lavabo / vasque ;
-   - meuble vasque ;
-   - double vasque ;
-   - lave-main.
-
-5. **Composants automatiques**
-   - vérifier que siphon/bonde/vidage automatiques sont immédiatement visibles ;
-   - vérifier qu’ils apparaissent dans le total sans recherche manuelle.
-
-6. **Habitudes artisan**
-   - mémoriser une référence d’accessoire ;
-   - créer un nouvel équipement comparable ;
-   - vérifier sa réutilisation automatique.
-
-7. **Catalogue visuel**
-   - tester les raccourcis familles ;
-   - contrôler recherche, marque, type et finition.
-
-8. **Multi-fournisseurs**
-   - Téréva doit être actif ;
-   - CCL doit apparaître seulement comme futur connecteur, jamais comme catalogue chiffré.
+1. Étape 1 : le champ doit afficher **« Chauffe-eau → distance moyenne salle de bain (m) »**.
+2. Ajouter deux WC suspendus dans des zones différentes.
+3. Configurer entièrement le premier WC suspendu : produit, accessoires, options et temps.
+4. Vérifier l’apparition du bouton **« Appliquer les caractéristiques aux éléments similaires »**.
+5. Cliquer sur le bouton.
+6. Vérifier que le second WC suspendu récupère les caractéristiques mais conserve sa propre zone.
+7. Ajouter un WC à poser : vérifier qu’il n’est pas modifié par la copie depuis le WC suspendu.
+8. Tester la même logique sur deux éviers identiques ; vérifier qu’un évier simple ne copie pas vers un double.
+9. Contrôler le bouton sur desktop et mobile.
 
 ## Statut logique
 
-**634 / 634 assertions réussies.**
+**649 / 649 assertions réussies.**
 
-Le Sprint E est codé et testé logiquement. La validation ergonomique finale nécessite ce nouveau passage humain.
+La validation ergonomique finale dépend du contrôle navigateur ci-dessus.
