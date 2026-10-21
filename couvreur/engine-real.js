@@ -54,7 +54,23 @@ function minPitch(p,input){
   }
   return {value:null,source:'Non déterminée',review:true};
 }
-function fixRatio(p,input){const pitch=input.geometry.pitch_percent,severe=input.context.exposure==='exposed'||input.context.coastal||input.context.mountain,canal=norm(p.family).includes('canal');if(input.context.high_vibration||pitch>60)return {ratio:1,reason:'Toutes les tuiles fixées - validation fabricant requise'};if(canal){if(pitch<=30&&!severe&&input.context.zone<=2)return {ratio:0,reason:'Partie courante non fixée dans le cas favorable; périphérie fixée'};if(pitch<=40&&!severe)return {ratio:.2,reason:'Provision 1 tuile sur 5'};return {ratio:1/3,reason:'Provision renforcée 1 tuile sur 3'}}return severe||pitch>45?{ratio:1/3,reason:'Provision renforcée'}:{ratio:.2,reason:'Provision courante'} }
+function fixRatio(p,input){const pitch=input.geometry.pitch_percent,severe=input.context.exposure==='exposed'||input.context.coastal||input.context.mountain,canal=norm(p.family).includes('canal');if(input.context.high_vibration||pitch>60)return {ratio:1,reason:'Toutes les tuiles fixées - validation fabricant requise'};if(canal){if(pitch<=30&&!severe&&input.context.zone<=2)return {ratio:0,reason:'Partie courante non fixée dans le cas favorable; rives et égout fixés'};if(pitch<=40&&!severe)return {ratio:.2,reason:'1 tuile sur 5 en partie courante + rives et égout fixés'};return {ratio:1/3,reason:'1 tuile sur 3 en partie courante + rives et égout fixés'}}return severe||pitch>45?{ratio:1/3,reason:'1 tuile sur 3 en partie courante + rives et égout fixés'}:{ratio:.2,reason:'1 tuile sur 5 en partie courante + rives et égout fixés'} }
+function toMetres(v){const n=Number(v);if(!Number.isFinite(n)||n<=0)return null;return n>10?n/1000:n}
+function fixingPlan(p,input,tiles,o){
+  const auto=fixRatio(p,input),requested=o.mode_fixation_tuiles||'auto';
+  let ratio=auto.ratio,reason=auto.reason,mode=requested;
+  if(requested==='rives_egout'){ratio=0;reason='Choix artisan : rives latérales et égout uniquement'}
+  if(requested==='one_in_five'){ratio=.2;reason='Choix artisan : 1 tuile sur 5 en partie courante + rives et égout'}
+  if(requested==='all'){ratio=1;reason='Choix artisan : toutes les tuiles'}
+  const usefulWidth=toMetres(p?.technical?.useful_width),gaugeM=toMetres(avg(p?.technical?.gauge));
+  const eaves=input.geometry.eaves_length_m||0,rakes=(input.geometry.left_rake_length_m||0)+(input.geometry.right_rake_length_m||0);
+  const eavesQty=eaves?ceil(eaves/(usefulWidth||.3)):0;
+  const rakesQty=rakes?ceil(rakes/(gaugeM||.3)):0;
+  const edgeQty=Math.min(tiles,eavesQty+rakesQty);
+  const fieldBase=Math.max(0,tiles-edgeQty);
+  if(ratio>=1)return {mode:'all',edgeQty:0,fieldQty:tiles,ratio:1,reason,basis:'Toutes les tuiles'};
+  return {mode,edgeQty,fieldQty:ratio>0?ceil(fieldBase*ratio):0,ratio,reason,basis:`Rives/égout : ${edgeQty} tuiles estimées par géométrie; partie courante : ${fieldBase} tuiles`};
+}
 function ventCount(area,isolationCase,section){const standard=[[100,6],[150,9],[200,11],[250,14]],high=[[100,10],[150,14],[200,19],[250,24]],arr=Number(isolationCase)===3?high:standard;let ref=arr.find(x=>area<=x[0]);let count=ref?ref[1]:Math.ceil(area*(arr[arr.length-1][1]/arr[arr.length-1][0]));let need=count*35;return {count:Math.ceil(need/Math.max(1,section||35)),requiredAreaCm2:need}}
 function item(id,label,category,qty,unit,price,source='Base de démonstration',note='',ref=''){qty=unit==='u'?ceil(qty):round(qty,1);return{id,label,category,quantity:qty,unit,unit_price_ht:round(price,2),total_ht:round(qty*price,2),source,note,product_reference:ref}}
 function rateForLinear(p,words,fallback){const a=findAccessory(p,words);return {rate:a?.units_per_linear_m||fallback,ref:a?.reference||'',source:a?.units_per_linear_m?'Fiche fabricant':'Rendement visible à valider'}}
@@ -111,7 +127,17 @@ class CouvreurCalculateur{
        }else alerts.push({level:'blocking',message:`Aucun tarif/raccord VELUX ${flashCode} disponible pour la dimension ${vp.size_code}.`});
      }else{alerts.push({level:'blocking',message:'Fenêtre de toit demandée mais aucun modèle VELUX sélectionné.'})}
    }if(input.openings.chimneys)items.push(item('chimneys','Abergements de cheminée','Pénétrations',input.openings.chimneys,'u',PRICE.chimneyFlashing));
-   const fixing=fixRatio(p,input);if(tiles&&o.fixations!==false){const periph=ceil((input.geometry.eaves_length_m+rakeLen)/.3),cnt=ceil(tiles*fixing.ratio)+periph;items.push(item('fixings','Crochets / vis / clips de fixation','Fixations',cnt,'u',PRICE.fixing,'Règle provisoire visible',fixing.reason))}
+   const fixing=fixingPlan(p,input,tiles,o);if(tiles&&o.fixations!==false){
+     if(fixing.mode==='all'){
+       items.push(item('fixings_all','Fixations tuiles — toutes les tuiles','Fixations',fixing.fieldQty,'u',PRICE.fixing,'Mode de fixation sélectionné',fixing.reason));
+     }else{
+       if(fixing.edgeQty)items.push(item('fixings_edges','Fixations tuiles — rives + égout','Fixations',fixing.edgeQty,'u',PRICE.fixing,'Rives et égout',fixing.basis));
+       if(fixing.fieldQty){
+         const den=Math.round(1/fixing.ratio);
+         items.push(item('fixings_field',`Fixations tuiles — partie courante (1 sur ${den})`,'Fixations',fixing.fieldQty,'u',PRICE.fixing,'Densité de fixation',fixing.reason));
+       }
+     }
+   }
    // Zinguerie - lengths are always explicit, never derived from hidden doubles
    if(o.gouttieres){const gl=Math.max(0,Number(dm.longueur_gouttiere)||0),gt=o.type_gouttiere||'zinc',gp=PRICE.gutter[gt]||PRICE.gutter.zinc,nd=Math.max(0,Number(dm.nombre_descentes)||0),hd=Math.max(0,Number(dm.hauteur_descentes)||0);if(gl){items.push(item('gutter',`Gouttière ${gt}`,'Zinguerie',gl,'ml',gp));items.push(item('gutter_hooks','Crochets de gouttière','Zinguerie',gl/Math.max(.1,Number(o.ecartement_crochets_m)||.5),'u',PRICE.gutterHook,'Entraxe saisi'));items.push(item('gutter_ends','Fonds de gouttière','Zinguerie',Math.max(2,Number(o.nombre_fonds)||2),'u',PRICE.gutterEnd));items.push(item('gutter_joints','Jonctions de gouttière','Zinguerie',Math.max(0,Number(o.nombre_jonctions)||0),'u',PRICE.gutterJoint))}if(nd){items.push(item('gutter_outlet','Naissances','Zinguerie',nd,'u',PRICE.gutterOutlet));items.push(item('downpipes','Descentes EP','Zinguerie',nd*hd,'ml',PRICE.downpipe));items.push(item('elbows','Coudes de descente','Zinguerie',nd*Math.max(0,Number(o.coudes_par_descente)||2),'u',PRICE.elbow));items.push(item('collars','Colliers de descente','Zinguerie',nd*Math.ceil(hd/Math.max(.1,Number(o.ecartement_colliers_m)||1.5)),'u',PRICE.collar));items.push(item('dolphins','Dauphins / raccords bas','Zinguerie',nd,'u',PRICE.dolphin))}}
    if(Number(dm.longueur_cheneau)>0)items.push(item('box_gutter','Chéneau','Zinguerie',dm.longueur_cheneau,'ml',PRICE.boxGutter));if(Number(dm.longueur_planche_rive)>0){const typ=o.type_planche_rive||'bois';items.push(item('fascia',`Planche de rive ${typ}`,'Zinguerie',dm.longueur_planche_rive,'ml',PRICE.fascia[typ]||PRICE.fascia.bois))}
@@ -128,5 +154,5 @@ class CouvreurCalculateur{
    return {product:p,input,surfaces:{totale:roofArea,nette:roofArea,avec_pertes:round(roofArea*(1+waste/100),2),detail_par_face:{toiture:roofArea}},materiaux:items,main_oeuvre:{temps_estime_heures:duration,heures_homme:totalHH,decomposition:decomp,taux_horaire:Number(o.taux_horaire)||48,nombre_ouvriers:workers,cout_total:labor},totaux:{materiaux_ht:material,securite_ht:security,main_oeuvre_ht:labor,total_ht:total,tva:vat,total_ttc:round(total+vat,2)},stock_status:{disponible:true,articles_manquants:[]},recommandations:[`Modèle : ${p.manufacturer} ${p.model}`,`Fixation : ${fixing.reason}`,`Ventilation : ${vent.count} chatière(s) calculée(s)`],alertes:alerts,technical:{tiles_per_m2:tpm||null,tiles_per_m2_min:tileInfo.min,tiles_per_m2_max:tileInfo.max,tiles_per_m2_source:tileInfo.source,battens_ml_m2:bpm||null,gauge_mm:gauge||null,min_pitch:mp.value,validation:p.validation?.status||'unknown'}};
  }
 }
-window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.4.0'};
+window.SpeedArtiCouvreurReal={CouvreurCalculateur,roofProducts:PRODUCTS,listManufacturers:manufacturers,listProducts:products,getTileConsumptionInfo:tileConsumptionInfo,veluxProducts:veluxProducts,getVeluxProduct:veluxProduct,recommendVeluxFlashing:recommendVeluxFlashing,getVeluxFlashing:veluxFlashing,getVeluxAccessory:veluxAccessory,veluxFlashingOptions:veluxFlashingOptions,version:'0.4.1'};
 })();
