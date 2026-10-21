@@ -2,6 +2,18 @@
   const C=window.SpeedArtiRoofCatalog;
   if(!C||!Array.isArray(C.products)) return;
   const battenCorrections={
+    'terreal-cote-de-beaune':{min:2.5,mean:2.5,max:2.5,source:'TERREAL Guide Grands Moules du Nord — Côte de Beaune'},
+    'terreal-cote-de-nuits-pv':{min:2.9,mean:2.9,max:2.9,source:'TERREAL Guide Grands Moules du Nord — Côte de Nuits PV'},
+    'terreal-losangee':{min:2.7,mean:2.9,max:3.1,source:'TERREAL Guide Grands Moules du Nord — Losangée'},
+    'terreal-montchanin-losangee':{min:2.7,mean:2.9,max:3.1,source:'TERREAL Guide Grands Moules du Nord — Montchanin Losangée'},
+    'terreal-tuile-a-cote-universelle':{min:2.7,mean:2.9,max:3.1,source:'TERREAL Guide Grands Moules du Nord — Tuile à Côte Universelle'},
+    'terreal-volnay-pv':{min:2.5,mean:2.5,max:2.5,source:'TERREAL Guide Grands Moules du Nord — Volnay PV'},
+    'terreal-volnay-pv-version-tandem':{min:2.5,mean:2.5,max:2.5,source:'TERREAL Guide Grands Moules du Nord — Volnay PV Tandem'},
+    'terreal-double-canal-languedoc':{min:2.5,mean:2.5,max:2.5,source:'TERREAL Guide Canal & Grands Moules du Sud — DCL'},
+    'terreal-heritage-canal':{min:2.40,mean:2.46,max:2.53,gauge_min_mm:396,gauge_mean_mm:406,gauge_max_mm:416,source:'TERREAL Guide Canal & Grands Moules du Sud — Héritage Canal, calcul depuis pureau 39,6–41,6 cm'},
+    'terreal-romane-azur':{min:2.23,mean:2.23,max:2.23,source:'TERREAL Guide Canal & Grands Moules du Sud — Romane Azur'},
+    'terreal-romane-reno':{min:2.8,mean:2.8,max:2.8,source:'TERREAL Guide Canal & Grands Moules du Sud — Romane Réno'},
+    'terreal-rully':{min:6.25,mean:6.25,max:6.25,gauge_min_mm:160,gauge_mean_mm:160,gauge_max_mm:160,source:'TERREAL Guide Grands Moules du Nord — Rully'},
     'edilians-mediane-plus':{min:2.66,mean:2.72,max:2.78,gauge_min_mm:360,gauge_mean_mm:368,gauge_max_mm:376,source:'EDILIANS Encyclopédie 2026 — MÉDIANE PLUS Gélis'},
     'edilians-double-tenord':{min:3.70,mean:3.85,max:4.00,gauge_min_mm:250,gauge_mean_mm:260,gauge_max_mm:270,source:'EDILIANS Encyclopédie 2026 — DOUBLE TÉNORD'},
     'edilians-hp-13-evolutive':{min:2.85,mean:3.17,max:3.57,gauge_min_mm:280,gauge_mean_mm:315,gauge_max_mm:350,source:'EDILIANS Encyclopédie 2026 — HP 13 ÉVOLUTIVE'},
@@ -69,5 +81,5 @@
     }
     p.validation.catalogue_correction='source_fabricant_auditee';
   }
-  C.corrections={version:'2026-10-21-v5',count:Object.keys(corrections).length,batten_count:Object.keys(battenCorrections).length};
+  C.corrections={version:'2026-10-21-v6',count:Object.keys(corrections).length,batten_count:Object.keys(battenCorrections).length};
 })();
