@@ -721,4 +721,10 @@ assert(appSrc.includes('Caractéristiques appliquées à'),'Retour utilisateur a
 assert(/éléments similaires/.test(ANGEL.answer('appliquer caracteristiques elements similaires wc suspendu')),'Angel v1.8 connaît la copie des caractéristiques');
 assert(/distance moyenne salle de bain/.test(ANGEL.answer('distance chauffe eau salle de bain')),'Angel v1.8 connaît le nouveau libellé distance moyenne salle de bain');
 
+// Contrôles ciblés du correctif d'affichage v0.8.1 (capture artisan).
+assert(cssSrc.includes('.grid>.c12{grid-column:1/-1;min-width:0}'),'Les grands blocs de configuration occupent bien toute la grille');
+assert(cssSrc.includes('grid-template-columns:repeat(12,minmax(0,1fr))'),'Les colonnes ne sont plus contraintes par la largeur minimale des contenus');
+assert(appSrc.includes('similar-equipment-toolbar')&&appSrc.includes('<div class="inside">${similarToolbar}<div class="grid">'),'Copie des sanitaires similaires visible en tête de la fiche ouverte');
+assert(appSrc.includes('Aucun autre sanitaire du même type et de la même configuration'),'Message explicite lorsqu’aucune cible compatible n’existe');
+
 console.log(JSON.stringify({status:'OK',assertions:ok,catalogueCount:CAT.count,priceCount:CAT.priceCount,knownPrice117_19:known[0].prix,balisesVersion:r1.controle_balises.version,networkOnly:{ef:r2.surfaces.detail_par_face.EF_ml,ec:r2.surfaces.detail_par_face.EC_ml},fittingsOneFixture:fittingsWC.quantite_finale},null,2));
