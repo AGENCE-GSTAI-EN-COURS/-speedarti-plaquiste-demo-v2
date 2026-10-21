@@ -4,7 +4,7 @@ Date : 2026-10-21
 
 ## Résultat
 
-**649 / 649 assertions réussies** sur le code réellement présent sur `main`.
+**653 / 653 assertions réussies** sur le code réellement présent sur `main`.
 
 Catalogue Téréva contrôlé :
 - 7 456 références ;
@@ -23,6 +23,16 @@ Balises : `BALISES-ABSOLUES-v1.8`.
 - éléments spécifiques de désignations différentes : copie refusée ;
 - bouton UI et message de confirmation présents ;
 - Ángel Plombier v1.8 connaît la nouvelle fonction.
+
+## Correction d'affichage v0.8.1 — retour utilisateur 21/10/2026
+
+- les blocs `c12` de l'étape 3 occupent toute la largeur de la grille ;
+- les 12 colonnes de la grille sont définies sans minimum implicite ;
+- l'action de copie est maintenant placée en tête de la fiche sanitaire ouverte ;
+- en l'absence d'autre sanitaire compatible, une explication est affichée au lieu d'un bouton inutilisable ;
+- la logique métier d'appariement et la conservation ID/zone restent inchangées.
+
+**4 assertions UI supplémentaires**, ajoutées aux 649 assertions préexistantes.
 
 ## Régressions
 
