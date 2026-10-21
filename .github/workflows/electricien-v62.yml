@@ -1,4 +1,4 @@
-name: "Électricien V6.2 - Contrôles métier et navigateur"
+name: "Électricien V6.3 - Commandes éclairage et VMC"
 on:
   push:
     paths:
@@ -31,7 +31,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: electricien-v62-captures
+          name: electricien-v63-captures
           path: |
             electricien-desktop-result.png
             electricien-mobile-result.png
