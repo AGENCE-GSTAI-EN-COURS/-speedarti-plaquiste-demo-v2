@@ -1,10 +1,10 @@
-# SpeedArti — Plombier v0.8.0 — Auto-contrôle
+# SpeedArti — Plombier v0.8.1 — Auto-contrôle
 
-Date : 2026-10-08
+Date : 2026-10-21
 
 ## Résultat
 
-**634 / 634 assertions réussies** sur le code réellement présent sur `main`.
+**649 / 649 assertions réussies** sur le code réellement présent sur `main`.
 
 Catalogue Téréva contrôlé :
 - 7 456 références ;
@@ -12,28 +12,22 @@ Catalogue Téréva contrôlé :
 
 Balises : `BALISES-ABSOLUES-v1.8`.
 
-## Contrôles Sprint E
+## Contrôles Sprint F
 
-- distances SDB/cuisine appliquées à EF + EC ;
-- lavabo SDB : 8 ml + 5 m = 13 ml EF et 13 ml EC ;
-- scénario douche + évier : 5/8 m → 29 ml EF et EC ; 10/10 m → 36 ml EF et EC ;
-- lave-main = EF + EC + platine double Téréva `3160404` ;
-- ancien mode lave-main EF seul absent de l’UI ;
-- choix rapide robinet sur lavabo/vasque ;
-- habitude robinetterie lavabo réutilisée automatiquement ;
-- habitudes entreprise génériques pour accessoires configurables ;
-- fournisseur Téréva tracé dans les sélections et l’approvisionnement ;
-- CCL préparé mais inactif avec zéro article ;
-- payload fournisseur `PLB-APPRO-V2` ;
-- catalogue visuel présent à l’étape 3 ;
-- protection CSS anti-chevauchement et layout empilé sous 1180 px ;
-- résumé visible des composants automatiques ;
-- Ángel Plombier v1.7 cohérent avec les nouvelles règles.
+- nouveau libellé « distance moyenne salle de bain » présent dans la saisie et le résumé réseau ;
+- WC suspendu → WC suspendu : caractéristiques principales, références, accessoires et articles complémentaires recopiés ;
+- ID cible conservé ;
+- zone cible RDC/R+1 conservée ;
+- WC suspendu → WC à poser : copie refusée ;
+- évier simple → évier double : copie refusée ;
+- éléments spécifiques de désignations différentes : copie refusée ;
+- bouton UI et message de confirmation présents ;
+- Ángel Plombier v1.8 connaît la nouvelle fonction.
 
 ## Régressions
 
-Les **608 assertions** de la v0.7.1 restent intégrées dans la suite.
+Les **634 assertions** de la v0.8.0 restent intégrées dans la suite.
 
 ## Limite
 
-Les tests logiques ne remplacent pas un contrôle visuel navigateur. Les chevauchements signalés par Guillaume doivent être revalidés sur la page publique v0.8.0.
+Le comportement logique est validé. Un contrôle navigateur humain reste nécessaire pour confirmer l’ergonomie du bouton sur desktop et mobile.
