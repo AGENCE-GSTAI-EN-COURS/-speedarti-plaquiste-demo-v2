@@ -33,3 +33,11 @@ Ce document n'est PAS une nouvelle base de connaissances ni un nouvel index. Il 
 - Forfait VMC autoréglable / hygro / double flux : **3 bouches comprises, 1 cuisine + 1 WC + 1 salle de bains ou salle d'eau**. Le cellier n'est pas une quatrième bouche incluse.
 - Si plusieurs cuisines, WC ou salles de bains/salles d'eau : toute bouche au-delà de la première dans chaque famille s'ajoute au forfait au prix validé **115 € HT par bouche**. Le champ manuel est réservé aux autres bouches et ne doit pas doubler celles déjà calculées d'après la composition.
 - Le récapitulatif doit préciser explicitement les 3 bouches incluses, les suppléments automatiques, les ajouts manuels et le total. Aucune base Ángel parallèle ; ce delta reste à intégrer en production.
+
+## Complément V6.4 — catalogue références d'appareillage
+- Les prises blanches simples doivent être proposées, avec marque, gamme, génération, couleur, référence exacte et statut de prix (confirmé / indicatif / absent).
+- Une entrée du catalogue représentant un mécanisme seul n'est jamais facturée comme une prise complète sans mécanisme, finition, enjoliveur éventuel, plaque et support compatibles.
+- Distinguer Odace 2011 et 2025 ; contrôler génération et finition dans chaque composition.
+- Ne jamais inventer un prix : Mosaic 278111L-1121-C est un exemple de kit blanc complet sans prix unitaire public exact prouvé.
+- Priorité inchangée : tarif personnel fournisseur artisan > référence exacte > moyenne même famille/fonction. N'utiliser le prix moyen que pour les produits complets compatibles.
+- Les **références supplémentaires sont documentées** dans `catalogue-en-ligne.json` et l'audit `AUDIT_REFERENCES_V64.md` ; aucune mise à jour de la base Ángel de production n'a été effectuée. Complément à intégrer dans les connaissances existantes et à tracer.
