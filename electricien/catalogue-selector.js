@@ -160,7 +160,11 @@
   function resolve(state,key){
     const cfg=getCfg(state,key); const brand=cfg.brand||"moyen";
     if(brand==="moyen"){
-      const list=choices(key); return {price:average(list),exact:false,brand:"Prix moyen",gamme:"Toutes gammes",ref:"",label:`Prix moyen ${FAMILY_DEFS[key]?.label||key}`,source:"Catalogue multi-gammes 2026 — moyenne générale"};
+      const filter=cfg.finition||"";
+      const list=choices(key,"","",filter);
+      return {price:average(list),exact:false,brand:"Prix moyen",gamme:"Toutes gammes",ref:"",
+        label:`Prix moyen ${FAMILY_DEFS[key]?.label||key}${filter?" · "+filter:""}`,
+        source:"Catalogue multi-gammes 2026 — moyenne de la finition compatible"};
     }
     const list=choices(key,brand,cfg.gamme||"",cfg.finition||"");
     const picked=cfg.choiceId ? list.find(c=>c.id===cfg.choiceId) : null;
