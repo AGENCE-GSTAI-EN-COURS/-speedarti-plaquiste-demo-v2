@@ -280,4 +280,80 @@ test('VMC désactivée : aucune bouche facturée même si des extras sont enregi
   assert.equal(E.vmcMouthsFor(s).total,0);
   assert.equal(E.calculate(s).fixed.rows.filter(x=>x.label.includes('VMC')||x.label.includes('bouche(s)')).length,0);
 });
+
+const online=JSON.parse(fs.readFileSync(path.join(root,'catalogue-en-ligne.json'),'utf8'));
+const combined={window:{},console};
+vm.runInNewContext(fs.readFileSync(path.join(root,'catalogue-appareillage.js'),'utf8'),combined,{filename:'catalogue-appareillage.js'});
+const all=combined.window.SpeedArtiElectricienCatalogue.items;
+const itemKey=x=>[x["Marque"],x["Gamme"],x["Génération"]||"",x["Référence fabricant"],x["Type article"]].join('|').toLowerCase();
+for(const item of online.items){
+  const existing=all.findIndex(x=>itemKey(x)===itemKey(item));
+  if(existing===-1)all.push(item);
+  else all[existing]={...all[existing],...item};
+}
+vm.runInNewContext(fs.readFileSync(path.join(root,'catalogue-selector.js'),'utf8'),combined,{filename:'catalogue-selector.js'});
+vm.runInNewContext(fs.readFileSync(path.join(root,'engine-current.js'),'utf8'),combined,{filename:'engine-current.js'});
+const WEB=combined.window.ElectricienCatalogueSelector, WEB_ENGINE=combined.window.ElectricienEngine;
+test('catalogue en ligne : 9 nouvelles références, 2 mises à jour, aucun doublon',()=>{
+  assert.equal(online.items.length,11);
+  assert.equal(WEB.items.length,267);
+  assert.equal(new Set(WEB.items.map(x=>[x.brand,x.gamme,x.generation,x.ref,x.type].join('|'))).size,267);
+});
+test('URLs et prix du catalogue vérifié traçables',()=>{
+  for(const item of online.items){
+    assert(/^https:\/\/(www\.)?(123elec\.com|elec44\.fr)\//.test(item["Source URL"]));
+    assert(Math.abs(item["Prix TTC"]/1.2-item["Prix HT"])<.02);
+    assert(item["Date relevé"]==='2026-10-21');
+  }
+});
+test('prise simple blanche disponible dans Schneider Ovalis, Odace 2011 et 2025',()=>{
+  for(const [range,ref] of [['Ovalis','S320059-P'],['Odace','S520052-P'],['Odace','S920052-P']]){
+    const list=WEB.choices('priseSimple','Schneider Electric',range,'blanc');
+    assert(list.some(x=>x.ref===ref&&x.exact),ref);
+  }
+});
+test('prise simple blanche disponible chez Legrand Céliane 2024 et Dooxie',()=>{
+  for(const [range,ref] of [['Céliane 2024','CM0111-CCB'],['Dooxie','600335-111-C']])
+    assert(WEB.choices('priseSimple','Legrand',range,'blanc').some(x=>x.ref===ref&&x.exact),ref);
+});
+test('Hager Essensya prises blanches simple/affleurante, double et triple',()=>{
+  const simple=WEB.choices('priseSimple','Hager','Essensya','blanc');
+  assert(simple.some(x=>x.ref==='WE100P'&&x.exact));
+  assert(simple.some(x=>x.ref==='WE106P'&&x.exact));
+  assert(WEB.choices('priseDouble','Hager','Essensya','blanc').some(x=>x.ref==='WE122P'&&x.exact));
+  assert(WEB.choices('priseTriple','Hager','Essensya','blanc').some(x=>x.ref==='WE123P'&&x.exact));
+  assert(WEB.choices('rj45','Hager','Essensya','blanc').some(x=>x.ref==='WE228P'&&x.exact));
+});
+test('filtre blanc : aucun modèle anthracite affiché',()=>{
+  for(const brand of ['Schneider Electric','Hager','Legrand']){
+    const choices=WEB.choices('priseSimple',brand,'','blanc');
+    assert(choices.length>0,brand);
+    assert(choices.every(x=>WEB.isWhite(x.finition)),brand);
+  }
+});
+test('les deux générations Odace ne sont pas mélangées',()=>{
+  const whites=WEB.choices('priseSimple','Schneider Electric','Odace','blanc');
+  const older=whites.find(x=>x.ref==='S520052-P');
+  const newer=whites.find(x=>x.ref==='S920052-P');
+  assert(older&&newer);
+  assert.notEqual(older.price,newer.price);
+  assert(!whites.some(x=>x.ref.includes('S520052')&&x.ref.includes('S920702')));
+});
+test('prix blanc exact alimente le calcul et conserve la référence fournisseur',()=>{
+  const s=base();s.appareillage.families={
+    priseSimple:{brand:'Hager',gamme:'Essensya',finition:'blanc',choiceId:'WEB-2026-005'}
+  };
+  const r=WEB_ENGINE.calculate(s);
+  const m=r.materials.find(x=>x.articleId==='catalogue:priseSimple:WEB-2026-005');
+  assert(m);
+  assert.equal(m.price,2.89);
+  assert(m.note.includes('WE100P'));
+  assert(m.source.includes('elec44.fr'));
+});
+test('aucune composition incomplète ne chiffre sa plaque comme prise complète',()=>{
+  const semi=WEB.choices('priseSimple','Legrand','Céliane 2024','blanc')
+    .find(x=>x.ref==='CM0111-CB');
+  if(semi){assert.equal(semi.partial,true);assert.equal(semi.price,null);}
+});
+
 console.log('OK '+passed+' contrôles moteur');
