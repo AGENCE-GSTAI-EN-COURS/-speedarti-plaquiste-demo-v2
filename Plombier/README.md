@@ -1,5 +1,13 @@
 # SpeedArti — Plombier v0.8.1 — Sprint F duplication de configuration
 
+## Correctif d'affichage v0.8.1 — 21 octobre 2026
+
+À la suite d'une capture montrant les champs de configuration écrasés, restauration du plein format des blocs `c12` et sécurisation des 12 colonnes CSS. L'action de copie est désormais visible dès l'ouverture de la fiche du sanitaire compatible ; si aucune cible ne correspond, l'interface explique pourquoi le bouton n'apparaît pas. Aucune modification des règles de prix, du réseau EF/EC ou des sous-types similaires.
+
+Auto-contrôle élargi : **653 / 653 PASS**. Validation humaine navigateur desktop/mobile encore nécessaire.
+
+**Optimisation catalogue V3 : piste future, non développée dans ce correctif.**
+
 ## Sprint F v0.8.1
 
 - libellé remplacé par **« Chauffe-eau → distance moyenne salle de bain (m) »** ; la règle de calcul EF + EC reste inchangée ;
