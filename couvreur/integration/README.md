@@ -1,10 +1,10 @@
-# Couvreur — Couche d'intégration SpeedArti V0.4.0
+# Couvreur — Couche d'intégration SpeedArti V0.5.1
 
 Le dépôt `GSTAI-Sp/speedarti-v2` a été audité **uniquement en lecture**. Cette couche prépare le raccordement sans modifier le dépôt source.
 
 ## Quantité de tuiles
 
-La V0.4.0 utilise le modèle fabricant exact :
+La V0.5.1 utilise le modèle fabricant exact :
 
 - valeur fabricant exacte quand elle existe ;
 - plage fabricant quand elle varie avec recouvrement / pureau ;
@@ -14,7 +14,7 @@ La V0.4.0 utilise le modèle fabricant exact :
 
 ## Fenêtres de toit VELUX
 
-La démo V0.4.0 ajoute une bibliothèque VELUX avec modèle/gamme, code dimension, dimensions physiques et prix web public sourcé. Le prix artisan affiché applique une estimation de -15 % demandée pour le chiffrage de démonstration. Ce n'est pas un tarif professionnel VELUX contractuel : un tarif fournisseur/pro réel doit toujours primer.
+La démo V0.5.1 ajoute une bibliothèque VELUX avec modèle/gamme, code dimension, dimensions physiques et prix web public sourcé. Le prix artisan affiché applique une estimation de -15 % demandée pour le chiffrage de démonstration. Ce n'est pas un tarif professionnel VELUX contractuel : un tarif fournisseur/pro réel doit toujours primer.
 
 ## Raccords et accessoires VELUX
 
@@ -45,3 +45,12 @@ Toutes les options et dimensions de sécurité sont regroupées dans un seul blo
 6. Stock uniquement avec identifiants réels.
 7. Ángel enrichit la base existante, pas de base runtime parallèle.
 8. Chiffrage → devis uniquement sur action explicite de l'artisan.
+
+
+## Liteaux automatiques
+
+Les 129 modèles de couverture de la démo disposent d'une consommation de liteaux calculable automatiquement. La valeur fabricant est prioritaire. MÉDIANE PLUS EDILIANS utilise 2,72 ml/m² au pureau moyen de 368 mm (plage fabricant 2,66 à 2,78 ml/m²). La saisie manuelle reste possible et explicite.
+
+## Planches de rive et dessous de toit
+
+Ces postes sont séparés des gouttières. Le bloc Finitions de rive gère la planche, l'habillage, les angles, jonctions et embouts. Le bloc Dessous de toit calcule la surface à partir de la longueur × profondeur et ajoute matériau, profils et grilles de ventilation.
