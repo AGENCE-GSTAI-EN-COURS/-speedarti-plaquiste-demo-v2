@@ -34,14 +34,14 @@
     pose: txt(r["Pose"]),
     ip: txt(r["IP"]),
     ref: txt(r["Référence fabricant"]),
-    priceTTC: n(r["Prix TTC"]),
-    priceHT: n(r["Prix HT"]) || (n(r["Prix TTC"])?Math.round(n(r["Prix TTC"])/1.2*100)/100:0),
+    priceTTC: n(r["Prix TTC"])>0?n(r["Prix TTC"]):null,
+    priceHT: n(r["Prix HT"])>0?n(r["Prix HT"]):(n(r["Prix TTC"])>0?Math.round(n(r["Prix TTC"])/1.2*100)/100:null),
     supplier: txt(r["Fournisseur"]),
     source: txt(r["Source URL"]),
     date: txt(r["Date relevé"]),
     status: txt(r["Statut"]),
     notes: txt(r["Notes"])
-  })).filter(i=>i.brand && i.gamme && i.priceHT>0);
+  })).filter(i=>i.brand && i.gamme && i.ref && i.fonction);
 
   const FAMILY_DEFS = {
     priseSimple:{label:"Prises simples",match:i=>i.fonction==="Prise 2P+T" && !isExterior(i) && !hasWord(i,"double") && !hasWord(i,"triple") && !hasWord(i,"renforc")},
@@ -89,7 +89,7 @@
   }
   function directChoice(base,key){
     return {
-      id:base.id, family:key, exact:true, components:[base], price:base.priceHT,
+      id:base.id, family:key, exact:base.priceHT!==null,partial:base.priceHT===null,components:[base], price:base.priceHT,
       brand:base.brand,gamme:base.gamme,finition:base.finition||"Standard",ref:base.ref,
       type:base.type,
       label:`${base.gamme} · ${base.modele||base.fonction}${base.finition?` · ${base.finition}`:""} · réf. ${base.ref}`,
@@ -107,14 +107,19 @@
     const needsAccessory=base.type==="Mécanisme" && accessoryCandidates(base,key).length>0;
     const out=[];
     plates.forEach(plate=>{
+      // Une plaque blanche et un mécanisme anthracite ne forment pas une composition blanche.
+      // Pas d'association croisée si la couleur du mécanisme est connue.
+      if(base.finition && plate.finition &&
+         finishKey(base.finition)!==finishKey(plate.finition)) return;
       const acc=base.type==="Mécanisme" ? accessoryFor(base,key,plate) : null;
       // Ne jamais fabriquer une composition mélangeant des finitions incompatibles.
       if(needsAccessory && !acc) return;
       const comps=[base]; if(acc) comps.push(acc); comps.push(plate);
-      const price=Math.round(comps.reduce((s,x)=>s+x.priceHT,0)*100)/100;
+      const price=comps.every(x=>x.priceHT!==null)
+        ?Math.round(comps.reduce((s,x)=>s+x.priceHT,0)*100)/100:null;
       const refs=comps.map(x=>x.ref).filter(Boolean).join(" + ");
       out.push({
-        id:comps.map(x=>x.id).join("+"),family:key,exact:true,partial:false,components:comps,price,
+        id:comps.map(x=>x.id).join("+"),family:key,exact:price!==null,partial:price===null,components:comps,price,
         brand:base.brand,gamme:base.gamme,finition:plate.finition||base.finition||"Standard",ref:refs,
         type:"Composition",
         label:`${base.gamme} · ${base.modele||base.fonction} · ${plate.finition||"plaque standard"} · ${refs}`,
@@ -125,30 +130,42 @@
     if(out.length) return out;
     const c=directChoice(base,key); c.exact=false; c.partial=true; c.note="Composition incomplète : aucun enjoliveur/plaque de finition compatible n'est présent dans la base de démo."; return [c];
   }
-  function choices(key,brand="",gamme=""){
+  function isWhite(v){ return /blanc|pure|craie/i.test(txt(v)); }
+  function matchesFinish(v,finish){
+    const f=txt(finish).toLowerCase();
+    if(!f)return true;
+    if(f==="blanc")return isWhite(v);
+    return finishKey(v)===f;
+  }
+  function choices(key,brand="",gamme="",finish=""){
     let arr=familyBaseItems(key);
     if(brand) arr=arr.filter(i=>i.brand===brand);
     if(gamme) arr=arr.filter(i=>i.gamme===gamme);
     const out=[];
-    arr.forEach(base=>assembliesFor(base,key).forEach(c=>out.push(c)));
+    arr.forEach(base=>assembliesFor(base,key).forEach(c=>{
+      if(matchesFinish(c.finition,finish))out.push(c);
+    }));
     const seen=new Set();
     return out.filter(c=>{ if(seen.has(c.id)) return false; seen.add(c.id); return true; })
-      .sort((a,b)=>a.brand.localeCompare(b.brand)||a.gamme.localeCompare(b.gamme)||a.price-b.price||a.label.localeCompare(b.label));
+      .sort((a,b)=>Number(isWhite(b.finition))-Number(isWhite(a.finition))
+        ||Number(b.exact)-Number(a.exact)
+        ||a.brand.localeCompare(b.brand)||a.gamme.localeCompare(b.gamme)
+        ||(a.price??Infinity)-(b.price??Infinity)||a.label.localeCompare(b.label));
   }
   function brands(key){ return [...new Set(familyBaseItems(key).map(i=>i.brand))].sort(); }
   function gammes(key,brand){ return [...new Set(familyBaseItems(key).filter(i=>!brand||i.brand===brand).map(i=>i.gamme))].sort(); }
   function allGammes(brand){ return [...new Set(items.filter(i=>i.brand===brand).map(i=>i.gamme))].sort(); }
-  function average(list){ const valid=list.filter(c=>c.exact&&!c.partial); return valid.length?Math.round(valid.reduce((s,c)=>s+c.price,0)/valid.length*100)/100:null; }
+  function average(list){ const valid=list.filter(c=>c.exact&&!c.partial&&c.price!==null); return valid.length?Math.round(valid.reduce((s,c)=>s+c.price,0)/valid.length*100)/100:null; }
   function getCfg(state,key){ return state?.appareillage?.families?.[key] || {brand:"moyen",gamme:"",choiceId:""}; }
   function resolve(state,key){
     const cfg=getCfg(state,key); const brand=cfg.brand||"moyen";
     if(brand==="moyen"){
       const list=choices(key); return {price:average(list),exact:false,brand:"Prix moyen",gamme:"Toutes gammes",ref:"",label:`Prix moyen ${FAMILY_DEFS[key]?.label||key}`,source:"Catalogue multi-gammes 2026 — moyenne générale"};
     }
-    const list=choices(key,brand,cfg.gamme||"");
+    const list=choices(key,brand,cfg.gamme||"",cfg.finition||"");
     const picked=cfg.choiceId ? list.find(c=>c.id===cfg.choiceId) : null;
     if(picked) return picked;
-    return {price:average(list),exact:false,brand,gamme:cfg.gamme||"Toutes gammes",ref:"",label:`Moyenne ${brand}${cfg.gamme?` · ${cfg.gamme}`:""}`,source:"Catalogue multi-gammes 2026 — moyenne de la sélection"};
+    return {price:average(list),exact:false,brand,gamme:cfg.gamme||"Toutes gammes",ref:"",label:`Moyenne ${brand}${cfg.gamme?` · ${cfg.gamme}`:""}${cfg.finition?` · ${cfg.finition}`:""}`,source:"Catalogue multi-gammes 2026 — moyenne de la sélection"};
   }
   function socketDistribution(state,total){
     const d=state?.appareillage?.socketDistribution||{};
@@ -161,6 +178,7 @@
 
   window.ElectricienCatalogueSelector={
     items,FAMILY_DEFS,BRAND_LABELS,brands,gammes,allGammes,choices,resolve,socketDistribution,
+    isWhite,
     familyKeys:()=>Object.keys(FAMILY_DEFS)
   };
 })();
