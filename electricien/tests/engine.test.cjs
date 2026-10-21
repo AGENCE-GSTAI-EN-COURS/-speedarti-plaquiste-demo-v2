@@ -203,4 +203,81 @@ test('au-delà de 40 circuits : palier de temps bloqué',()=>{
   const r=E.calculate(s);
   assert(r.blockers.some(x=>x.includes("s'arrête à 40 circuits")));
 });
+
+test('simple, va-et-vient et éclairage 3 points personnalisables indépendamment',()=>{
+  const s=base();
+  s.pointOverrides={simple:3,vv:2,three:1};
+  const p=E.effectivePoints(s);
+  assert.equal(p.simple,3);
+  assert.equal(p.vv,2);
+  assert.equal(p.three,1);
+  assert.equal(p.lightPoints,6+E.computeAutoPoints(s).extraLight);
+  assert.equal(p.switches,10);
+  const r=E.calculate(s);
+  assert.equal(r.points.switches,10);
+  assert(r.materials.some(m=>m.name.includes('Interrupteurs / commandes')&&m.qty===10));
+});
+test('changer va-et-vient modifie câblage, main d’oeuvre et prix',()=>{
+  const s1=base();s1.pointOverrides={simple:3,vv:0,three:1};
+  const s2=base();s2.pointOverrides={simple:3,vv:2,three:1};
+  const r1=E.calculate(s1),r2=E.calculate(s2);
+  assert.equal(r2.points.lightPoints-r1.points.lightPoints,2);
+  assert.equal(r2.points.switches-r1.points.switches,4);
+  assert(r2.labor.hours>r1.labor.hours);
+  const cableQty=r=>r.materials.filter(m=>m.name.includes('Conducteurs H07VU')).reduce((sum,m)=>sum+m.qty,0);
+  assert(cableQty(r2)>cableQty(r1));
+  assert(r2.knownTotal>r1.knownTotal);
+});
+test('zéro est un réglage manuel valide et vide restitue AUTO',()=>{
+  const s=base(),auto=E.computeAutoPoints(s);
+  s.pointOverrides={simple:0,vv:0,three:0};
+  assert.equal(E.effectivePoints(s).switches,0);
+  s.pointOverrides={simple:"",vv:null,three:null};
+  assert.equal(E.effectivePoints(s).switches,auto.switches);
+  assert.equal(E.effectivePoints(s).lightPoints,auto.lightPoints);
+});
+test('répartition détaillée prend le pas sur anciennes corrections globales',()=>{
+  const s=base();
+  s.pointOverrides={lightPoints:100,switches:200,simple:1,vv:1,three:1};
+  const p=E.effectivePoints(s);
+  assert.equal(p.switches,6);
+  assert.equal(p.lightPoints,3+E.computeAutoPoints(s).extraLight);
+});
+test('VMC simple flux 3 bouches incluses sans supplément',()=>{
+  const s=base();s.circuits.vmcType='auto';s.circuits.vmcExtraMouths=0;
+  const vmc=E.vmcMouthsFor(s),r=E.calculate(s);
+  assert.equal(vmc.included,3);
+  assert.equal(vmc.extraAuto,0);
+  assert.equal(vmc.total,3);
+  assert(r.fixed.rows.some(x=>x.label.includes('3 bouches comprises')&&x.price===600));
+  assert(!r.fixed.rows.some(x=>x.label.includes('supplémentaire')));
+});
+test('VMC plus de WC/SDB : surplus automatique 115€ par bouche',()=>{
+  const s=base();s.circuits.vmcType='hygro';s.rooms.wc=2;s.rooms.sdb=2;
+  const vmc=E.vmcMouthsFor(s),r=E.calculate(s);
+  assert.equal(vmc.extraAuto,2);
+  assert.equal(vmc.total,5);
+  assert.equal(vmc.extraPrice,230);
+  assert(r.fixed.rows.some(x=>x.label.includes('composition')&&x.price===230));
+  assert.equal(r.fixed.rows.filter(x=>x.label.includes('VMC')||x.label.includes('composition')).reduce((x,y)=>x+y.price,0),1030);
+});
+test('VMC salle d eau remplace salle de bains sans bouche en plus',()=>{
+  const s=base();s.circuits.vmcType='auto';s.rooms.sdb=0;s.rooms.sde=1;
+  assert.equal(E.vmcMouthsFor(s).extraAuto,0);
+  assert.equal(E.vmcMouthsFor(s).total,3);
+});
+test('VMC extras manuels s ajoutent au surplus automatique sans double comptage',()=>{
+  const s=base();s.circuits.vmcType='auto';s.rooms.sde=1;s.circuits.vmcExtraMouths=1;
+  const v=E.vmcMouthsFor(s),r=E.calculate(s);
+  assert.equal(v.extraAuto,1);
+  assert.equal(v.extraManual,1);
+  assert.equal(v.total,5);
+  assert.equal(v.extraPrice,230);
+  assert.equal(r.fixed.rows.filter(x=>x.label.includes('bouche(s)')).reduce((sum,x)=>sum+x.price,0),230);
+});
+test('VMC désactivée : aucune bouche facturée même si des extras sont enregistrés',()=>{
+  const s=base();s.circuits.vmcType='none';s.circuits.vmcExtraMouths=3;
+  assert.equal(E.vmcMouthsFor(s).total,0);
+  assert.equal(E.calculate(s).fixed.rows.filter(x=>x.label.includes('VMC')||x.label.includes('bouche(s)')).length,0);
+});
 console.log('OK '+passed+' contrôles moteur');
