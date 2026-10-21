@@ -1,4 +1,13 @@
-# SpeedArti — Plombier v0.8.0 — Sprint E retour Guillaume complet
+# SpeedArti — Plombier v0.8.1 — Sprint F duplication de configuration
+
+## Sprint F v0.8.1
+
+- libellé remplacé par **« Chauffe-eau → distance moyenne salle de bain (m) »** ; la règle de calcul EF + EC reste inchangée ;
+- ajout dans l’étape 3 du bouton **« Appliquer les caractéristiques aux éléments similaires »** lorsqu’au moins un autre sanitaire compatible existe ;
+- éléments similaires = même famille + même sous-type ; pour les éviers, même configuration simple/double ; pour un élément spécifique, même désignation ;
+- la copie reprend références catalogue, accessoires, options, dimensions/configuration, articles complémentaires et temps ;
+- l’ID et la zone RDC/R+1 de chaque sanitaire cible sont toujours conservés ;
+- un WC suspendu ne peut pas appliquer ses caractéristiques à un WC à poser.
 
 Cette version reprend l’intégralité du retour Guillaume après la v0.7.1.
 
