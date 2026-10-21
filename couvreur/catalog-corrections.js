@@ -2,6 +2,15 @@
   const C=window.SpeedArtiRoofCatalog;
   if(!C||!Array.isArray(C.products)) return;
   const battenCorrections={
+    'edilians-standard-14-vario':{min:2.86,mean:3.15,max:3.50,gauge_min_mm:285,gauge_mean_mm:317,gauge_max_mm:350,source:'EDILIANS Encyclopédie 2026 — STANDARD 14 VARIO'},
+    'edilians-arboise-ecaille':{min:4.54,mean:4.54,max:4.54,gauge_min_mm:220,gauge_mean_mm:220,gauge_max_mm:220,source:'EDILIANS Encyclopédie 2026 — ARBOISE ÉCAILLE'},
+    'edilians-beauvoise-graphite':{min:4.08,mean:4.08,max:4.08,gauge_min_mm:245,gauge_mean_mm:245,gauge_max_mm:245,source:'EDILIANS Encyclopédie 2026 — BEAUVOISE GRAPHITE'},
+    'edilians-plate-ecaille-pressee-17x27':{min:10.00,mean:10.53,max:11.11,gauge_min_mm:90,gauge_mean_mm:95,gauge_max_mm:100,source:'EDILIANS Encyclopédie 2026 — PLATE ÉCAILLE PRESSÉE 17X27'},
+    'edilians-plate-elixir-16x27':{min:10.53,mean:11.11,max:11.70,gauge_min_mm:85,gauge_mean_mm:90,gauge_max_mm:95,source:'EDILIANS Encyclopédie 2026 — PLATE ELIXIR 16X27'},
+    'edilians-plate-rectangulaire-pressee-17x27':{min:10.00,mean:10.53,max:11.11,gauge_min_mm:90,gauge_mean_mm:95,gauge_max_mm:100,source:'EDILIANS Encyclopédie 2026 — PLATE RECTANGULAIRE PRESSÉE 17X27'},
+    'edilians-plate-restauration-16x27':{min:10.53,mean:11.11,max:11.70,gauge_min_mm:85,gauge_mean_mm:90,gauge_max_mm:95,source:'EDILIANS Encyclopédie 2026 — PLATE RESTAURATION 16X27'},
+    'edilians-plate-tradition-17x27':{min:10.00,mean:10.53,max:11.11,gauge_min_mm:90,gauge_mean_mm:95,gauge_max_mm:100,source:'EDILIANS Encyclopédie 2026 — PLATE TRADITION 17X27'},
+    'terreal-double-canal-languedoc-aspect-vieux-pays':{min:2.5,mean:2.5,max:2.5,source:'TERREAL Guide Canal & Grands Moules du Sud — DCL aspect Vieux Pays'},
     'terreal-cote-de-beaune':{min:2.5,mean:2.5,max:2.5,source:'TERREAL Guide Grands Moules du Nord — Côte de Beaune'},
     'terreal-cote-de-nuits-pv':{min:2.9,mean:2.9,max:2.9,source:'TERREAL Guide Grands Moules du Nord — Côte de Nuits PV'},
     'terreal-losangee':{min:2.7,mean:2.9,max:3.1,source:'TERREAL Guide Grands Moules du Nord — Losangée'},
