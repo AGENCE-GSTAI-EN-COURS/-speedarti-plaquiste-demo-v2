@@ -95,3 +95,6 @@ Conserver une trace de chaque relevé et du prix précédent, puis exécuter les
 ## Commit livré
 
 Code fonctionnel V6.5 : `09ffb00e2e9eccf5f8928cf53390ffb5e72408c7`, poussé sur `main`. Un correctif de cache suit ce commit. Le commit courant du rapport est visible dans son historique GitHub ; les résultats ne sont pas présumés pour un commit non testé.
+
+
+Correctif de cache publié : `112917a68e98ebbbd71bac3904e811e0912ddfd5`. Les 59 contrôles moteur et 4 scénarios de chargement sont également PASS après ce correctif. La recette du site public est en cours ; elle sera consignée après vérification.
