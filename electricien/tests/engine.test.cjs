@@ -294,15 +294,16 @@ for(const item of online.items){
 vm.runInNewContext(fs.readFileSync(path.join(root,'catalogue-selector.js'),'utf8'),combined,{filename:'catalogue-selector.js'});
 vm.runInNewContext(fs.readFileSync(path.join(root,'engine-current.js'),'utf8'),combined,{filename:'engine-current.js'});
 const WEB=combined.window.ElectricienCatalogueSelector, WEB_ENGINE=combined.window.ElectricienEngine;
-test('catalogue en ligne : 9 nouvelles références, 2 mises à jour, aucun doublon',()=>{
-  assert.equal(online.items.length,11);
-  assert.equal(WEB.items.length,267);
-  assert.equal(new Set(WEB.items.map(x=>[x.brand,x.gamme,x.generation,x.ref,x.type].join('|'))).size,267);
+test('catalogue en ligne : 12 nouvelles références, 2 mises à jour, aucun doublon',()=>{
+  assert.equal(online.items.length,14);
+  assert.equal(WEB.items.length,270);
+  assert.equal(new Set(WEB.items.map(x=>[x.brand,x.gamme,x.generation,x.ref,x.type].join('|'))).size,270);
 });
 test('URLs et prix du catalogue vérifié traçables',()=>{
   for(const item of online.items){
     assert(/^https:\/\/(www\.)?(123elec\.com|elec44\.fr)\//.test(item["Source URL"]));
-    assert(Math.abs(item["Prix TTC"]/1.2-item["Prix HT"])<.02);
+    if(item["Prix TTC"]!==null)assert(Math.abs(item["Prix TTC"]/1.2-item["Prix HT"])<.02);
+    else assert.equal(item["Prix HT"],null);
     assert(item["Date relevé"]==='2026-10-21');
   }
 });
@@ -323,6 +324,24 @@ test('Hager Essensya prises blanches simple/affleurante, double et triple',()=>{
   assert(WEB.choices('priseDouble','Hager','Essensya','blanc').some(x=>x.ref==='WE122P'&&x.exact));
   assert(WEB.choices('priseTriple','Hager','Essensya','blanc').some(x=>x.ref==='WE123P'&&x.exact));
   assert(WEB.choices('rj45','Hager','Essensya','blanc').some(x=>x.ref==='WE228P'&&x.exact));
+});
+test('Legrand Mosaic : simple blanche, double et triple référencées sans inventer de prix',()=>{
+  const simple=WEB.choices('priseSimple','Legrand','Mosaic','blanc');
+  const single= simple.find(x=>x.ref==='278111L-1121-C');
+  assert(single,'Mosaic simple blanche disponible');
+  assert.equal(single.price,null,'tarif exact inconnu : ne pas reprendre le dès 5,99');
+  const dbl=WEB.choices('priseDouble','Legrand','Mosaic','blanc');
+  const triple=WEB.choices('priseTriple','Legrand','Mosaic','blanc');
+  assert(dbl.some(x=>x.ref==='277804L-2221-C'&&x.price===11.28));
+  assert(triple.some(x=>x.ref==='277806L-3311-C'&&x.price===28.57));
+});
+test('prise blanche Mosaic sans prix reste ligne à chiffrer, pas devis définitif',()=>{
+  const s=base();s.appareillage.families={
+    priseSimple:{brand:'Legrand',gamme:'Mosaic',finition:'blanc',choiceId:'WEB-2026-012'}
+  };
+  const m=WEB_ENGINE.calculate(s);
+  assert(!m.pricingComplete);
+  assert(m.unknownMaterials.some(x=>x.name.includes('Prise 16A')));
 });
 test('filtre blanc : aucun modèle anthracite affiché',()=>{
   for(const brand of ['Schneider Electric','Hager','Legrand']){
