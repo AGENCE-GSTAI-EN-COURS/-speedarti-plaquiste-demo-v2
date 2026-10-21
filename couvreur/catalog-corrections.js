@@ -32,11 +32,17 @@
   };
   const priceCorrections={
     'edilians-mediane-plus':{
-      unit_price_ht:4.38,
       currency:'EUR',
-      price_type:'public_catalogue_benchmark',
-      source:'Point.P — prix catalogue public Médiane Plus Rouergue relevé 2026-10-21, conversion TTC vers HT à 20%',
-      source_url:'https://www.pointp.fr/p/couverture/tuile-mediane-plus-gelis-101-rouergue-84-A6427698'
+      price_type:'public_market_benchmark',
+      unit_price_ht_estimated:3.24,
+      source:'Chausson — Médiane Plus 101+ affichée à 3,89 €/pièce sur plusieurs teintes ; conversion indicative en HT à 20%',
+      source_url:'https://www.chausson.fr/materiaux/tuiles-tuile-mediane-plus-tradition-p-141031-19',
+      observations:[
+        {supplier:'Chausson',variant:'Tradition',display_price:3.89,display_unit:'piece',tax_status:'public_display',url:'https://www.chausson.fr/materiaux/tuiles-tuile-mediane-plus-tradition-p-141031-19'},
+        {supplier:'Chausson',variant:'Rouergue',display_price:3.89,display_unit:'piece',tax_status:'public_display',url:'https://www.chausson.fr/materiaux/tuile-mediane-terre-cuite-double-emboitement-edilians-101-p-141031-20'},
+        {supplier:'Point.P',variant:'Rouergue',display_price:5258.89,display_unit:'mille',tax_status:'TTC',equivalent_ttc_per_piece:5.25889,url:'https://www.pointp.fr/p/couverture/tuile-mediane-plus-gelis-101-rouergue-84-A6427698'}
+      ],
+      warning:'Prix distributeur variable selon teinte, agence et compte professionnel ; ne pas considérer ce benchmark comme tarif fournisseur contractuel.'
     }
   };
   const corrections={
@@ -103,5 +109,5 @@
     }
     p.validation.catalogue_correction='source_fabricant_auditee';
   }
-  C.corrections={version:'2026-10-21-v7',count:Object.keys(corrections).length,batten_count:Object.keys(battenCorrections).length,price_count:Object.keys(priceCorrections).length};
+  C.corrections={version:'2026-10-21-v8',count:Object.keys(corrections).length,batten_count:Object.keys(battenCorrections).length,price_count:Object.keys(priceCorrections).length};
 })();
