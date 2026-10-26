@@ -19,7 +19,7 @@ jobs:
       - name: Exécuter les tests métier
         run: node --test terrassier/tests/engine.test.mjs
   tests-navigateur:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
