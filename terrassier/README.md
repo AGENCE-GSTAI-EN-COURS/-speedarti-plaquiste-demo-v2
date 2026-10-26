@@ -1,30 +1,45 @@
-# Terrassier — SpeedArti, démo indépendante V1.1
+# SPEEDARTI — TERRASSIER V1.2 (DEMO INDÉPENDANTE)
 
-**Dépôt de travail :** AGENCE-GSTAI-EN-COURS/-speedarti-plaquiste-demo-v2, dossier `/terrassier/`.
+Dépôt autorisé : `AGENCE-GSTAI-EN-COURS/-speedarti-plaquiste-demo-v2`, dossier `/terrassier/`. Branche `main`. Version source `GSTAI-Sp/speedarti-v2` **LECTURE SEULE absolue**, aucune modification faite sur la production.
 
-SpeedArti source `GSTAI-Sp/speedarti-v2` **consulté exclusivement en lecture seule**. Le module de démonstration est une adaptation indépendante de l'existant, pas une copie identique du moteur de production. Aucune connexion production/Supabase, aucune donnée client.
+## Couverture réelle
 
-## Fonctionnalités
+- 5 catégories, **25 prestations disposant chacune d'une recette distincte** : terrassements/fondations, chemins/parkings, enrobés, réseaux, démolition
+- Formulaire contextuel pour chaque prestation : dimensions, profondeur, épaisseurs, regards, pente, bordures, souches, etc.
+- BPU historique et provisions, calculs indicatifs par unité HT : engins, matériaux, main-d'œuvre, transport/évacuation
+- Chiffrage réactif à chaque saisie, tarif global personnalisable ou correction du prix/quantité d'une ligne
+- Conservation locale (`localStorage`) des prix, dimensions et corrections par prestation ; export/import JSON et export CSV
+- Avertissements explicites sur les devis incomplets (fondations profondes, réseaux eau potable, réseaux secs, ANC)
+- Des tests pour les recettes métier et un parcours de navigation en navigateur Chromium (actions GitHub)
 
-- 5 familles : terrassement et fondations, chemins et parkings, enrobés, réseaux, démolition
-- Prestations types préconfigurées et modifiables, puis saisie libre
-- Champs de métrés contextuels : L × l × profondeur pour fouilles et réseaux, surface m² pour revêtements
-- Schéma de coupe interactif avec valeurs et matériaux indicatifs
-- Aperçu du chiffrage recalculé à chaque saisie sans bouton
-- Plusieurs couches d'enrobé : classe, épaisseur, tonnage et prix couche par couche (2 à 5)
-- Fosse incluse automatiquement lors du choix « fosse septique » ; choix du modèle
-- Blindage, pompage, bordures chiffrés selon **hypothèses de prix de simulation non validées** ; montants à remplacer
-- Récapitulatif modifiable : quantités, prix HT, journées de location (ligne de matériel), heures de main-d'œuvre
-- Validation locale d'un récapitulatif, export CSV et impression (pas de devis ou facture en production)
+## Limites métiers et commerciales
 
-## Risques et limites
+**Ce n'est pas un catalogue tarifaire vérifié en 2026.** Les valeurs de base proviennent du BPU SpeedArti V2 (moyennes 2024–2025) et de quelques **provisions internes non sourcées**. Les loueurs, décharges, distributeurs et centrales béton appliquent des tarifs locaux différents. Prix et quantités doivent être vérifiés avant devis. Les résultats ne sont pas destinés à être intégrés automatiquement aux documents facturables.
 
-Les références de prix sont historiques (2024–2025) et ne sont pas validées pour 2026. Les simulations d'options (blindage, bordures, pompage) utilisent des hypothèses provisoires ; elles n'établissent ni un devis conforme ni les coûts réglementaires. Vérifier au cas par cas la stabilité des fouilles, les réseaux DT/DICT, les contraintes géotechniques, les filières de déchets, le dimensionnement d'assainissement et la TVA. Les données ne sont pas persistées.
+Attention :
+- Fondations profondes : pas de forage spécialisé, armatures, béton spécifique, essais et études structure.
+- ANC : pas de filière d'épandage, contrôle SPANC, étude de sol ni accessoires complets.
+- Réseaux eau potable / secs : raccords, vannes, gestionnaire, tests et câblage non chiffrés.
+- Démolition : diagnostics, désamiantage, contraintes structurelles et éventuelles autorisations hors chiffrage.
+- Les tarifs d'engins sont sans opérateur et la MO reste séparée ; vérifier que le devis du loueur ne contient pas déjà un conducteur.
+- Les prix personnalisés sont conservés **sur le navigateur seulement** : vider les données du site les supprime. Exporter JSON pour les garder.
 
-## Tests
+## Sources de contexte 2026 (comparaisons, non prix contractuels)
 
-`node --test terrassier/tests/engine.test.mjs`
+- Relevés d'offres de location : https://pellejaune.fr/prix-location-mini-pelle/
+- Fourchettes béton prêt à l'emploi : https://conseils.hellopro.fr/combien-coute-le-beton-pret-a-l-emploi-4395.html
+- Ces recherches ne remplacent pas une collecte de devis fournisseurs localisés pour chaque article.
 
-Test navigateur avec Chromium : `npm install --prefix terrassier`, `npx --prefix terrassier playwright install chromium` puis servir la racine du dépôt sur le port 8020 et `npm run test:e2e --prefix terrassier`. Un workflow GitHub Actions exécute les deux suites.
+## Commandes de test
 
-L'intégration future dans l'application SpeedArti doit enrichir la base de connaissances **existante** d'Ángel, sans base parallèle.
+```bash
+npm install --prefix terrassier
+npm run test --prefix terrassier
+npx --prefix terrassier playwright install chromium
+python3 -m http.server 8020
+npm run test:e2e --prefix terrassier
+```
+
+## Sprint futur d'intégration
+
+La réintégration éventuelle dans SpeedArti requiert audit de compatibilité par Anne-Sophie et enrichissement de la base de connaissances existante d'Ángel — jamais de base parallèle. Aucun lien Supabase ou API n'est configuré pour cette démo.

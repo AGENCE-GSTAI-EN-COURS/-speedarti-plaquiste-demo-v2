@@ -1,0 +1,41 @@
+/* SpeedArti Terrassier V1.2 — design guidé, isolé de tous les autres métiers */
+.v12 .panel{scroll-margin-top:20px}
+.v12Familles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px}
+.v12Famille{border:1px solid #d7e4f3;background:#f8fbff;color:#274a73;min-height:110px;border-radius:13px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;padding:12px;text-align:center}
+.v12Famille span{font-size:26px}.v12Famille b{font-size:13px}.v12Famille small{color:#70839c;font-size:11px}
+.v12Famille.selected{border:2px solid #2774ec;background:#eaf3ff;color:#1457c5;box-shadow:0 0 0 2px #dceaff}
+.v12Prestations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.v12Prestation{padding:15px 14px;border:1px solid #dce6f2;border-radius:11px;background:#fff;color:#2b5279;font-weight:700;cursor:pointer;text-align:left;min-height:53px}
+.v12Prestation.selected{background:#1d65de;color:white;border-color:#1d65de}
+.v12Prestation:not(.selected):hover,.v12Famille:not(.selected):hover{background:#eff6ff}
+.v12Options{margin-top:20px;border-radius:12px;border:1px solid #dfebf8;padding:16px;background:#f9fcff}
+.v12Checks{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:17px}
+.v12Checks label{display:flex;align-items:center;gap:9px;padding:11px 14px;background:white;border:1px solid #d9e5f2;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600}
+.v12Checks input{accent-color:#1d65de;width:17px;height:17px}
+#mesures{margin-bottom:6px}
+.v12Totals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.v12Totals .total{min-height:80px}
+.v12Table{width:100%;min-width:780px}
+.v12Table th{white-space:nowrap;font-size:12px}
+.v12Table td{vertical-align:middle;line-height:1.45}
+.v12Table td strong{display:block;font-size:12px}
+.v12LineCat{display:block;font-size:10px;color:#8193a9}
+.v12Edit{width:110px;max-width:100%;padding:8px;border:1px solid #bed2eb;border-radius:8px;background:#fbfdff;color:#164474;font-size:13px}
+.v12Edit.invalid{border-color:#b62828;background:#fff2f2}
+.v12LineTotal{font-weight:800;color:#1952aa;white-space:nowrap}
+.v12Source{display:block;font-size:11px;color:#6c829c;min-width:85px}
+.v12SourceInput{width:100%;max-width:260px;min-width:140px;margin-top:7px;border:1px solid #d0dfee;border-radius:7px;padding:7px;font-size:12px}
+.v12Warn{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.v12Warn>div{background:#f9fbff;border:1px solid #e1eaf5;border-radius:10px;padding:0 15px}
+.v12Warn ul{padding-left:20px;color:#58738c;font-size:12px;line-height:1.7}
+.notice.danger{background:#fff0e9;color:#913c24;border-left-color:#d15636}
+.v12PriceToolbar{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:20px 0}
+.v12PriceToolbar label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#305678;flex:1}
+.v12PriceToolbar input{min-width:170px;width:100%;height:42px;padding:9px 11px;border-radius:8px;border:1px solid #c9d9ed}
+.v12Sources{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.v12Sources a{color:#1458c6;text-decoration:underline;font-size:12px}
+.saveStatut{padding:10px 14px;margin-bottom:16px;background:#eaf7ef;border:1px solid #c2e8cb;border-radius:9px;color:#28603d;font-size:12px}
+.saveStatut.warn{background:#fff4df;color:#76511b;border-color:#f4d8a5}
+@media (max-width:900px){.v12Familles{grid-template-columns:repeat(3,minmax(0,1fr))}.v12Prestations{grid-template-columns:repeat(2,minmax(0,1fr))}.v12Totals{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:570px){.v12Familles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.v12Famille{min-height:90px;padding:9px}.v12Prestations{grid-template-columns:1fr}.v12Warn{grid-template-columns:1fr}.v12Totals{grid-template-columns:1fr 1fr}.v12Totals .total b{font-size:16px}.v12 .fields,.v12 .fields.thirds{grid-template-columns:1fr}.v12Checks{display:grid;grid-template-columns:1fr}.v12PriceToolbar{align-items:stretch;flex-direction:column}}
+@media print{.top,.hero,.notice,.saveStatut,.v12Nav,#formulaireV12,.actions,#cataloguePrix,.v12Sources,footer{display:none!important}.v12 .panel{box-shadow:none;border:0;padding:6px}.v12Edit{border:0;padding:0}#rapport{display:block!important}.v12Table{min-width:unset}}

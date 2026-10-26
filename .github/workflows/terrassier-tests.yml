@@ -1,4 +1,4 @@
-name: Terrassier — validation moteur et interface
+name: Terrassier — V1.2 moteur et interface
 on:
   push:
     paths:
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '22'
       - name: Exécuter les tests métier
-        run: node --test terrassier/tests/engine.test.mjs
+        run: npm run test --prefix terrassier
   tests-navigateur:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
