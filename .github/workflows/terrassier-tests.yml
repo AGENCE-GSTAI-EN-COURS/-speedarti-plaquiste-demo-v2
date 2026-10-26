@@ -1,4 +1,4 @@
-name: Terrassier — tests métier
+name: Terrassier — validation moteur et interface
 on:
   push:
     paths:
@@ -9,12 +9,29 @@ on:
       - 'terrassier/**'
       - '.github/workflows/terrassier-tests.yml'
 jobs:
-  tests:
+  tests-metier:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Tests moteur Terrassier
+      - name: Exécuter les tests métier
         run: node --test terrassier/tests/engine.test.mjs
+  tests-navigateur:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer navigateur Chromium
+        run: |
+          npm install --prefix terrassier --no-audit --no-fund
+          npx --prefix terrassier playwright install --with-deps chromium
+      - name: Vérifier la démo depuis un navigateur réel
+        run: |
+          python3 -m http.server 8020 --bind 127.0.0.1 >/tmp/terrassier-server.log 2>&1 &
+          sleep 2
+          npm run test:e2e --prefix terrassier

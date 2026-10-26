@@ -1,0 +1,10 @@
+{
+  "name":"speedarti-terrassier-demo",
+  "private":true,
+  "type":"module",
+  "scripts":{
+    "test":"node --test tests/engine.test.mjs",
+    "test:e2e":"node --test tests/browser.test.mjs"
+  },
+  "devDependencies":{"playwright":"1.56.1"}
+}

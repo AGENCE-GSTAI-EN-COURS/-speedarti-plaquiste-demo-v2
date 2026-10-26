@@ -10,14 +10,38 @@
 <main class="container">
  <section class="hero"><div><span class="eyebrow">MÉTIER · TERRASSIER</span><h1>Chiffrez votre chantier,<br><em>des fouilles aux finitions.</em></h1><p>Terrassement, fondations, accès, enrobés, réseaux et démolition. Estimation locale sans compte ni connexion à SpeedArti V2.</p></div><div class="heroGraphic" aria-hidden="true"><span>🏗️</span><strong>5</strong><small>familles de travaux</small></div></section>
  <p class="notice"><strong>Prix de démonstration.</strong> Références historiques de V2 (2024–2025), non vérifiées pour 2026. Vérifier les prix, réglementations et quantités avant toute utilisation professionnelle.</p>
+ <section class="panel compact" aria-labelledby="modelesTitre"><div class="step"><span>✦</span><div><h2 id="modelesTitre">Démarrer avec une prestation type</h2><p>Un clic préremplit l'ouvrage, les dimensions et ses options ; tout reste modifiable.</p></div></div>
+   <div class="presets" id="presets">
+    <button type="button" class="preset" data-preset="tranchee_eu">🔧 Tranchée EU</button>
+    <button type="button" class="preset" data-preset="fondations">🏠 Fondations maison</button>
+    <button type="button" class="preset" data-preset="acces_gravier">🛤️ Accès gravillonné</button>
+    <button type="button" class="preset" data-preset="parking_enrobe">🛣️ Parking enrobé</button>
+    <button type="button" class="preset" data-preset="multicouches">▤ Enrobé multicouche</button>
+    <button type="button" class="preset" data-preset="fosse">💧 Fosse septique</button>
+   </div><p id="modeleActif" class="helper">Modèle libre — saisie personnalisée.</p>
+ </section>
  <form id="formulaire" novalidate>
   <section class="panel"><div class="step"><span>1</span><div><h2>Nature des travaux</h2><p>Choisissez une catégorie et un ouvrage.</p></div></div>
    <div id="categories" class="categories" role="group" aria-label="Catégorie des travaux"></div>
    <div class="fields"><label>Type de travaux<select id="sous_type_terrassement" required></select></label><label>Nom du calcul<input id="nom_calcul" type="text" maxlength="120" value="Chantier terrassement — démo" required></label></div>
   </section>
   <section class="panel"><div class="step"><span>2</span><div><h2>Dimensions</h2><p>Calcul automatique des surfaces et volumes.</p></div></div>
-   <div class="fields thirds"><label>Longueur <small>m</small><input id="longueur" type="number" min="0.01" step="any" value="15" required></label><label>Largeur <small>m</small><input id="largeur" type="number" min="0.01" step="any" value="3" required></label><label>Profondeur / épaisseur <small>m</small><input id="profondeur_fouille" type="number" min="0.01" step="any" value="0.8" required></label></div>
-   <div class="metrics"><div><small>Surface</small><b id="metreSurface">–</b></div><div><small>Volume</small><b id="metreVolume">–</b></div><div><small>Volume foisonné</small><b id="metreFoisonne">–</b></div></div>
+   <div class="fields thirds" data-for="terrassement_fondation reseaux demolition"><label>Longueur <small>m</small><input id="longueur" type="number" min="0.01" step="any" value="15" required></label><label>Largeur de l'ouvrage <small>m</small><input id="largeur" type="number" min="0.01" step="any" value="3" required></label><label>Profondeur <small>m</small><input id="profondeur_fouille" type="number" min="0.01" step="any" value="0.8" required></label></div>
+   <div class="fields" data-for="enrobe chemin_acces"><label>Surface à traiter <small>m²</small><input id="surface_m2" type="number" min="0.01" step="any" value="80"></label><p class="helper inlineHelp">La profondeur technique de décaissement est préestimée ; les couches d'enrobé sont définies plus bas en centimètres.</p></div>
+   <div class="metrics"><div><small>Surface</small><b id="metreSurface">–</b></div><div><small id="metreVolumeLabel">Volume</small><b id="metreVolume">–</b></div><div><small id="metreFoisonneLabel">Volume foisonné</small><b id="metreFoisonne">–</b></div></div>
+   <div class="schemaPanel"><div><strong>Coupe simplifiée de l'ouvrage</strong><p id="schemaDescription">Schéma indicatif, non contractuel.</p></div>
+    <svg class="ouvrageSchema" viewBox="0 0 640 180" role="img" aria-label="Coupe schématique de l'ouvrage et des dimensions">
+     <defs><pattern id="solHachures" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="12" height="12" fill="#e1d5bd"></rect><path d="M0 0V12" stroke="#c2ac8d" stroke-width="2"></path></pattern></defs>
+     <rect x="8" y="68" width="624" height="105" rx="6" fill="url(#solHachures)"></rect>
+     <path d="M8 69H630" stroke="#527a5a" stroke-width="5"></path>
+     <path id="schemaOuvrage" d="M183 70V136H470V70" fill="#eef6ff" stroke="#2470dc" stroke-width="3"></path>
+     <rect id="schemaCouche" x="183" y="112" width="287" height="24" fill="#7ca5da" opacity=".7"></rect>
+     <path d="M183 45H470" stroke="#184b8d" stroke-width="2"></path><path d="M183 40V50M470 40V50" stroke="#184b8d" stroke-width="2"></path>
+     <text id="schemaLargeur" x="326" y="33" text-anchor="middle" fill="#153c76" font-size="16" font-weight="bold">3 m</text>
+     <path d="M490 70V136M485 70H495M485 136H495" stroke="#184b8d" stroke-width="2"></path>
+     <text id="schemaProfondeur" x="500" y="104" fill="#153c76" font-size="15">0,8 m</text>
+     <text id="schemaLongueur" x="320" y="161" text-anchor="middle" fill="#6f4b30" font-size="14">Longueur : 15 m</text>
+    </svg></div>
   </section>
   <section class="panel"><div class="step"><span>3</span><div><h2>Options et main-d'œuvre</h2><p>Les options non chiffrées sont signalées.</p></div></div>
    <div class="fields thirds"><label>Nature du sol<select id="nature_sol"><option value="terre_meuble">Terre meuble</option><option value="sable">Sable</option><option value="argile">Argile / limon</option><option value="roche">Roche tendre</option><option value="roche_dure">Roche dure</option></select></label>
@@ -25,24 +49,28 @@
    <label>Engin<select id="engin_selectionne"><option value="auto">Sélection automatique</option></select></label></div>
    <div class="fields thirds">
     <label data-for="enrobe">Classe d'enrobé<select id="classe_enrobe"><option>BBSG</option><option>BBME</option><option>BBM</option><option>BBDr</option><option>EAC</option></select></label>
-    <label data-for="enrobe">Épaisseur enrobé <small>cm</small><input id="epaisseur_enrobe" type="number" min="1" max="40" step="0.5" value="6"></label>
+    <label data-for="enrobe">Épaisseur enrobé monocouche <small>cm</small><input id="epaisseur_enrobe" type="number" min="1" max="40" step="0.5" value="6"></label>
     <label data-for="chemin_acces">Revêtement<select id="type_revetement"><option value="gravillons">Gravillons compactés</option><option value="beton_lisse">Béton lissé</option><option value="beton_desactive">Béton désactivé</option><option value="enrobe_chaud">Enrobé chaud</option><option value="enrobe_froid">Enrobé froid</option><option value="paves_autobloquants">Pavés</option><option value="dalles_beton">Dalles béton</option></select></label>
     <label data-for="reseaux">Diamètre canalisation<select id="diametre_tuyau"><option>PVC_100</option><option>PVC_125</option><option selected>PVC_160</option><option>PVC_200</option><option>PVC_250</option><option>PVC_315</option></select></label>
     <label data-for="reseaux">Nombre de regards <small>u</small><input id="nombre_regards" type="number" min="0" step="1" value="2"></label>
     <label data-for="reseaux">Taille regards<select id="taille_regard"><option>40x40</option><option>50x50</option><option>60x60</option></select></label>
     <label data-for="terrassement_fondation">Classe de béton<select id="type_beton"><option>B20</option><option selected>B25</option><option>B30</option><option>B35</option></select></label>
+    <label data-for="reseaux" id="blocTypeFosse">Modèle d'assainissement<select id="type_fosse"><option value="fosse_septique_3000l">Fosse toutes eaux 3 000 L</option><option value="fosse_septique_5000l">Fosse toutes eaux 5 000 L</option><option value="micro_station_4eh">Micro-station 4 EH</option><option value="micro_station_6eh">Micro-station 6 EH</option><option value="bac_a_graisse">Bac à graisse 200 L</option></select></label>
+    <label data-for="chemin_acces" id="blocLongueurBordures">Longueur bordures <small>ml</small><input id="longueur_bordures" type="number" min="0.01" step="any" value="30"></label>
    </div>
-   <div class="checks"><label><input type="checkbox" id="evacuation_terres" checked> Évacuation déblais</label><label><input type="checkbox" id="presence_eau"> Présence d'eau</label><label><input type="checkbox" id="acces_difficile"> Accès difficile</label><label data-for="enrobe"><input type="checkbox" id="couche_accrochage"> Couche d'accrochage</label><label data-for="chemin_acces"><input type="checkbox" id="sous_couche_grave" checked> Sous-couche GNT</label><label data-for="terrassement_fondation reseaux"><input type="checkbox" id="blindage_fouille"> Blindage (non chiffré)</label><label data-for="chemin_acces"><input type="checkbox" id="bordures"> Bordures (non chiffrées)</label><label data-for="reseaux"><input type="checkbox" id="fosse_septique"> Ajouter fosse standard</label></div>
+   <div id="couchesEnrobe" class="layersPanel" hidden><strong>Composition des couches d'enrobé</strong><p class="helper">Renseignez la classe et l'épaisseur de chaque couche : les tonnages sont calculés séparément.</p><div id="listeCouches" class="layers"></div><button id="ajouterCouche" type="button" class="btn secondary small">+ Ajouter une couche</button></div>
+   <div class="checks"><label><input type="checkbox" id="evacuation_terres" checked> Évacuation déblais</label><label><input type="checkbox" id="presence_eau"> Présence d'eau</label><label><input type="checkbox" id="acces_difficile"> Accès difficile</label><label data-for="enrobe"><input type="checkbox" id="couche_accrochage"> Couche d'accrochage</label><label data-for="chemin_acces"><input type="checkbox" id="sous_couche_grave" checked> Sous-couche GNT</label><label data-for="terrassement_fondation reseaux"><input type="checkbox" id="blindage_fouille"> Blindage de fouille</label><label data-for="chemin_acces"><input type="checkbox" id="bordures"> Bordures + pose</label><label data-for="chemin_acces"><input type="checkbox" id="geotextile" checked> Géotextile</label><label data-for="reseaux" id="blocAjouterFosse"><input type="checkbox" id="fosse_septique"> Ajouter une fosse</label></div>
    <details><summary>Personnaliser taux horaires et TVA</summary><div class="fields thirds advanced"><label>Conducteur <small>€/h HT</small><input id="taux_conducteur" type="number" value="55" min="1"></label><label>Ouvrier <small>€/h HT</small><input id="taux_ouvrier" type="number" value="45" min="1"></label><label>TVA <small>%</small><select id="taux_tva"><option value="20" selected>20 %</option><option value="10">10 %</option><option value="5.5">5,5 %</option><option value="0">0 %</option></select></label></div></details>
-   <div class="actions"><button type="reset" class="btn secondary">Réinitialiser</button><button type="submit" class="btn primary">Calculer mon chantier →</button></div><p class="error" id="erreur" role="alert" hidden></p>
+   <div class="livePreview" aria-live="polite"><div><small>ESTIMATION ACTUALISÉE EN DIRECT</small><strong id="montantDirect">–</strong><span id="statutDirect">Modifiez les dimensions pour actualiser le calcul.</span></div><a href="#resultats" class="previewLink" id="voirDetail">Voir le détail ↓</a></div>
+   <div class="actions"><button type="reset" class="btn secondary">Réinitialiser</button><button type="submit" class="btn primary">Voir le récapitulatif ↓</button></div><p class="error" id="erreur" role="alert" hidden></p>
   </section>
  </form>
  <section id="resultats" class="panel results" aria-live="polite" hidden>
-  <div class="step"><span>4</span><div><h2>Résultat du chiffrage</h2><p>Détail quantités, main-d'œuvre et prix indicatifs.</p></div></div><div class="totals" id="totaux"></div>
-  <h3>Fournitures et locations</h3><div class="scroll"><table><thead><tr><th>Poste</th><th>Quantité</th><th>Unité</th><th>P.U. HT</th><th>Total HT</th></tr></thead><tbody id="materiaux"></tbody></table></div>
-  <h3>Main-d'œuvre</h3><div class="scroll"><table><thead><tr><th>Poste</th><th>Heures équipe</th></tr></thead><tbody id="mainOeuvre"></tbody></table></div>
+  <div class="step"><span>4</span><div><h2>Récapitulatif modifiable</h2><p>Corrigez les quantités, les prix HT ou les heures de travail avant de valider localement cette simulation.</p></div></div><div class="totals" id="totaux"></div>
+  <h3>Fournitures et locations</h3><div class="scroll"><table><thead><tr><th>Poste</th><th>Quantité modifiable</th><th>Unité</th><th>P.U. HT modifiable</th><th>Total HT</th></tr></thead><tbody id="materiaux"></tbody></table></div>
+  <h3>Main-d'œuvre</h3><div class="scroll"><table><thead><tr><th>Poste</th><th>Heures équipe modifiables</th></tr></thead><tbody id="mainOeuvre"></tbody></table></div><p class="helper">Le prix de l'engin et sa durée sont modifiables dans le tableau des fournitures ci-dessus.</p>
   <div class="messages"><div><h3>Points de vigilance</h3><ul id="alertes"></ul></div><div><h3>Recommandations</h3><ul id="recommandations"></ul></div></div>
-  <div class="actions"><button id="exportCSV" type="button" class="btn secondary">Exporter CSV</button><button id="imprimer" type="button" class="btn primary">Imprimer / PDF</button></div>
+  <div class="actions"><button id="validerRecap" type="button" class="btn primary">Valider ce récapitulatif</button><button id="exportCSV" type="button" class="btn secondary">Exporter CSV</button><button id="imprimer" type="button" class="btn secondary">Imprimer / PDF</button></div><p id="validationInfo" class="helper" role="status">Simulation modifiable — validation locale uniquement, sans création de devis dans SpeedArti.</p>
   <p class="muted">Estimation sans sauvegarde, stock ou catalogue connecté. Les montants ne constituent pas une offre commerciale.</p>
  </section>
  <footer>SpeedArti · Démonstration Terrassier indépendante · Aucune donnée transmise à la production.</footer>
