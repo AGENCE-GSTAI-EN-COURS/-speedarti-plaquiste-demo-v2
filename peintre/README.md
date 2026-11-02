@@ -1,4 +1,4 @@
-# SpeedArti — Métier Peintre V2 (démo commune)
+# SpeedArti — Métier Peintre V2.1 (démo commune)
 
 ## Périmètre
 Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
@@ -24,7 +24,9 @@ L'ancienne V0.1 (app.mjs, engine.mjs, tests.mjs, styles.css) est conservée à t
 
 ## Sécurité des calculs
 - La préparation est un poste de calcul explicite par support ; ses ratios de temps et consommables sont renseignés par l'artisan ou le catalogue futur. Sans prix/temps, le résultat reste incomplet.
-- Pas de prix fictif, d'article fournisseur inventé, de taux horaire implicite ni de TVA 5,5/10% décidée automatiquement.
+- Références historiques de démonstration préremplies depuis l'ancien calculateur de SpeedArti V2 (en lecture seule) : peinture acrylique 10 m²/L/couche, glycéro 12, satiné 9, 10 % de pertes, pot de 10 L à 100 € HT (ancien repère de 10 €/L), 0,15 h/m²/couche, 42 €/h ; papier peint 0,53 × 10 m à 25 €/rouleau, 0,25 h/m² de pose. Toutes sont modifiables et NON VALIDÉES comme prix fournisseurs actuels 2026.
+- Le résultat affiche séparément les besoins en litres, les pots à acheter, les fournitures HT et les heures-homme par mur/plafond.
+- Aucun tarif fournisseur 2026 n'est inventé ni aucune TVA réduite automatiquement décidée.
 - Consommations peinture = (surface nette × couches / rendement fabricant) × (1 + pertes).
 - Les surfaces avec peintures identiques sont groupées avant arrondi aux pots entiers.
 - Papier peint standard : estimation des lés selon largeur brute, hauteur du mur et raccord ; panoramique : panneaux à saisir après calepinage.
@@ -34,7 +36,7 @@ L'ancienne V0.1 (app.mjs, engine.mjs, tests.mjs, styles.css) est conservée à t
 
 ## Tests
 À la racine du dépôt : node --test peintre/tests-v2.mjs
-Les 28 scénarios V2 ont été exécutés avec succès sur le moteur, ainsi qu'une vérification de 10 interactions de l'application par simulation du DOM.
+Les 31 scénarios V2/V2.1 ont été exécutés avec succès sur le moteur, ainsi qu'une vérification de 9 interactions ciblées de l'application par simulation du DOM pour le correctif V2.1 (en complément des contrôles V2).
 Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop) ni une validation métier.
 
 ## Gardes-fous SpeedArti
@@ -43,3 +45,8 @@ Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop)
 - Modification autorisée du seul site GitHub Pages de démonstration multi-métiers.
 - Pas de création d'une deuxième base de connaissances Ángel ; seulement un delta à intégrer dans la base centrale existante, après validation.
 - L'enrichissement réel d'Ángel, les connecteurs, l'audit des prix et la validation humaine sont encore des dépendances : V2 démo ≠ module finalisé pour intégration production.
+
+## Correctif V2.1 — chiffrage automatique
+- Répare les résultats vides dus aux rendements, prix et temps non renseignés par défaut.
+- Une pièce de 5 × 4 × 2,5 m, avec plafond et peinture acrylique deux couches, produit une estimation de démonstration : 14,3 L, 2 pots, 19,5 heures-homme et 1 019 € HT avec les anciens repères indiqués ci-dessus.
+- Prix, rendements, références, temps et TVA à vérifier avant vrai devis. Une préparation avec consommables non tarifés reste « à confirmer » sans présenter un sous-total incomplet comme montant définitif.
