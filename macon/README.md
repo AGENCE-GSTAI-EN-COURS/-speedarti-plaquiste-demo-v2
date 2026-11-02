@@ -306,3 +306,18 @@ Cette correction ne remplace pas l’audit complet du catalogue Maçon, prévu s
 - soubassements et refends : les valeurs internes SpeedArti sont appliquées automatiquement lorsque aucun ancien override n’est présent ;
 - Angèle Maçon : **MAC-ANGEL-KB-v1.4** ;
 - interface : **v2.6.4**.
+
+
+## S6.5 — pré-production Guillaume
+
+- **Escalier retiré** du module Maçon : plus de parcours simple, plus de carte multi, plus d’accès indirect via Ouvrage BA ; les anciennes sessions contenant un escalier sont nettoyées au chargement.
+- **Mur de refend en soubassement** : ajout d’une semelle filante sous le refend, avec largeur/hauteur reprises de la semelle principale par défaut et modifiables.
+- **Coffres tunnels** : ajout des variantes brique et résine, chiffrées au ml avec prix HT/ml explicite en attendant l’audit catalogue.
+- **Seuil BA** : la hauteur de baie n’est plus demandée ; seule la largeur utile au seuil est conservée.
+- **Mobile / options fondations** : les saisies numériques sont enregistrées sans rerendu complet du formulaire ; seuls les choix structurants continuent de rerendre l’écran.
+- **Isolation plancher / dalle VS** : prix HT/m² obligatoire et repris dans le calcul.
+- **Génoise simple / double** : prix HT/ml obligatoire et repris dans le calcul.
+- Angèle Maçon : **MAC-ANGEL-KB-v1.5**.
+- Interface : **v2.6.5**.
+
+Ces prix manuels temporaires (coffres tunnels, isolation, génoises) restent à auditer avec le catalogue Maçon avant toute intégration production.
