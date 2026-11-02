@@ -56,7 +56,7 @@
     }
   ],
   "review": {
-    "engine_tests": "24/24",
+    "engine_tests": "26/26",
     "ui_simulated_interactions": "10/10",
     "real_browser_test": "NOT_YET_RUN",
     "human_acceptance": "PENDING"
