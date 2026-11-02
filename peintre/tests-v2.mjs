@@ -168,3 +168,28 @@ test('papier peint en m² seul : impossible de prétendre calculer les lés',()=
  const s=createDefaultState(),w=newWork('surface','Panneau');w.surface.areaOverride=22.4;w.surface.mode='wallpaper';s.works.push(w);prices(s);
  assert.throws(()=>calculateEstimate(s),/dimensions longueur\/largeur/);
 });
+
+test('régression : une nouvelle pièce produit immédiatement peinture, litres, pots, heures et prix indicatifs',()=>{
+ const s=roomState(),r=calculateEstimate(s);
+ const paint=r.lines.find(x=>x.name==='Peinture acrylique mat blanche');
+ assert.equal(r.complete,true);assert.equal(paint.litresBesoin,14.3);
+ assert.equal(paint.quantity,2);assert.equal(r.hoursMan,19.5);
+ assert.equal(r.materialsHT,200);assert.equal(r.laborHT,819);
+ assert.equal(r.totalHT,1019);assert.equal(r.ttc,1222.8);
+});
+test('régression : un mur simple est chiffré sans saisie de ratios supplémentaires',()=>{
+ const s=createDefaultState();s.works.push(newWork('wall','Mur salon'));
+ const r=calculateEstimate(s);
+ assert.equal(r.geometry[0].net,10);
+ assert.equal(r.lines.find(x=>x.kind==='material').quantity,1);
+ assert.equal(r.hoursMan,3);assert.equal(r.totalHT,226);
+});
+test('régression : papier peint classique calcule rouleaux, prix et temps automatiquement',()=>{
+ const s=roomState(),w=s.works[0];w.walls.A.mode='wallpaper';
+ const r=calculateEstimate(s);
+ const material=r.lines.find(x=>x.unit==='rouleau');
+ assert.equal(material.quantity,3);
+ assert.equal(material.amount,75);
+ assert.equal(r.hoursMan,18.88);
+ assert.equal(r.complete,true);
+});
