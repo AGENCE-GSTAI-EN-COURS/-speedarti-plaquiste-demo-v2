@@ -138,7 +138,7 @@ export function calculateEstimate(state) {
       priceHT:price,totalHT:rolls==null||price==null?null:round2(rolls*price),priceSource:'saisie artisan',billable:true});
     laborLine(laborLines,warnings,'wallpaper-labor','Pose papier peint',g.wallpaperM2,wp.hoursPerM2,hourlyRate);
   }
-  let extraHours = 0;
+  let extraHours = 0, missingExtraHours = false;
   const extras = Array.isArray(state.extras) ? state.extras : [];
   extras.forEach((extra,i) => {
     const name = String(extra.name||'').trim();
@@ -147,18 +147,20 @@ export function calculateEstimate(state) {
     const price = checkedMoney(extra.unitPriceHT);
     const hoursPerUnit = value(extra.hoursPerUnit);
     if (price == null) warn(warnings,name+' : prix forfaitaire (pose incluse) à confirmer.');
-    if (!valid(hoursPerUnit)) warn(warnings,name+' : heures de planning à confirmer.');
+    if (!valid(hoursPerUnit)) { missingExtraHours = true; warn(warnings,name+' : heures de planning à confirmer.'); }
     else extraHours += qty * hoursPerUnit;
     lines.push({id:'extra-'+i,name,category:'prestation_forfait',quantity:qty,unit:'unité',priceHT:price,
       totalHT:price==null?null:round2(qty*price),billable:true, laborIncluded:true,priceSource:'saisie artisan'});
   });
   const all = [...lines,...laborLines];
-  const complete = all.every(l=>l.totalHT!==null);
+  const missingSupplies = (prep.level && prep.level !== 'none' && paintArea > 0) || (state.plinth?.enabled && g.plinthMl > 0);
+  if (missingSupplies) warn(warnings,'Consommables de préparation / plinthes non chiffrés : total final bloqué jusqu’au raccordement catalogue.');
+  const complete = all.every(l=>l.totalHT!==null) && !missingSupplies;
   const confirmedHT = round2(sum(all.filter(l=>l.totalHT!==null).map(l=>l.totalHT)));
   const amount = complete ? confirmedHT : null;
   const tax = amount === null ? null : round2(amount * vat/100);
   const materialSum = list => list.every(l=>l.totalHT!==null) ? round2(sum(list.map(l=>l.totalHT))) : null;
-  const hours = laborLines.every(l=>l.quantity!==null) ? round2(sum(laborLines.map(l=>l.quantity)) + extraHours) : null;
+  const hours = !missingExtraHours && laborLines.every(l=>l.quantity!==null) ? round2(sum(laborLines.map(l=>l.quantity)) + extraHours) : null;
   warn(warnings,'TVA sélectionnée par l’artisan : éligibilité à contrôler selon la nature du chantier.');
   return {
     geometry:g, paintAreaM2:round2(paintArea), woodworkM2:round2(woodArea), lines:all,
