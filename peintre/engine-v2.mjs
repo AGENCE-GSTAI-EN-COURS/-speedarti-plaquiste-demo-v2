@@ -55,6 +55,10 @@ export function surfacesFor(work){
 }
 export function getSurface(work,sid){return surfacesFor(work).find(s=>s.id===sid)||null;}
 function resolved(work,s){
+ if(work.type==='surface' && positive(s.areaOverride)){
+   if(s.mode==='wallpaper')throw Error(s.name+' : dimensions longueur/largeur nécessaires pour le calepinage papier peint (désactivez la surface directe m²).');
+   return {length:num(s.areaOverride),height:1};
+ }
  if(work.type!=='room')return {length:req(s.length,s.name+' longueur'),height:req(s.height,s.name+' hauteur')};
  const len=req(work.length,work.name+' longueur'),width=req(work.width,work.name+' largeur'),h=req(work.height,work.name+' hauteur');
  if(s.id===work.ceiling.id)return {length:len,height:width};
