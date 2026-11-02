@@ -33,7 +33,7 @@ L'ancienne V0.1 (app.mjs, engine.mjs, tests.mjs, styles.css) est conservée à t
 
 ## Tests
 À la racine du dépôt : node --test peintre/tests-v2.mjs
-Les 24 scénarios V2 ont été exécutés avec succès sur le moteur, ainsi qu'une vérification de 10 interactions de l'application par simulation du DOM.
+Les 26 scénarios V2 ont été exécutés avec succès sur le moteur, ainsi qu'une vérification de 10 interactions de l'application par simulation du DOM.
 Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop) ni une validation métier.
 
 ## Gardes-fous SpeedArti
