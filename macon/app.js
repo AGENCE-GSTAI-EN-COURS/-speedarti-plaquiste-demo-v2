@@ -57,12 +57,17 @@ function normalizeValue(el){
 }
 function bindDataField(el,obj,path,rerender=false){
   const dynamicNumberPaths=new Set(['braceQty','rows','microDepth']);
-  el.addEventListener('change',()=>{
+  const commit=()=>{
     const value=normalizeValue(el);
     setPath(obj,path,value);
     if(path==='stack'){if(value&&!(num(obj.stackCount)>0))obj.stackCount=1;if(!value)obj.stackCount=0;}
     if(path==='cap'){if(value&&!(num(obj.capCount)>0))obj.capCount=1;if(!value)obj.capCount=0;}
     saveState();
+    return value;
+  };
+  if(el.type==='number')el.addEventListener('input',commit);
+  el.addEventListener('change',()=>{
+    commit();
     if(rerender||el.type==='checkbox'||el.tagName==='SELECT'||(el.type==='number'&&dynamicNumberPaths.has(path)))render();
   });
 }
