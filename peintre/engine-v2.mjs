@@ -1,5 +1,5 @@
-// SpeedArti Peintre V2 — moteur autonome de DÉMONSTRATION, sans API ni prix inventé.
-// Une surface = un support indépendant ; tous les prix/rendements sont saisis ou à confirmer.
+// SpeedArti Peintre V2.1 — moteur de DÉMONSTRATION, hors production.
+// Références historiques de l'ancien calculateur SpeedArti V2 (non validées fournisseurs).
 const num = v => v === '' || v === null || v === undefined ? null : Number(v);
 const valid = v => Number.isFinite(num(v)) && num(v) >= 0;
 const positive = v => valid(v) && num(v) > 0;
@@ -18,14 +18,18 @@ export const PREPARATIONS=Object.freeze([
 ]);
 export const PAINT_TYPES=Object.freeze(['acrylique','glycero','alkyde','autre']);
 export const PAINT_FINISHES=Object.freeze(['mat','velours','satin','brillant','autre']);
+// Repères issus de GSTAI-Sp/speedarti-v2, PeintreCalculateur.ts (LECTURE SEULE).
+// Ce ne sont PAS des rendements/temps/prix fournisseur 2026 vérifiés.
+export const DEMO_REFERENCE=Object.freeze({yieldAcrylique:10,yieldGlycero:12,yieldSatin:9,paintPotL:10,paintPricePerLHT:10,paintHoursPerLayerM2:0.15,prepHoursM2:0.2,wallpaperWidthM:0.53,wallpaperLengthM:10,wallpaperPriceHT:25,wallpaperHoursM2:0.25,hourlyRateHT:42});
+export function demoYield(type,finish){return finish==='satin'?DEMO_REFERENCE.yieldSatin:type==='glycero'?DEMO_REFERENCE.yieldGlycero:DEMO_REFERENCE.yieldAcrylique;}
 export function defaultPaint(){
- return {type:'acrylique',finish:'mat',color:'white',colorRef:'',layers:2,yield:'',loss:10,potLitres:'',potPrice:'',hoursM2:''};
+ return {type:'acrylique',finish:'mat',color:'white',colorRef:'',layers:2,yield:DEMO_REFERENCE.yieldAcrylique,loss:10,potLitres:DEMO_REFERENCE.paintPotL,potPrice:DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL,hoursM2:2*DEMO_REFERENCE.paintHoursPerLayerM2,autoHours:true};
 }
 export function defaultWallpaper(){
- return {kind:'classique',rollWidth:'',rollLength:'',repeatCm:0,loss:20,rollPrice:'',panels:'',panelPrice:'',hoursM2:''};
+ return {kind:'classique',rollWidth:DEMO_REFERENCE.wallpaperWidthM,rollLength:DEMO_REFERENCE.wallpaperLengthM,repeatCm:0,loss:20,rollPrice:DEMO_REFERENCE.wallpaperPriceHT,panels:'',panelPrice:'',hoursM2:DEMO_REFERENCE.wallpaperHoursM2};
 }
 export function defaultPreparation(){
- return {level:'none',hoursM2:'',consumablePriceM2:''};
+ return {level:'none',hoursM2:DEMO_REFERENCE.prepHoursM2,consumablePriceM2:''};
 }
 export function newSurface(name='Mur',kind='wall'){
  return {id:uid(),name,active:true,kind,mode:'paint',length:3,height:2.5,areaOverride:'',
@@ -37,7 +41,7 @@ export function newOpening(){
 export function newWork(type='room',name){
  if(type==='room'){
    const work={id:uid(),type,name:name||'Pièce',length:5,width:4,height:2.5,walls:{},ceiling:newSurface('Plafond','ceiling'),
-     plinth:{enabled:false,manualLength:0,hoursMl:'',pricePerMl:''}};
+     plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:''}};
    for(const letter of ['A','B','C','D'])work.walls[letter]=newSurface('Mur '+letter,'wall');
    work.ceiling.active=true;return work;
  }
@@ -46,8 +50,8 @@ export function newWork(type='room',name){
  throw Error('Type d’ouvrage inconnu.');
 }
 export function createDefaultState(){
- return {version:2,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:'',pricePerMl:''},
-   labor:{hourlyRate:'',workers:1},vatRate:20};
+ return {version:2.1,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:''},
+   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20};
 }
 export function surfacesFor(work){
  if(work.type==='room')return [...['A','B','C','D'].map(k=>work.walls[k]),work.ceiling];
@@ -88,7 +92,7 @@ function labor(lists,warnings,label,area,hoursM2,rate,tag){
  const ratio=valid(hoursM2)?num(hoursM2):null;
  if(ratio==null)missing(warnings,label+' : temps de main-d’œuvre à confirmer.');
  const hours=ratio==null?null:r(area*ratio);
- lists.lines.push({name:label,kind:'labor',tag,unit:'h-homme',quantity:hours,unitPrice:rate,amount:hours==null||rate==null?null:r(hours*rate),source:'temps artisan'});
+ lists.lines.push({name:label,kind:'labor',tag,unit:'h-homme',quantity:hours,unitPrice:rate,amount:hours==null||rate==null?null:r(hours*rate),source:'repère historique SpeedArti / modifiable'});
 }
 function material(lists,warnings,label,area,costM2,tag){
  const cost=valid(costM2)?num(costM2):null;
@@ -221,11 +225,12 @@ export function calculateEstimate(state){
    lists.lines.push({name:group.label,kind:'material',tag:group.areas.join(' • '),unit:'pot',quantity,unitPrice:group.price,
      litresTheoriques:group.canCompute?r(group.litresTheoriques):null,litresBesoin:group.canCompute?r(group.litresBesoin):null,
      conditionnementLitres:group.pack,amount:quantity==null||group.price==null?null:r(quantity*group.price),
-     source:'produit/conditionnement artisan'});
+     source:'repère historique SpeedArti / à vérifier',prixIndicatif:true});
  }
  if(!active)missing(warnings,'Aucun support actif à chiffrer.');
  if(rate==null&&lists.lines.some(l=>l.kind==='labor'))missing(warnings,'Taux horaire de l’artisan à confirmer.');
  const lines=lists.lines;
+ missing(warnings,'Tarifs, rendements et temps préremplis : repères historiques de démonstration SpeedArti V2, à vérifier avant un devis client.');
  const hoursKnown=lines.filter(l=>l.kind==='labor').every(l=>l.quantity!=null);
  const hours=hoursKnown?r(total(lines.filter(l=>l.kind==='labor').map(l=>l.quantity))):null;
  const missingColor=warnings.some(w=>w.includes('référence couleur non renseignée'));
