@@ -22,3 +22,14 @@ Ce document est une **liste de connaissances à fusionner dans la base Ángel EX
 3. Soumettre la revue humaine au responsable métier.
 4. Enrichir **les connaissances existantes**, avec version, source et statuts.
 5. Dans le pilotage SpeedArti, ligne obligatoire « Connaissances Ángel » : ne pas déclarer le métier TERMINÉ avant import validé ou dépendance explicite.
+
+
+## Delta V2 — ajout du 2 novembre 2026 (NON IMPORTÉ)
+- PNT-V2-SURFACE-011 : pièce avec murs A/B/C/D et plafond activables indépendamment ; peinture, papier peint et préparation spécifiques à chaque support.
+- PNT-V2-WORK-012 : mur simple = longueur × hauteur ; surface simple = longueur × largeur ; ne pas déduire un état global à la place des supports indépendants.
+- PNT-V2-OPENING-013 : ouvertures en déduction, menuiseries en supplément, ou les deux ; jamais compter deux fois une déduction ni omettre les faces réellement peintes.
+- PNT-V2-PLINTH-014 : plinthes automatiques uniquement sur les murs actifs ; retrancher les largeurs de portes déduites ; une ligne manuelle reste distincte.
+- PNT-V2-PREP-015 : préparation par support avec aucune par défaut, ponçage léger, ponçage + rattrapage et ratissage complet. Ces intitulés métiers ne donnent pas à eux seuls des rendements fournisseurs ou un temps normatif ; demander les paramètres validés.
+- PNT-V2-WALL-016 : papier peint panoramique = nombre réel de panneaux, largeur/hauteur/raccord du produit à vérifier ; le mode classique peut estimer des lés, mais ne doit pas assimiler toute surface nette à des rouleaux commercialement exacts.
+- PNT-V2-PRICE-017 : regrouper les quantités de même produit avant arrondi aux conditionnements ; conserver une référence de teinte distincte par couleur.
+- PNT-V2-SAFETY-018 : une démo GitHub Pages ne constitue jamais une connexion à la base de connaissances centrale. Statut « connaissances Ángel à intégrer », pas « terminé ».
