@@ -145,3 +145,17 @@ test('une ouverture sur une surface simple peut être déduite',()=>{
  const op=newOpening();op.width=1;op.height=1;w.surface.openings.push(op);
  const r=calculateEstimate(s);assert.equal(r.geometry[0].net,11);
 });
+
+test('un même pot reste mutualisé même avec couches différentes',()=>{
+ const s=prices(roomState()),w=s.works[0];w.walls.B.active=false;w.walls.D.active=false;w.ceiling.active=false;
+ w.walls.C.paint.layers=3;
+ const r=calculateEstimate(s),pots=r.lines.filter(l=>l.unit==='pot');
+ assert.equal(pots.length,1);
+ assert.equal(pots[0].litresBesoin,6.88);
+ assert.equal(pots[0].quantity,1);
+});
+test('peinture couleur sans référence : total bloqué',()=>{
+ const s=prices(roomState());s.works[0].walls.C.paint.color='color';s.works[0].walls.C.paint.colorRef='';
+ const r=calculateEstimate(s);
+ assert.equal(r.complete,false);assert.equal(r.totalHT,null);
+});
