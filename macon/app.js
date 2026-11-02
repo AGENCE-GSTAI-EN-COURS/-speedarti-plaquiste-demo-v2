@@ -19,6 +19,7 @@ function loadState(){
     state.step=0;
     if(state.simpleType==='escalier')state.simpleType='murs';
     state.elements=(state.elements||[]).filter(e=>e.type!=='escalier');
+    for(const e of state.elements)if(e.type==='ouvrage_ba'&&['escalier_ba','paillasse_escalier','palier_ba'].includes(e.data?.workRef))e.data.workRef='beton_proprete';
     if(Number.isFinite(truck)&&truck>0)state.globals.truckPrice=truck;
     return state;
   }catch{return base;}
