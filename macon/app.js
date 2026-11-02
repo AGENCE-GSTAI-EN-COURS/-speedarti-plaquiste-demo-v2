@@ -17,6 +17,8 @@ function loadState(){
     const truck=Number(localStorage.getItem(TRUCK_PREF_KEY));
     const state=saved?{...base,...saved,globals:{...base.globals,...saved.globals},simple:{...base.simple,...saved.simple}}:base;
     state.step=0;
+    if(state.simpleType==='escalier')state.simpleType='murs';
+    state.elements=(state.elements||[]).filter(e=>e.type!=='escalier');
     if(Number.isFinite(truck)&&truck>0)state.globals.truckPrice=truck;
     return state;
   }catch{return base;}
@@ -53,13 +55,14 @@ function normalizeValue(el){
   return el.value;
 }
 function bindDataField(el,obj,path,rerender=false){
+  const dynamicNumberPaths=new Set(['braceQty','rows','microDepth']);
   el.addEventListener('change',()=>{
     const value=normalizeValue(el);
     setPath(obj,path,value);
     if(path==='stack'){if(value&&!(num(obj.stackCount)>0))obj.stackCount=1;if(!value)obj.stackCount=0;}
     if(path==='cap'){if(value&&!(num(obj.capCount)>0))obj.capCount=1;if(!value)obj.capCount=0;}
     saveState();
-    if(rerender||el.type==='checkbox'||el.tagName==='SELECT')render();
+    if(rerender||el.type==='checkbox'||el.tagName==='SELECT'||(el.type==='number'&&dynamicNumberPaths.has(path)))render();
   });
 }
 function resetSimple(){
@@ -93,11 +96,11 @@ function bindEvents(){
     saveState();render();
   });
 
-  $$('[data-simple]').forEach(el=>bindDataField(el,state.simple,el.dataset.simple,true));
-  $$('[data-global]').forEach(el=>bindDataField(el,state.globals,el.dataset.global,true));
-  $$('[data-root-field]').forEach(el=>bindDataField(el,state,el.dataset.rootField,true));
-  $$('[data-el-id][data-field]').forEach(el=>{
-    const e=findElement(el.dataset.elId); if(e)bindDataField(el,e.data,el.dataset.field,true);
+  $('[data-simple]').forEach(el=>bindDataField(el,state.simple,el.dataset.simple,false));
+  $('[data-global]').forEach(el=>bindDataField(el,state.globals,el.dataset.global,false));
+  $('[data-root-field]').forEach(el=>bindDataField(el,state,el.dataset.rootField,false));
+  $('[data-el-id][data-field]').forEach(el=>{
+    const e=findElement(el.dataset.elId); if(e)bindDataField(el,e.data,el.dataset.field,false);
   });
 
   $$('[data-add-simple-opening]').forEach(b=>b.onclick=()=>{
