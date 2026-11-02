@@ -17,9 +17,10 @@ L'ancienne V0.1 (app.mjs, engine.mjs, tests.mjs, styles.css) est conservée à t
 ## Parcours
 1. Ajouter une pièce, un mur simple ou une surface simple. On peut mélanger plusieurs ouvrages.
 2. Sur une pièce, le schéma A/B/C/D et Plafond permet d'activer/désactiver et configurer chaque support sans contamination des autres supports.
-3. Par support : peinture (famille, finition, teinte blanc/couleur, référence et couches), papier peint (classique/intissé/vinyle/panoramique), ouvertures déduites / menuiseries peintes / les deux et préparation indépendante (aucune / ponçage léger / ponçage + rattrapage / ratissage complet).
-4. Plinthes automatiques selon les murs actifs avec déduction des largeurs de portes ; ajout manuel possible.
-5. Résultat par surface : métrés nets, fournitures, heures-homme et montants à confirmer.
+3. Pour les surfaces simples, saisie longueur × largeur ou m² directs (pour peinture ; longueur et largeur obligatoires en papier peint).
+4. Par support : peinture (famille, finition, teinte blanc/couleur, référence et couches), papier peint (classique/intissé/vinyle/panoramique), ouvertures déduites / menuiseries peintes / les deux et préparation indépendante (aucune / ponçage léger / ponçage + rattrapage / ratissage complet).
+5. Plinthes automatiques selon les murs actifs avec déduction des largeurs de portes ; ajout manuel possible.
+6. Résultat par surface : métrés nets, fournitures, heures-homme et montants à confirmer.
 
 ## Sécurité des calculs
 - La préparation est un poste de calcul explicite par support ; ses ratios de temps et consommables sont renseignés par l'artisan ou le catalogue futur. Sans prix/temps, le résultat reste incomplet.
@@ -33,7 +34,7 @@ L'ancienne V0.1 (app.mjs, engine.mjs, tests.mjs, styles.css) est conservée à t
 
 ## Tests
 À la racine du dépôt : node --test peintre/tests-v2.mjs
-Les 26 scénarios V2 ont été exécutés avec succès sur le moteur, ainsi qu'une vérification de 10 interactions de l'application par simulation du DOM.
+Les 28 scénarios V2 ont été exécutés avec succès sur le moteur, ainsi qu'une vérification de 10 interactions de l'application par simulation du DOM.
 Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop) ni une validation métier.
 
 ## Gardes-fous SpeedArti
