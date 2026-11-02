@@ -46,7 +46,7 @@ export const TRACE_TARGETS = {
   chimneyHeight:'quantity+labor', chimneyCount:'quantity+labor', chimneyConduit:'material+labor', chimneyStack:'material+labor', chimneyStackCount:'quantity+labor', chimneyCap:'material+labor', chimneyCapCount:'quantity+labor', chimneyFoyer:'report', chimneyManualPrice:'price-mode', chimneySupplyOverride:'price', chimneyHoursOverride:'labor', chimneyTotalOverride:'price',
   foundationType:'route', microCount:'quantity', microDepth:'commercial-price-rule', microPrice:'price', longrineType:'route', longrineLength:'quantity', longrineWidth:'quantity', longrineHeight:'quantity', longrinePrice:'price',
   plotCount:'quantity', plotVolumeMode:'quantity-meaning', plotVolume:'quantity', basementPerimeter:'quantity', basementBlockHeight:'quantity', basementRows:'quantity', basementFootingWidth:'quantity', basementFootingHeight:'quantity', basementStiffeners:'quantity',
-  refendLength:'quantity', refendHeight:'quantity', refendStiffeners:'quantity', associatedSlabSurface:'quantity', associatedSlabThickness:'quantity', associatedSlabRef:'material+labor', associatedSlabInsulation:'material',
+  refendLength:'quantity', refendHeight:'quantity', refendStiffeners:'quantity', refendFootingWidth:'quantity', refendFootingHeight:'quantity', associatedSlabSurface:'quantity', associatedSlabThickness:'quantity', associatedSlabRef:'material+labor', associatedSlabInsulation:'material', associatedSlabInsulationPrice:'price',
   bearingLength:'quantity', bearingHeight:'quantity', bearingThickness:'quantity', bearingMethod:'route', prefabType:'labor', prefabPriceM2:'price', bearingChainH:'material+labor', bearingChainV:'material+labor', braceQty:'quantity', bracePrice:'price', braceHours:'labor',
   elevationType:'report', elevationLength:'quantity', elevationHeight:'quantity', elevationThickness:'material-variant', elevationMaterial:'material-variant+price-key', elevationMethod:'material-label', elevationChainH:'material+labor', elevationChainV:'material+labor',
   openingType:'associated-work', openingWidth:'quantity', openingHeight:'quantity', openingLintelLength:'quantity', openingLintelRef:'material+labor', openingManualPrice:'price', openingManualHours:'labor',
@@ -472,7 +472,11 @@ function renderFoundationElement(e){
       ${ef(e,'Hauteur refend (m)','refendHeight',d.refendHeight??'',{step:'0.1',trace:'refendHeight'})}
       ${ef(e,'Raidisseurs refend (nb)','refendStiffeners',d.refendStiffeners??'',{step:'1',trace:'refendStiffeners'})}
     </div>
-    <div class="info-box">Consommations et temps du refend calculés automatiquement par SpeedArti.</div>
+    <div class="grid cols-2" style="margin-top:10px">
+      ${ef(e,'Largeur semelle sous refend (cm)','refendFootingWidthCm',d.refendFootingWidthCm??d.footingWidthCm??'',{step:'1',trace:'refendFootingWidth',help:'Reprend par défaut la semelle de soubassement, modifiable.'})}
+      ${ef(e,'Hauteur semelle sous refend (cm)','refendFootingHeightCm',d.refendFootingHeightCm??d.footingHeightCm??'',{step:'1',trace:'refendFootingHeight',help:'Reprend par défaut la semelle de soubassement, modifiable.'})}
+    </div>
+    <div class="info-box">Le mur de refend en soubassement comprend sa semelle filante. Consommations et temps du mur calculés automatiquement par SpeedArti.</div>
     ${renderAssociatedSlabControls(e,d,{surfaceKey:'slabSurface',surfaceLabel:'Surface dalle associée (m²)',insulationKey:d.foundationType==='vide_sanitaire'?'slabInsulation':null,insulationLabel:'Type de plancher VS'})}`;
     sub+=renderRefOverrides('element',d,'semelle_filante').replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
     sub+=renderRefOverrides('element',d,'potelet_raidisseur_vertical').replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
@@ -1012,6 +1016,14 @@ function calcFoundationElement(state,e,lines,lab,alerts,reco){
         const refendHours=num(d.refendHoursPerM2)>0?num(d.refendHoursPerM2):MASONRY_DEFAULTS.parpaing.wallHPerM2;
         lines.push(line(`${p}-refend-blocks`,'Blocs mur de refend','Maçonnerie',rs*refendBlocks,'unité'));
         lab.push(labor(`${e.name} — mur refend`,rs*refendHours));
+        const refendWidth=num(d.refendFootingWidthCm)||fw,refendFootingHeight=num(d.refendFootingHeightCm)||fh;
+        if(!(refendWidth>0&&refendFootingHeight>0))alerts.push(`🚨 ${e.name} : dimensions de semelle sous refend obligatoires.`);
+        else {
+          const refendVol=num(d.refendLength)*(refendWidth/100)*(refendFootingHeight/100);
+          const ref=resolvedRef(d,'semelle_filante'),cc=d.foundationConcreteClass||g.concreteClass||'';
+          lab.push(labor(`${e.name} — semelle sous refend`,addRefLines(lines,ref,refendVol,`${p}-refend-foot`,cc)));
+          reco.push(`${e.name} : semelle sous refend = ${fmt(num(d.refendLength),2)} ml × ${fmt(refendWidth,0)} × ${fmt(refendFootingHeight,0)} cm = ${fmt(refendVol,3)} m³.`);
+        }
         const rml=num(d.refendStiffeners)*num(d.refendHeight);
         if(rml>0){const ref=resolvedRef(d,'potelet_raidisseur_vertical');lab.push(labor(`${e.name} — raidisseurs refend`,addRefLines(lines,ref,rml,`${p}-refend-stiff`,d.foundationConcreteClass||g.concreteClass||'')));}
       }
