@@ -81,8 +81,9 @@ function supportDetails(ctx){
  +(s.active?'<div class="support-body">'
    +(!room?card('Dimensions du support',grid([
       input('Longueur (m)',path+'.length',s.length),
-      input(w.type==='wall'?'Hauteur (m)':'Largeur (m)',path+'.height',s.height)
-   ])):'<p class="note">Dimensions reprises de la pièce : '+(ceiling?'longueur × largeur':'longueur du mur × hauteur')+'.</p>')
+      input(w.type==='wall'?'Hauteur (m)':'Largeur (m)',path+'.height',s.height),
+      ...(w.type==='surface'?[input('Surface directe (m², facultatif)',path+'.areaOverride',s.areaOverride,{placeholder:'Prioritaire pour peinture'})]:[])
+   ])+(w.type==='surface'?'<p class="hint">La saisie directe en m² remplace longueur × largeur pour la peinture. Pour le papier peint, videz ce champ et renseignez les dimensions afin de calculer les lés.</p>':'')):'<p class="note">Dimensions reprises de la pièce : '+(ceiling?'longueur × largeur':'longueur du mur × hauteur')+'.</p>')
    +card('Revêtement choisi',grid([
      select('Type de revêtement',path+'.mode',s.mode,[['paint','Peinture'],['wallpaper','Papier peint'],['none','Aucun revêtement']])
    ])+(s.mode==='paint'?paintEditor(path+'.paint',s.paint):
