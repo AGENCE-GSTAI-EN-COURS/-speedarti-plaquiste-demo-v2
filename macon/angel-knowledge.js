@@ -288,7 +288,7 @@ const ANGEL_STOP_WORDS=new Set(['le','la','les','un','une','des','du','de','d','
 function angelTokens(q){return norm(q).split(/\s+/).filter(t=>t.length>=3&&!ANGEL_STOP_WORDS.has(t)&&!/^\d+$/.test(t))}
 function angelOutOfDomain(q){
   const s=norm(q);
-  return /barbecue|barbeque|four a pizza|four pizza|mortier refractaire|cheminee decorative exterieure/.test(s);
+  return /barbecue|barbeque|four a pizza|four pizza|mortier refractaire|cheminee decorative exterieure|grue mobile|grue de chantier/.test(s);
 }
 function structuralSizingQuery(q){q=norm(q);return /dimension|dimensionnement|ferraillage|section|portee|profondeur|diametre|charge|charges|epaisseur minimale|quelle armature|quel acier/.test(q)&&/fondation|semelle|radier|poutre|poteau|mur porteur|soutenement|dalle|plancher|chainage|micro pieu|micropieu/.test(q)}
 export function searchAngelMacon(query,limit=5){
