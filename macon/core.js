@@ -22,7 +22,6 @@ export const SIMPLE_TYPES = [
   {id:'murs', icon:'🧱', label:'Murs / Cloisons', desc:'Blocs, briques, béton banché'},
   {id:'dalle', icon:'⬜', label:'Dallage / Dalle', desc:'Dallage ou ouvrage béton'},
   {id:'fondations', icon:'🏗️', label:'Fondations', desc:'Semelles et terrassement'},
-  {id:'escalier', icon:'⭐', label:'Escalier', desc:'Béton armé'},
   {id:'terrasse', icon:'▤', label:'Terrasse', desc:'Dalle extérieure'},
   {id:'cheminee', icon:'🔥', label:'Cheminée', desc:'Conduit, souche, chapeau'}
 ];
@@ -31,7 +30,6 @@ export const MULTI_CARDS = [
   {id:'fondations', type:'fondations', icon:'🏗️', label:'Fondations', name:'Fondation'},
   {id:'murs_porteurs', type:'murs_porteurs', icon:'🧱', label:'Murs porteurs', name:'Mur porteur'},
   {id:'murs_elevations', type:'murs_elevations', icon:'🏠', label:"Murs d'élévations", name:'Murs extérieurs'},
-  {id:'escalier', type:'escalier', icon:'⭐', label:'Élément spécial', name:'Escalier'},
   {id:'dalle', type:'dalle', icon:'🟫', label:'Dalle seule', name:'Dalle'},
   {id:'cheminee', type:'cheminee', icon:'🔥', label:'Cheminée', name:'Cheminée'},
   {id:'ouvrage_ba', type:'ouvrage_ba', icon:'▧', label:'Ouvrage BA / Annexe 1', name:'Ouvrage BA'}
@@ -45,7 +43,6 @@ export const TRACE_TARGETS = {
   wallOpening:'quantity+associated-work', wallMaterial:'material-variant+price-key', wallMethod:'material-label', wallChainH:'material+labor', wallChainV:'material+labor',
   slabSurface:'quantity', slabLength:'quantity', slabWidth:'quantity', slabThickness:'quantity', slabRef:'material+labor', slabTreillis:'material', treillisType:'material+price+labor', slabFibres:'material', fibreType:'material', fibreDose:'quantity+alert',
   foundationRef:'material+labor', footingLength:'quantity', footingWidth:'quantity', footingHeight:'quantity', excavationDepth:'report+earthworks-context',
-  stairRef:'material+labor', stairSurface:'quantity', stairHeight:'report', stairType:'report', stairManualPrice:'price-mode', stairManualIncludesLabor:'price-mode', stairManualHours:'planning',
   chimneyHeight:'quantity+labor', chimneyCount:'quantity+labor', chimneyConduit:'material+labor', chimneyStack:'material+labor', chimneyStackCount:'quantity+labor', chimneyCap:'material+labor', chimneyCapCount:'quantity+labor', chimneyFoyer:'report', chimneyManualPrice:'price-mode', chimneySupplyOverride:'price', chimneyHoursOverride:'labor', chimneyTotalOverride:'price',
   foundationType:'route', microCount:'quantity', microDepth:'commercial-price-rule', microPrice:'price', longrineType:'route', longrineLength:'quantity', longrineWidth:'quantity', longrineHeight:'quantity', longrinePrice:'price',
   plotCount:'quantity', plotVolumeMode:'quantity-meaning', plotVolume:'quantity', basementPerimeter:'quantity', basementBlockHeight:'quantity', basementRows:'quantity', basementFootingWidth:'quantity', basementFootingHeight:'quantity', basementStiffeners:'quantity',
@@ -129,7 +126,6 @@ export function projectSummary(state){
   if(state.simpleType==='murs')return `${label} · ${fmt(num(d.length),2)} m × ${fmt(num(d.height),2)} m`;
   if(state.simpleType==='fondations')return `${label} · ${fmt(num(d.length),2)} ml`;
   if(state.simpleType==='cheminee')return `${label} · ${fmt(num(d.height),2)} m · ${num(d.count)||1} conduit`;
-  if(state.simpleType==='escalier')return `${label} · ${fmt(num(d.surface),2)} m²`;
   return label;
 }
 
@@ -241,8 +237,9 @@ export function button(label,attrs='',trace){
   return `<button type="button" ${attrs} ${traceAttr(trace)}>${label}</button>`;
 }
 
-export function workOptions(ids=WORKS.map(x=>x.id)){
-  return ids.map(id=>WORK_BY_ID[id]).filter(Boolean).map(r=>({value:r.id,label:`${r.label} — ${r.moHParUnite} h/${r.unite}`}));
+export const DISABLED_WORK_IDS=new Set(['escalier_ba','paillasse_escalier','palier_ba']);
+function workOptions(ids=WORKS.map(x=>x.id)){
+  return ids.filter(id=>!DISABLED_WORK_IDS.has(id)).map(id=>WORK_BY_ID[id]).filter(Boolean).map(r=>({value:r.id,label:`${r.label} — ${r.moHParUnite} h/${r.unite}`}));
 }
 
 export function concreteClassOptions(){
@@ -285,14 +282,13 @@ export function newElement(cardId){
   if(c.type==='fondations') Object.assign(d,{foundationType:'vide_sanitaire',foundationConcreteClass:'',slabConcreteClass:'',longrineConcreteClass:'',blockHeight:.20,treillisType:'ST25C',longrinePrice:LONGRINE_PRICE_ML});
   if(c.type==='murs_porteurs') Object.assign(d,{method:'coule_sur_place',thickness:20,prefabType:'standard',prefabPriceM2:PREFAB_DEFAULT_PRICE_M2,concreteClass:''});
   if(c.type==='murs_elevations') Object.assign(d,{wallType:'murs_exterieurs',material:'parpaing',method:'colle',thickness:20,concreteClass:'',prefabType:'standard',prefabPriceM2:PREFAB_DEFAULT_PRICE_M2});
-  if(c.type==='escalier') Object.assign(d,{stairType:'droit',stairRef:'escalier_ba',concreteClass:''});
   if(c.type==='dalle') Object.assign(d,{thickness:12,fibreType:'courante',treillisType:'ST25C',concreteClass:''});
   if(c.type==='cheminee') Object.assign(d,{conduit:'20x20',count:1,stack:'',stackCount:0,cap:'',capCount:0,foyer:'ouvert',chimneyOverrides:{}});
   if(c.type==='ouvrage_ba') Object.assign(d,{workRef:'beton_proprete',quantity:1,concreteClass:''});
   return {id:uid(),type:c.type,name:c.name,data:d};
 }
 
-export function iconFor(t){return ({fondations:'🏗️',murs_porteurs:'🧱',murs_elevations:'🏠',escalier:'⭐',dalle:'🟫',cheminee:'🔥',ouvrage_ba:'▧'})[t]||'•';}
+export function iconFor(t){return ({fondations:'🏗️',murs_porteurs:'🧱',murs_elevations:'🏠',dalle:'🟫',cheminee:'🔥',ouvrage_ba:'▧'})[t]||'•';}
 
 export function renderMode(state){
   return `<div class="section-title"><h2>Mode de chiffrage</h2><p>Choisissez simplement si le chantier contient un seul ouvrage ou plusieurs éléments.</p></div>
@@ -364,23 +360,6 @@ export function renderSimpleConfig(state){
       </div>${renderRefOverrides('simple',d,refId)}`;
   }
 
-  if(state.simpleType==='escalier'){
-    const refId=d.stairRef||'escalier_ba';
-    return `<div class="section-title"><h2>Escalier BA</h2><p>Les anciens forfaits cachés sont supprimés.</p></div>
-      <div class="grid cols-5">
-        ${field("Type d'escalier",'stairType',d.stairType??'droit',{trace:'stairType',options:[{value:'droit',label:'Droit'},{value:'quart_tournant',label:'1/4 tournant'},{value:'demi_tournant',label:'2/4 tournant'}]})}
-        ${field('Ouvrage de référence','stairRef',refId,{trace:'stairRef',options:workOptions(['escalier_ba','paillasse_escalier','palier_ba'])})}
-        ${field('Surface réelle (m²)','surface',d.surface??'',{required:true,step:'0.1',trace:'stairSurface'})}
-        ${field('Hauteur à franchir (m)','height',d.height??'',{step:'0.01',trace:'stairHeight'})}
-        ${field('Classe béton','concreteClass',d.concreteClass??'',{required:true,trace:'concreteClass',options:[{value:'',label:'Choisir…'},...concreteClassOptions()]})}
-      </div>
-      <div class="grid cols-3" style="margin-top:14px">
-        ${field('Prix manuel total HT (€) — facultatif','manualPrice',d.manualPrice??'',{step:'1',trace:'stairManualPrice',help:'S’il est saisi, il remplace les lignes de vente calculées.'})}
-        ${check('Le prix manuel inclut la main-d’œuvre','manualIncludesLabor',!!d.manualIncludesLabor,'simple','stairManualIncludesLabor')}
-        ${field('Heures-homme planning si prix manuel','manualHours',d.manualHours??'',{step:'0.1',trace:'stairManualHours'})}
-      </div>${renderRefOverrides('simple',d,refId)}`;
-  }
-
   if(state.simpleType==='cheminee') return renderChimneyConfig('simple',d);
   return '';
 }
@@ -404,7 +383,6 @@ function renderElementConfig(e){
   if(e.type==='fondations') body=renderFoundationElement(e);
   if(e.type==='murs_porteurs') body=renderBearingWallElement(e);
   if(e.type==='murs_elevations') body=renderElevationElement(e);
-  if(e.type==='escalier') body=renderStairElement(e);
   if(e.type==='dalle') body=renderSlabElement(e);
   if(e.type==='cheminee') body=renderChimneyConfig('element',e.data,e);
   if(e.type==='ouvrage_ba') body=renderGenericWorkElement(e);
@@ -605,21 +583,6 @@ function renderElevationElement(e){
   h+=renderRefOverrides('element',d,'chainage_horizontal').replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
   h+=renderRefOverrides('element',d,'chainage_vertical').replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
   return h;
-}
-
-function renderStairElement(e){
-  const d=e.data, refId=d.stairRef||'escalier_ba';
-  return `<div class="grid cols-5">
-    ${ef(e,"Type d'escalier",'stairType',d.stairType??'droit',{trace:'stairType',options:[{value:'droit',label:'Droit'},{value:'quart_tournant',label:'1/4 tournant'},{value:'demi_tournant',label:'2/4 tournant'}]})}
-    ${ef(e,'Ouvrage de référence','stairRef',refId,{trace:'stairRef',options:workOptions(['escalier_ba','paillasse_escalier','palier_ba'])})}
-    ${ef(e,'Surface réelle (m²)','surface',d.surface??'',{required:true,step:'0.1',trace:'stairSurface'})}
-    ${ef(e,'Hauteur (m)','height',d.height??'',{step:'0.01',trace:'stairHeight'})}
-    ${ef(e,'Classe béton','concreteClass',d.concreteClass??'',{required:true,trace:'concreteClass',options:[{value:'',label:'Choisir…'},...concreteClassOptions()]})}
-  </div><div class="grid cols-3" style="margin-top:14px">
-    ${ef(e,'Prix manuel total HT (€) — facultatif','manualPrice',d.manualPrice??'',{step:'1',trace:'stairManualPrice'})}
-    ${ec(e,'Prix manuel inclut la main-d’œuvre','manualIncludesLabor',!!d.manualIncludesLabor,'stairManualIncludesLabor')}
-    ${ef(e,'Heures-homme planning si prix manuel','manualHours',d.manualHours??'',{step:'0.1',trace:'stairManualHours'})}
-  </div>${renderRefOverrides('element',d,refId).replaceAll('data-field=',`data-el-id="${e.id}" data-field=`)}`;
 }
 
 function renderSlabElement(e){
@@ -987,21 +950,6 @@ function calcFoundationSimple(state,lines,lab,alerts,reco){
   alerts.push(STRUCTURE_WARNING);
 }
 
-function calcStair(state,d,prefix,lines,lab,alerts,reco){
-  const ref=resolvedRef(d,d.stairRef||'escalier_ba'),s=num(d.surface),cc=concreteClassFor(d,state.globals);
-  reco.push(`Type d'escalier : ${d.stairType||'non renseigné'} ; hauteur : ${fmt(num(d.height),2)} m ; classe béton ${cc}.`);
-  if(num(d.manualPrice)>0){
-    lines.push(line(`${prefix}-manual`,'Escalier — prix manuel total','Escalier',1,'forfait',num(d.manualPrice),'explicit'));
-    if(!(num(d.manualHours)>0))alerts.push('⚠️ Escalier au prix manuel : heures de planning non renseignées.');
-    else lab.push(labor('Escalier — planning manuel',num(d.manualHours),{includedInManual:!!d.manualIncludesLabor}));
-    return {manualTotal:true,manualIncludesLabor:!!d.manualIncludesLabor};
-  }
-  if(!(s>0))alerts.push('🚨 Surface réelle escalier obligatoire.');
-  if(s>0&&ref)lab.push(labor(ref.label,addRefLines(lines,ref,s,prefix,cc)));
-  alerts.push(STRUCTURE_WARNING);
-  return {manualTotal:false,manualIncludesLabor:false};
-}
-
 function calcFoundationElement(state,e,lines,lab,alerts,reco){
   const d=e.data,g=state.globals,p=e.id;
   if(d.foundationType==='micro_pieux'){
@@ -1223,10 +1171,6 @@ export function calculate(state){
       }
     }
     if(state.simpleType==='fondations')calcFoundationSimple(state,lines,lab,alerts,reco);
-    if(state.simpleType==='escalier'){
-      const r=calcStair(state,state.simple,'simple-stair',lines,lab,alerts,reco);
-      manualTotalLaborIncluded=r.manualTotal&&r.manualIncludesLabor;
-    }
     if(state.simpleType==='cheminee'){
       const r=calcChimney(state.simple,'simple-chimney');lines.push(...r.lines);lab.push(...r.labor);alerts.push(...r.alerts);reco.push(...r.reco);laborPriceOverride+=r.laborPriceOverride;
     }
@@ -1236,7 +1180,6 @@ export function calculate(state){
       if(e.type==='fondations')calcFoundationElement(state,e,lines,lab,alerts,reco);
       if(e.type==='murs_porteurs')calcBearingWall(state,e,lines,lab,alerts,reco);
       if(e.type==='murs_elevations')calcElevationWall(state,e,lines,lab,alerts,reco);
-      if(e.type==='escalier')calcStair(state,e.data,e.id,lines,lab,alerts,reco);
       if(e.type==='dalle')calcSlab(state,e.data,e.name,num(e.data.length)*num(e.data.width),lines,lab,alerts,reco);
       if(e.type==='cheminee'){const r=calcChimney(e.data,e.id);lines.push(...r.lines);lab.push(...r.labor);alerts.push(...r.alerts);reco.push(...r.reco);laborPriceOverride+=r.laborPriceOverride;}
       if(e.type==='ouvrage_ba')calcGenericWork(state,e,lines,lab,alerts);
