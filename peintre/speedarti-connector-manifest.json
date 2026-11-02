@@ -1,62 +1,69 @@
 {
   "metadata": {
-    "id": "speedarti-peintre-v0.1",
-    "status": "DEMO_BRANCH_ONLY_NOT_CONNECTED",
-    "branch": "feature/peintre-v1-isole",
-    "source_read_only": "GSTAI-Sp/speedarti-v2@main",
+    "id": "speedarti-peintre-v2",
+    "status": "DEMO_ON_GITHUB_PAGES_NOT_CONNECTED_TO_PRODUCTION",
     "repository": "AGENCE-GSTAI-EN-COURS/-speedarti-plaquiste-demo-v2",
-    "risk": "AUCUNE_ACTION_PRODUCTION"
+    "branch": "main",
+    "version": "2.0.0",
+    "source_reference_read_only": "GSTAI-Sp/speedarti-v2",
+    "other_trades_unchanged": true
+  },
+  "runtime": {
+    "entry": "peintre/index.html",
+    "app": "peintre/app-v2.mjs",
+    "engine": "peintre/engine-v2.mjs",
+    "stylesheet": "peintre/styles-v2.css",
+    "tests": "peintre/tests-v2.mjs"
   },
   "connectors": [
     {
-      "id": "auth_user",
-      "target": "SpeedArti authService / RLS",
-      "status": "NOT_CONNECTED",
-      "rule": "Jamais de user_id libre depuis la démo"
+      "id": "auth",
+      "target": "authService / Supabase RLS",
+      "status": "NOT_CONNECTED"
     },
     {
-      "id": "artisan_settings",
-      "target": "parametres_utilisateur.taux_horaire / taux_par_metier / nb_ouvriers_defaut",
-      "status": "PREPARED"
+      "id": "artisan",
+      "target": "parametres_utilisateur / taux_par_metier",
+      "status": "DRAFT_NOT_CONNECTED"
     },
     {
       "id": "catalogue",
-      "target": "src/services/chiffrage/integration/catalogueIntegration.ts",
-      "status": "MAPPING_REQUIRED",
-      "rule": "Jamais inventer article_id, prix, conditionnement"
-    },
-    {
-      "id": "stock",
-      "target": "src/services/chiffrage/integration/stockIntegration.ts",
-      "status": "NOT_CONNECTED"
+      "target": "catalogueIntegration",
+      "status": "DRAFT_MAPPING_REQUIRED",
+      "rule": "Jamais inventer de prix ni article_id"
     },
     {
       "id": "devis",
-      "target": "src/services/chiffrage/integration/devisIntegration.ts",
-      "status": "NOT_CONNECTED",
-      "rule": "Devis bloqué si prix/quantité/TVA incomplets"
+      "target": "devisIntegration",
+      "status": "BLOCKED_PEND_REVIEW"
     },
     {
-      "id": "tva",
-      "target": "src/services/chiffrage/tva/tvaService.ts",
+      "id": "stock",
+      "target": "stockIntegration",
       "status": "NOT_CONNECTED"
     },
     {
+      "id": "tva",
+      "target": "tvaService",
+      "status": "DRAFT_NOT_CONNECTED"
+    },
+    {
       "id": "angel",
-      "target": "src/services/angel/angelChatService.ts / toolExecutor.ts",
-      "status": "DELTA_REVIEW_REQUIRED",
-      "rule": "Enrichir la base EXISTANTE ; aucune base parallèle"
+      "target": "BASE_CONNAISSANCE_ANGEL_EXISTANTE",
+      "status": "DELTA_NOT_IMPORTED",
+      "delta": "peintre/ANGEL_KNOWLEDGE_DELTA.md",
+      "rule": "Aucune base de connaissance parallèle"
     }
   ],
-  "security": {
-    "productionWrites": false,
-    "supabaseAccess": false,
-    "externalRequests": false,
-    "githubPagesMainUnchanged": true
+  "review": {
+    "engine_tests": "24/24",
+    "ui_simulated_interactions": "10/10",
+    "real_browser_test": "NOT_YET_RUN",
+    "human_acceptance": "PENDING"
   },
-  "exports": {
-    "engine": "peintre/engine.mjs",
-    "integrationDraft": "peintre/integration/speedarti-adapter.mjs",
-    "angelDelta": "peintre/ANGEL_KNOWLEDGE_DELTA.md"
+  "security": {
+    "speedarti_v2_read_only": true,
+    "production_changes": false,
+    "supabase_access": false
   }
 }
