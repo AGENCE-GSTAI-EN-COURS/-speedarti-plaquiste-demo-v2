@@ -1,4 +1,4 @@
-import {createDefaultState,newWork,newOpening,calculateEstimate,surfacesFor,PREPARATIONS} from './engine-v2.mjs';
+import {createDefaultState,newWork,newOpening,calculateEstimate,surfacesFor,PREPARATIONS,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
 let state=createDefaultState(),step=0,selected={wi:0,key:'A'},error='';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','&quot;':'&quot;',"'":'&#39;'}[c]));
@@ -104,8 +104,8 @@ function paintEditor(path,p){
  +input('Pertes (%)',path+'.loss',p.loss,{step:1})
  +input('Conditionnement (L/pot)',path+'.potLitres',p.potLitres,{placeholder:'À confirmer'})
  +input('Prix HT/pot (€)',path+'.potPrice',p.potPrice,{placeholder:'À confirmer'})
- +input('Temps de pose h/m² (toutes couches)',path+'.hoursM2',p.hoursM2,{placeholder:'À confirmer'})
- +'</div><p class="hint">Un même produit utilisé sur plusieurs murs est regroupé avant l’arrondi aux pots entiers. Les prix sont à renseigner ou raccorder au catalogue SpeedArti.</p></div>';
+ +input('Temps de pose h/m² (toutes couches)',path+'.hoursM2',p.hoursM2,{placeholder:'Repère historique'})
+ +'</div><p class="hint">Valeurs préremplies issues de l’ancien calculateur SpeedArti V2 : rendement, pots de 10 L à 100 € HT et temps de 0,15 h/m²/couche. Repères indicatifs de démonstration, non vérifiés chez les fournisseurs. Modifiables librement ; l’artisan doit valider ses propres références.</p></div>';
 }
 function wallpaperEditor(path,wp){
  return '<div class="sub-section"><div class="field-grid">'
@@ -183,12 +183,12 @@ function settings(){
     input('Temps de pose/peinture (h/ml)','manualPlinth.hoursMl',state.manualPlinth.hoursMl),
     input('Fourniture et peinture HT/ml (€)','manualPlinth.pricePerMl',state.manualPlinth.pricePerMl)
   ])+'<p class="hint">Les plinthes automatiques des pièces dépendent uniquement des murs actifs. Cette ligne manuelle est indépendante.</p>')
-  +'<div class="info">Les tarifs historiques de Guillaume ne sont pas injectés comme prix actuels ; les données manquantes restent « À confirmer ».</div>';
+  +'<div class="info"><strong>Mode démonstration :</strong> taux horaire et fournitures sont préremplis avec d’anciens repères SpeedArti (42 €/h, peinture à 10 €/L). Ces prix ne constituent pas des tarifs fournisseurs actuels. Vérifiez et modifiez-les avant tout devis.</div>';
 }
 function results(){
  let result;
  try{result=calculateEstimate(state)}catch(e){return head('Résultat','Corrigez les champs signalés.')+'<div class="alert error">'+esc(e.message)+'</div>';}
- return head('Chiffrage détaillé','Résultat par support avec déductions, menuiseries, préparations, pots et heures de main-d’œuvre.')
+ return head('Chiffrage détaillé','Quantités de matériaux et temps de travail calculés automatiquement pour chaque ouvrage, avec références indicatives modifiables.')
   +'<div class="metrics">'
    +[['Supports comptés',result.geometry.filter(g=>g.kind!=='menuiserie'&&g.kind!=='plinth').length],
     ['Heures-homme',fmt(result.hoursMan)+' h'],['Durée chantier',fmt(result.durationHours)+' h'],
@@ -197,10 +197,13 @@ function results(){
     .map(([l,v])=>'<div class="metric"><small>'+l+'</small><strong>'+v+'</strong></div>').join('')+'</div>'
   +card('Métrés par ouvrage','<div class="scroll-table"><table><thead><tr><th>Support</th><th>Traitement</th><th>Brut</th><th>Déduction</th><th>Net</th><th>Préparation</th></tr></thead><tbody>'
    +result.geometry.map(g=>'<tr><td>'+esc(g.work)+' — '+esc(g.surface)+'</td><td>'+esc(g.mode)+'</td><td>'+fmt(g.gross)+'</td><td>'+fmt(g.deduction)+'</td><td><strong>'+fmt(g.net)+'</strong></td><td>'+esc(PREPARATIONS.find(x=>x.id===g.treatment)?.title||'Aucune')+'</td></tr>').join('')+'</tbody></table></div>')
-  +card('Fournitures et main-d’œuvre','<div class="scroll-table"><table><thead><tr><th>Poste</th><th>Qté</th><th>Unité</th><th>Prix HT</th><th>Montant HT</th></tr></thead><tbody>'
-   +result.lines.map(x=>'<tr><td>'+esc(x.name)+'<small class="row-sub">'+esc(x.tag)+'</small></td><td>'+fmt(x.quantity)+'</td><td>'+esc(x.unit)+'</td><td>'+money(x.unitPrice)+'</td><td><strong>'+money(x.amount)+'</strong></td></tr>').join('')+'</tbody></table></div>'
-   +'<p class="hint">Les pots identiques sont regroupés ; une peinture colorée différente reste un poste distinct.</p>')
-  +(result.complete?'<div class="info ok">Tous les montants des postes actifs sont calculables. Il reste à vérifier les références et le chantier avant devis.</div>':
+  +card('Matériaux et consommations','<div class="scroll-table"><table><thead><tr><th>Fourniture</th><th>Besoin estimé</th><th>À acheter</th><th>Prix HT</th><th>Montant HT</th></tr></thead><tbody>'
+   +result.lines.filter(x=>x.kind==='material').map(x=>'<tr><td>'+esc(x.name)+'<small class="row-sub">'+esc(x.tag)+'</small></td><td>'+(x.litresBesoin!=null?fmt(x.litresBesoin)+' L':'—')+'</td><td><strong>'+fmt(x.quantity)+' '+esc(x.unit)+'</strong></td><td>'+money(x.unitPrice)+'</td><td><strong>'+money(x.amount)+'</strong></td></tr>').join('')+'</tbody></table></div>'
+   +'<p class="hint">Les litres et le nombre de pots sont calculés avec les pertes et les conditionnements. Les pots identiques sont regroupés avant arrondi. Prix de référence historique à confirmer.</p>')
+  +card('Temps de travail / main-d’œuvre','<div class="scroll-table"><table><thead><tr><th>Ouvrage / tâche</th><th>Heures-homme</th><th>Taux horaire HT</th><th>Coût HT</th></tr></thead><tbody>'
+   +result.lines.filter(x=>x.kind==='labor').map(x=>'<tr><td>'+esc(x.name)+'<small class="row-sub">'+esc(x.tag)+'</small></td><td><strong>'+fmt(x.quantity)+' h</strong></td><td>'+money(x.unitPrice)+'</td><td>'+money(x.amount)+'</td></tr>').join('')+'</tbody></table></div><p class="hint">Total : '+fmt(result.hoursMan)+' heures-homme. Durée chantier : '+fmt(result.durationHours)+' h pour l’effectif renseigné. Temps indicatifs de démonstration, modifiables sur chaque support.</p>')
+  +'<div class="info"><strong>Sources des préremplissages :</strong> ancien calculateur Peintre SpeedArti V2 consulté en lecture seule. Les chiffres ne sont ni des tarifs actuels vérifiés ni un devis professionnel prêt à envoyer.</div>'
+  +(result.complete?'<div class="info ok">Matériaux, temps et montants indicatifs calculés. Vérifiez tarifs et rendements réels avant devis.</div>':
     '<div class="alert error"><strong>Chiffrage incomplet</strong> — les montants inconnus ne sont jamais remplacés par zéro. Sous-total des seules lignes calculables : '+money(result.confirmedHT)+'.</div>')
   +(result.warnings.length?card('Points à confirmer','<ul class="warnings">'+result.warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>'):'')
   +'<div class="export">'+btn('Exporter le résultat JSON (local)','export','','primary')+'</div>';
@@ -252,8 +255,23 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
  const t=e.target;if(!t.dataset.set)return;
- setPath(t.dataset.set,t.type==='checkbox'?t.checked:t.value);
- if(t.type==='checkbox'||t.tagName==='SELECT')render();
+ const path=t.dataset.set;
+ const before=getPath(path);
+ setPath(path,t.type==='checkbox'?t.checked:t.value);
+ // Si les valeurs correspondaient aux repères automatiques, les adapter au produit/couches.
+ if(path.endsWith('.paint.type')||path.endsWith('.paint.finish')){
+   const parent=path.slice(0,path.lastIndexOf('.'));
+   const spec=getPath(parent);
+   const oldType=path.endsWith('.type')?before:spec.type;
+   const oldFinish=path.endsWith('.finish')?before:spec.finish;
+   if(Number(spec.yield)===demoYield(oldType,oldFinish))spec.yield=demoYield(spec.type,spec.finish);
+ }
+ if(path.endsWith('.paint.layers')){
+   const spec=getPath(path.slice(0,-('.layers'.length)));
+   if(spec.autoHours!==false){spec.hoursM2=Math.round(Number(spec.layers)*DEMO_REFERENCE.paintHoursPerLayerM2*100)/100;}
+ }
+ if(path.endsWith('.paint.hoursM2')){getPath(path.slice(0,-('.hoursM2'.length))).autoHours=false;}
+ if(t.type==='checkbox'||t.tagName==='SELECT'||path.endsWith('.paint.layers'))render();
 });
 $('previous').addEventListener('click',()=>move(step-1));
 $('next').addEventListener('click',()=>move(step+1));
