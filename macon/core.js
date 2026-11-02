@@ -49,7 +49,7 @@ export const TRACE_TARGETS = {
   refendLength:'quantity', refendHeight:'quantity', refendStiffeners:'quantity', refendFootingWidth:'quantity', refendFootingHeight:'quantity', associatedSlabSurface:'quantity', associatedSlabThickness:'quantity', associatedSlabRef:'material+labor', associatedSlabInsulation:'material', associatedSlabInsulationPrice:'price',
   bearingLength:'quantity', bearingHeight:'quantity', bearingThickness:'quantity', bearingMethod:'route', prefabType:'labor', prefabPriceM2:'price', bearingChainH:'material+labor', bearingChainV:'material+labor', braceQty:'quantity', bracePrice:'price', braceHours:'labor',
   elevationType:'report', elevationLength:'quantity', elevationHeight:'quantity', elevationThickness:'material-variant', elevationMaterial:'material-variant+price-key', elevationMethod:'material-label', elevationChainH:'material+labor', elevationChainV:'material+labor',
-  openingType:'associated-work', openingWidth:'quantity', openingHeight:'quantity', openingLintelLength:'quantity', openingLintelRef:'material+labor', openingManualPrice:'price', openingManualHours:'labor',
+  openingType:'associated-work', openingWidth:'quantity', openingHeight:'quantity', openingLintelLength:'quantity', openingLintelRef:'material+labor', openingManualPrice:'price', openingManualHours:'labor', openingCoffrePrice:'price',
   beamLength:'quantity', beamWidth:'quantity', beamHeight:'quantity', beamRef:'material+labor', pignonWidth:'quantity', pignonSlope:'quantity',
   elevationWaterproof:'material+price', elevationDecoration:'material+price', elevationAntiTermite:'material+price',
   genericWorkRef:'material+labor', genericWorkQty:'quantity', refBeton:'quantity', refAcier:'quantity', refCoffrage:'quantity', refHours:'labor',
@@ -315,8 +315,9 @@ function openingRowsSimple(d){
   return `<div class="element-card"><header><strong>Ouvertures réelles</strong>${button('+ Ajouter',`class="btn ghost small" data-add-simple-opening="1"`,'addOpening')}</header><div class="body">
     ${openings.length?openings.map((o,i)=>`<div class="grid cols-4 line-editor">
       ${field('Largeur (m)',`openings.${i}.width`,o.width??'',{step:'0.01',trace:'wallOpening'})}
-      ${field('Hauteur (m)',`openings.${i}.height`,o.height??'',{step:'0.01',trace:'wallOpening'})}
-      ${field('Ouvrage associé',`openings.${i}.associated`,o.associated??'',{trace:'wallOpening',options:[{value:'',label:'Aucun'},{value:'appui_fenetre_ba',label:'Appui fenêtre BA'},{value:'seuil_ba',label:'Seuil BA'},{value:'linteau_ba_courant',label:'Linteau BA courant'},{value:'linteau_ba_renforce',label:'Linteau BA renforcé'}]})}
+      ${!['seuil_ba','coffre_tunnel_brique','coffre_tunnel_resine'].includes(o.associated)?field('Hauteur (m)',`openings.${i}.height`,o.height??'',{step:'0.01',trace:'wallOpening'}):''}
+      ${field('Ouvrage associé',`openings.${i}.associated`,o.associated??'',{trace:'wallOpening',options:[{value:'',label:'Aucun'},{value:'appui_fenetre_ba',label:'Appui fenêtre BA'},{value:'seuil_ba',label:'Seuil BA'},{value:'linteau_ba_courant',label:'Linteau BA courant'},{value:'linteau_ba_renforce',label:'Linteau BA renforcé'},{value:'coffre_tunnel_brique',label:'Coffre tunnel brique'},{value:'coffre_tunnel_resine',label:'Coffre tunnel résine'}]})}
+      ${['coffre_tunnel_brique','coffre_tunnel_resine'].includes(o.associated)?field('Prix HT / ml coffre',`openings.${i}.coffrePriceMl`,o.coffrePriceMl??'',{step:'0.01',trace:'openingCoffrePrice',help:'Prix provisoire à saisir en attendant l’audit catalogue.'}):''}
       ${button('Supprimer',`class="btn danger small" data-remove-simple-opening="${i}"`,'removeOpening')}
     </div>`).join(''):'<p class="muted">Aucune ouverture.</p>'}
     ${refs.map(id=>renderRefOverrides('simple',d,id)).join('')}
@@ -545,9 +546,10 @@ function renderElevationElement(e){
   const openings=d.openings||[];
   h+=`<div class="element-card"><header><strong>Ouvertures</strong>${eb(e,'+ Ajouter',`class="btn ghost small" data-add-opening="${e.id}"`,'addOpening')}</header><div class="body">
     ${openings.length?openings.map((o,i)=>`<div class="line-editor"><div class="grid cols-4">
-      ${ef(e,'Type',`openings.${i}.type`,o.type??'seuil_ba',{trace:'openingType',options:[{value:'seuil_ba',label:'Seuil BA'},{value:'appui_fenetre_ba',label:'Appui fenêtre BA'},{value:'linteau_ba_courant',label:'Linteau BA courant'},{value:'linteau_ba_renforce',label:'Linteau BA renforcé'},{value:'talonnette_manuelle',label:'Talonnette — saisie manuelle'}]})}
+      ${ef(e,'Type',`openings.${i}.type`,o.type??'seuil_ba',{trace:'openingType',options:[{value:'seuil_ba',label:'Seuil BA'},{value:'appui_fenetre_ba',label:'Appui fenêtre BA'},{value:'linteau_ba_courant',label:'Linteau BA courant'},{value:'linteau_ba_renforce',label:'Linteau BA renforcé'},{value:'coffre_tunnel_brique',label:'Coffre tunnel brique'},{value:'coffre_tunnel_resine',label:'Coffre tunnel résine'},{value:'talonnette_manuelle',label:'Talonnette — saisie manuelle'}]})}
       ${ef(e,'Largeur ouverture (m)',`openings.${i}.width`,o.width??'',{step:'0.01',trace:'openingWidth'})}
-      ${ef(e,'Hauteur ouverture (m)',`openings.${i}.height`,o.height??'',{step:'0.01',trace:'openingHeight'})}
+      ${!['seuil_ba','coffre_tunnel_brique','coffre_tunnel_resine'].includes(o.type)?ef(e,'Hauteur ouverture (m)',`openings.${i}.height`,o.height??'',{step:'0.01',trace:'openingHeight'}):''}
+      ${['coffre_tunnel_brique','coffre_tunnel_resine'].includes(o.type)?ef(e,'Prix HT / ml coffre',`openings.${i}.coffrePriceMl`,o.coffrePriceMl??'',{step:'0.01',trace:'openingCoffrePrice',help:'Prix provisoire à saisir en attendant l’audit catalogue.'}):''}
       ${eb(e,'Supprimer',`class="btn danger small" data-remove-opening="${e.id}:${i}"`,'removeOpening')}
     </div>
     ${String(o.type||'').startsWith('linteau')?`<div class="grid cols-2" style="margin-top:10px">${ef(e,'Longueur linteau (ml)',`openings.${i}.lintelLength`,o.lintelLength??o.width??'',{step:'0.01',trace:'openingLintelLength'})}${ef(e,'Référence linteau',`openings.${i}.type`,o.type??'linteau_ba_courant',{trace:'openingLintelRef',options:workOptions(['linteau_ba_courant','linteau_ba_renforce'])})}</div>`:''}
@@ -851,12 +853,19 @@ function calcChimney(d,prefix='chimney'){
 }
 
 function addOpeningAssociated(lines,lab,o,prefix,container,concreteClass,alerts){
-  const w=num(o.width),h=num(o.height), area=w*h;
-  const assoc=o.type||o.associated||'';
+  const w=num(o.width),h=num(o.height),assoc=o.type||o.associated||'';
+  const area=['seuil_ba','coffre_tunnel_brique','coffre_tunnel_resine'].includes(assoc)?0:w*h;
   if(assoc==='talonnette_manuelle'){
     if(num(o.manualPrice)>0) lines.push(line(`${prefix}-talonnette`,'Talonnette — prix manuel','Maçonnerie',1,'unité',num(o.manualPrice),'explicit'));
     else alerts.push('🚨 Talonnette : prix manuel obligatoire.');
     if(num(o.manualHours)>0) lab.push(labor('Talonnette',num(o.manualHours)));
+    return area;
+  }
+  if(['coffre_tunnel_brique','coffre_tunnel_resine'].includes(assoc)){
+    if(!(w>0))alerts.push('🚨 Coffre tunnel : largeur de baie obligatoire.');
+    const pr=num(o.coffrePriceMl);
+    if(!(pr>0))alerts.push(`🚨 ${assoc==='coffre_tunnel_brique'?'Coffre tunnel brique':'Coffre tunnel résine'} : prix HT/ml obligatoire.`);
+    else addDirectPricedLine(lines,`${prefix}-${assoc}`,assoc==='coffre_tunnel_brique'?'Coffre tunnel brique':'Coffre tunnel résine','Coffres tunnels',w,'ml',pr);
     return area;
   }
   const refId=assoc;
