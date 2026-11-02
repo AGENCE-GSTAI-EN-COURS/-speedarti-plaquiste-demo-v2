@@ -78,6 +78,12 @@ const baseEntries=[
     answer:'À chaque ouverture de la démo, le parcours démarre à l’étape 1. Les données du projet peuvent être conservées, mais l’étape courante n’est pas persistée. Les étapes déjà parcourues restent accessibles pour revenir en arrière.'
   },
   {
+    id:'MAC-S65-RETOUR-GUILLAUME',topic:'parcours',
+    tags:['s6.5','refend','semelle','coffre tunnel','seuil ba','isolation plancher','genoise','mobile','escalier'],
+    title:'S6.5 — corrections pré-production Guillaume',
+    answer:'Le module Maçon ne propose plus l’escalier. Un mur de refend en soubassement comprend sa semelle filante. Les coffres tunnels brique/résine sont chiffrés au ml avec prix explicite. Le seuil BA ne demande plus de hauteur de baie. L’isolation de plancher et les génoises demandent un prix explicite tant que l’audit catalogue n’est pas terminé. Les saisies numériques mobiles ne doivent plus provoquer de rerendu complet du formulaire.'
+  },
+  {
     id:'MAC-MURS-OUVERTURES',topic:'murs',
     tags:['mur','murs','ouverture','ouvertures','fenetre','porte','surface nette','linteau','seuil','appui'],
     title:'Déduction des ouvertures dans les murs',
@@ -205,7 +211,8 @@ const baseEntries=[
   }
 ];
 
-const workEntries=WORKS.map(w=>({
+const disabledWorkIds=new Set(['escalier_ba','paillasse_escalier','palier_ba']);
+const workEntries=WORKS.filter(w=>!disabledWorkIds.has(w.id)).map(w=>({
   id:'MAC-OUVRAGE-'+w.id.toUpperCase(),
   sourceId:w.id,
   topic:'ouvrage',
@@ -360,7 +367,7 @@ export function getAngelMaconEntry(id){
 }
 
 export const SpeedArtiAngelMaconKnowledge=Object.freeze({
-  version:'MAC-ANGEL-KB-v1.4',
+  version:'MAC-ANGEL-KB-v1.5',
   metier:'macon',
   source:'macon/references.js + macon/core.js + macon/catalogue-macon.js + macon/speedarti-integration.js (main)',
   entries:ANGEL_MACON_ENTRIES,
