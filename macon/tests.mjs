@@ -18,6 +18,8 @@ function test(name,fn){try{fn();pass.push(name)}catch(e){console.error(`FAIL —
 function base(){const s=defaultState();s.globals.hourly=50;s.globals.vat=20;s.globals.workers=2;s.globals.concreteClass='C25/30';return s;}
 function fillRequiredPrices(s){const r=calculate(s);for(const l of r.missingPrices)s.manualPrices[l.id]=10;return calculate(s)}
 function qty(r,id){const l=r.lines.find(x=>x.id===id);return l?.qty??null}
+const STAIR_WORK_IDS=new Set(['escalier_ba','paillasse_escalier','palier_ba']);
+const ACTIVE_WORKS=WORKS.filter(w=>!STAIR_WORK_IDS.has(w.id));
 
 test('référentiel Guillaume: 40 ouvrages',()=>assert.equal(WORKS.length,40));
 test('camion-benne 8x4 = 800 € HT/j',()=>assert.equal(TRUCK_8X4_DEFAULT,800));
@@ -46,9 +48,10 @@ test('select plot volume total persiste après rerender',()=>{
   assert.match(renderConfig(s),/<option value="total" selected>/);
 });
 
-test('les 40 ouvrages sont réellement accessibles dans UI Annexe 1',()=>{
+test('Annexe 1 expose tous les ouvrages actifs mais aucun escalier',()=>{
   const s=base();s.mode='multiple';const e=newElement('ouvrage_ba');s.elements=[e];const html=renderConfig(s);
-  for(const w of WORKS)assert.ok(html.includes(`value="${w.id}"`),`ouvrage inaccessible: ${w.id}`);
+  for(const w of ACTIVE_WORKS)assert.ok(html.includes(`value="${w.id}"`),`ouvrage inaccessible: ${w.id}`);
+  for(const id of STAIR_WORK_IDS)assert.ok(!html.includes(`value="${id}"`),`escalier encore accessible: ${id}`);
 });
 
 test('balisage: aucun contrôle orphelin sur parcours représentatifs',()=>{
@@ -90,9 +93,9 @@ test('prix catalogue automatique: aucun prix personnel requis pour continuer',()
   const html=renderPrices(s);assert.match(html,/Sélection automatique SpeedArti/);assert.match(html,/Prix HT personnel \//);
 });
 
-test('absence de famille catalogue fiable ne bloque plus le résultat',()=>{
-  const s=base();s.mode='multiple';const e=newElement('murs_elevations');Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',blocksPerM2:10,mortarKgM2:20,wallHPerM2:.8,concreteClass:'C25/30',decoration:'genoise_simple'});s.elements=[e];
-  const r=calculate(s),decor=r.lines.find(x=>x.id.includes('-decor-'));assert.equal(decor.price,0);assert.ok(r.missingPrices.some(x=>x.id===decor.id));assert.equal(r.canFinalize,true);
+test('génoise sélectionnée exige désormais un prix HT/ml explicite',()=>{
+  const s=base();s.mode='multiple';const e=newElement('murs_elevations');Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',decoration:'genoise_simple'});s.elements=[e];
+  const r=calculate(s);assert.ok(r.alerts.some(a=>/Génoise simple.*prix HT\/ml obligatoire/i.test(a)));assert.equal(r.canFinalize,false);
 });
 
 test('options visibles ont une case prix immédiate',()=>{
@@ -132,14 +135,14 @@ test('ouverture déduite + linteau traité séparément',()=>{
   const r=calculate(s);const blocks=r.lines.find(x=>x.id.startsWith('simple-wall-block'));assert.equal(blocks.qty,280);assert.ok(r.lines.some(x=>x.id.includes('linteau_ba_courant-beton')));
 });
 
-test('prix manuel escalier inclus MO: pas de double facturation',()=>{
-  const s=base();s.simpleType='escalier';Object.assign(s.simple,{stairType:'droit',stairRef:'escalier_ba',surface:5,manualPrice:2000,manualIncludesLabor:true,manualHours:8});
-  const r=calculate(s);assert.equal(r.hours,8);assert.equal(r.laborCost,0);assert.equal(r.materials,2000);
+test('escalier retiré du parcours simple et multi',()=>{
+  const simple=renderWorks(base());assert.ok(!/Escalier/.test(simple));
+  const s=base();s.mode='multiple';const multi=renderWorks(s);assert.ok(!/Escalier/.test(multi));assert.equal(newElement('escalier'),null);
 });
 
 
-test('les 40 ouvrages Annexe 1 sont calculables, pas seulement affichés',()=>{
-  for(const w of WORKS){
+test('les ouvrages Annexe 1 actifs sont calculables, pas seulement affichés',()=>{
+  for(const w of ACTIVE_WORKS){
     const s=base();s.mode='multiple';const e=newElement('ouvrage_ba');Object.assign(e.data,{workRef:w.id,quantity:1});s.elements=[e];
     const r=calculate(s);assert.equal(r.hours,w.moHParUnite,`MO ${w.id}`);
     if(w.betonParUnite>0)assert.equal(r.lines.find(x=>x.id===`${e.id}-generic-beton`).qty,w.betonParUnite,`béton ${w.id}`);
@@ -390,11 +393,11 @@ test('FIX audit humain: dalle associée gère treillis et fibres comme la dalle 
   assert.ok(Math.abs(fibre.qty-(80*.15*3.5))<1e-9);
 });
 
-test('FIX audit humain: isolation plancher VS n’est ajoutée qu’une seule fois',()=>{
+test('FIX audit humain: isolation plancher VS a un prix explicite et une seule ligne',()=>{
   const s=base();s.mode='multiple';const e=newElement('fondations');
-  Object.assign(e.data,{foundationType:'vide_sanitaire',perimeter:40,blockHeight:.2,rows:2,blocksPerM2:10,wallHPerM2:.5,footingWidthCm:40,footingHeightCm:30,slabSurface:80,slabRef:'dallage_arme',thickness:15,slabInsulation:'avec_isolant'});s.elements=[e];
-  const r=calculate(s);
-  assert.equal(r.lines.filter(l=>l.id===`${e.id}-vs-insulation`).length,1);
+  Object.assign(e.data,{foundationType:'vide_sanitaire',perimeter:40,blockHeight:.2,rows:2,footingWidthCm:40,footingHeightCm:30,foundationConcreteClass:'C25/30',slabSurface:80,slabRef:'dallage_arme',slabConcreteClass:'C25/30',thickness:15,slabInsulation:'avec_isolant',slabInsulationPriceM2:25});s.elements=[e];
+  const r=calculate(s),rows=r.lines.filter(l=>l.id===`${e.id}-vs-insulation`);
+  assert.equal(rows.length,1);assert.equal(rows[0].price,25);assert.equal(rows[0].qty,80);
 });
 
 test('FIX balisage absolu: navigation Précédent/Suivant et retours métiers sont balisés',()=>{
@@ -527,10 +530,11 @@ test('v2.5: Murs / Cloisons qualifie mur ou cloison non porteuse',()=>{
 });
 
 
-test('Angèle Maçon: base chargée et 40 ouvrages synchronisés',()=>{
+test('Angèle Maçon: base chargée avec ouvrages actifs hors escalier',()=>{
   assert.equal(SpeedArtiAngelMaconKnowledge.metier,'macon');
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.4');
-  assert.equal(SpeedArtiAngelMaconKnowledge.entries.filter(e=>e.topic==='ouvrage').length,WORKS.length);
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
+  const entries=SpeedArtiAngelMaconKnowledge.entries.filter(e=>e.topic==='ouvrage');assert.equal(entries.length,ACTIVE_WORKS.length);
+  for(const id of STAIR_WORK_IDS)assert.ok(!entries.some(e=>e.sourceId===id));
 });
 
 test('Angèle Maçon: recherche ouvrage utilise le référentiel réel',()=>{
@@ -560,7 +564,7 @@ test('Angèle Maçon: sécurité structurelle disponible à l’interrogation',(
 test('v2.6 audit toupie',()=>{const s=base();s.simpleType='dalle';Object.assign(s.simple,{surface:50,thickness:15,slabRef:'dallage_arme',concreteClass:'C25/30'});s.globals.toupie=true;const r=calculate(s),c=r.lines.find(x=>x.category==='Béton'&&x.unit==='m³');assert.equal(c.priceMode,'included');assert.equal(c.source,'inclus dans la fourniture toupie');});
 test('v2.6 audit beton ref',()=>{const s=base();s.simpleType='dalle';Object.assign(s.simple,{surface:20,thickness:10,slabRef:'dallage_non_arme',concreteClass:'C25/30'});assert.equal(calculate(s).lines.find(x=>x.category==='Béton').price,190);});
 test('v2.6 audit acier ref',()=>{assert.ok(genericRebarPricePerKg()>0);});
-test('v2.6 audit 40 ouvrages prix',()=>{for(const w of WORKS){const s=base();s.mode='multiple';const e=newElement('ouvrage_ba');Object.assign(e.data,{workRef:w.id,quantity:1,concreteClass:'C25/30'});s.elements=[e];assert.equal(calculate(s).missingPrices.length,0,w.id)}});
+test('v2.6 audit ouvrages actifs prix',()=>{for(const w of ACTIVE_WORKS){const s=base();s.mode='multiple';const e=newElement('ouvrage_ba');Object.assign(e.data,{workRef:w.id,quantity:1,concreteClass:'C25/30'});s.elements=[e];assert.equal(calculate(s).missingPrices.length,0,w.id)}});
 test('v2.6 audit catalogue inconnu',()=>{assert.equal(catalogueCandidatesForLine({id:'decor',name:'génoise simple',category:'Décoration extérieure',qty:10,unit:'ml'},8).length,0);});
 test('v2.6 audit Angel hors sujet',()=>{assert.equal(searchAngelMacon('prix d une grue mobile 60 tonnes',3).length,0);assert.equal(searchAngelMacon('quel dosage de mortier réfractaire pour un barbecue',3).length,0);});
 test('v2.6 audit Angel structure',()=>{assert.match(answerAngelMacon('quel ferraillage pour une poutre de 6 mètres'),/ne doit jamais proposer seule/i);});
@@ -812,7 +816,7 @@ test('S6.1 simple mur affiche la classe béton quand un ouvrage BA la nécessite
 });
 
 test('S6.1 Angèle connaît les nouvelles règles',()=>{
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.4');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
   for(const q of ['ratio parpaing','classe béton chaînage mur','quantité souche chapeau','arrondi TTC TVA'])assert.ok(searchAngelMacon(q,5).length>0,q);
 });
 
@@ -857,7 +861,7 @@ test('S6.3 résultat affiche prix par unité de vente réelle du catalogue',()=>
 });
 
 test('S6.3 Angèle connaît mortier chantier et conditionnement fournisseur',()=>{
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.4');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
   assert.ok(searchAngelMacon('ciment sable mortier chantier parpaing',5).length>0);
   assert.ok(searchAngelMacon('armature linteau vendue à la pièce',5).length>0);
 });
@@ -903,9 +907,66 @@ test('S6.4 fondations : soubassement et refend n’exposent plus leurs ratios et
 });
 
 test('S6.4 Angèle connaît la règle ratios internes et navigation',()=>{
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.4');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
   assert.ok(searchAngelMacon('consommation par m2 donnée interne SpeedArti artisan',5).length>0);
   assert.ok(searchAngelMacon('réouverture étape 1 navigation retour',5).length>0);
+});
+
+
+test('S6.5 refend : semelle sous refend calculée et explicitement tracée',()=>{
+  const s=base();s.mode='multiple';const e=newElement('fondations');
+  Object.assign(e.data,{foundationType:'vide_sanitaire',perimeter:20,blockHeight:.2,rows:2,footingWidthCm:50,footingHeightCm:30,foundationConcreteClass:'C25/30',refendLength:5,refendHeight:1,refendFootingWidthCm:40,refendFootingHeightCm:25});s.elements=[e];
+  const r=calculate(s),beton=r.lines.find(l=>l.id===e.id+'-refend-foot-beton');
+  assert.ok(beton);assert.ok(Math.abs(beton.qty-.5)<1e-9);assert.ok(r.reco.some(x=>/semelle sous refend/i.test(x)));
+});
+
+test('S6.5 seuil BA : hauteur de baie non demandée',()=>{
+  const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+  Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',openings:[{type:'seuil_ba',width:1.2,height:2}]});s.elements=[e];
+  const html=renderConfig(s);assert.ok(!html.includes('Hauteur ouverture (m)'));const r=calculate(s);
+  assert.equal(r.lines.find(l=>l.id.includes('seuil_ba-beton')).qty,.036);
+  assert.equal(r.lines.find(l=>l.id.startsWith(e.id+'-blocks')).qty,250);
+});
+
+test('S6.5 coffres tunnels brique/résine : visibles et chiffrés au ml',()=>{
+  for(const type of ['coffre_tunnel_brique','coffre_tunnel_resine']){
+    const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+    Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',openings:[{type,width:1.5,coffrePriceMl:40}]});s.elements=[e];
+    const html=renderConfig(s);assert.match(html,/Coffre tunnel brique/);assert.match(html,/Coffre tunnel résine/);assert.match(html,/Prix HT \/ ml coffre/);
+    const r=calculate(s),line=r.lines.find(l=>l.id.includes(type));assert.ok(line);assert.equal(line.qty,1.5);assert.equal(line.price,40);
+  }
+});
+
+test('S6.5 isolation plancher : prix obligatoire et repris au total',()=>{
+  const s=base();s.mode='multiple';const e=newElement('fondations');
+  Object.assign(e.data,{foundationType:'vide_sanitaire',perimeter:20,blockHeight:.2,rows:2,footingWidthCm:50,footingHeightCm:30,foundationConcreteClass:'C25/30',slabSurface:20,slabRef:'dallage_arme',slabConcreteClass:'C25/30',thickness:12,slabInsulation:'avec_isolant'});s.elements=[e];
+  assert.match(renderConfig(s),/Prix isolation HT \/ m²/);assert.ok(calculate(s).alerts.some(a=>/prix isolation plancher VS obligatoire/i.test(a)));
+  e.data.slabInsulationPriceM2=30;const r=calculate(s),line=r.lines.find(l=>l.id===e.id+'-vs-insulation');assert.equal(line.price,30);assert.equal(line.qty,20);
+});
+
+test('S6.5 génoise : prix HT/ml visible et calculé',()=>{
+  const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+  Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',decoration:'genoise_double',decorationPriceMl:55});s.elements=[e];
+  assert.match(renderConfig(s),/Prix génoise HT \/ ml/);const r=calculate(s),line=r.lines.find(l=>l.id===e.id+'-decor-genoise_double');assert.equal(line.qty,10);assert.equal(line.price,55);
+});
+
+test('S6.5 mobile : saisies numériques ne forcent plus le rerender global',()=>{
+  const app=fs.readFileSync(new URL('./app.js',import.meta.url),'utf8');
+  assert.match(app,/data-global.*bindDataField\(el,state\.globals,el\.dataset\.global,false\)/);
+  assert.match(app,/dynamicNumberPaths/);
+  assert.ok(!app.includes("bindDataField(el,state.globals,el.dataset.global,true)"));
+});
+
+test('S6.5 escalier : anciens états nettoyés et accès indirect verrouillé',()=>{
+  const app=fs.readFileSync(new URL('./app.js',import.meta.url),'utf8');
+  assert.match(app,/filter\(e=>e\.type!=='escalier'\)/);
+  const s=base();s.mode='multiple';const e=newElement('ouvrage_ba');Object.assign(e.data,{workRef:'escalier_ba',quantity:1,concreteClass:'C25/30'});s.elements=[e];
+  const r=calculate(s);assert.ok(r.alerts.some(a=>/Escalier retiré du module Maçon/i.test(a)));
+});
+
+test('S6.5 Angèle connaît le retour Guillaume pré-prod',()=>{
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
+  assert.ok(searchAngelMacon('semelle sous refend coffre tunnel isolation génoise mobile',5).some(x=>x.id==='MAC-S65-RETOUR-GUILLAUME'));
 });
 
 console.log(`OK — V2.6 Maçon: ${pass.length} contrôles fonctionnels passés`);
