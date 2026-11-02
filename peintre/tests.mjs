@@ -90,6 +90,8 @@ test('préparation sans faux coût de fourniture',()=>{
   const r=calculateEstimate(s);
   assert.equal(r.laborHT,975);
   assert.ok(r.warnings.some(w=>w.includes('consommables')));
+  assert.equal(r.totalHT,null);
+  assert.equal(r.complete,false);
 });
 test('sans rendement ou conditionnement aucun volume facturé inventé',()=>{
   const r=calculateEstimate(createDefaultState());
@@ -110,4 +112,12 @@ test('TVA est un choix explicite et ne doit pas être déduite du seul âge',()=
   assert.equal(calculateEstimate(s).vatHT,42.5);
   s.vatRate=7;
   assert.throws(()=>calculateEstimate(s),/TVA/);
+});
+
+test('plinthes : pas de total définitif avant matière catalogue',()=>{
+  const s=priced();s.plinth.enabled=true;s.plinth.hoursPerMl=.05;
+  const r=calculateEstimate(s);
+  assert.equal(r.geometry.plinthMl,18);
+  assert.equal(r.totalHT,null);
+  assert.equal(r.complete,false);
 });
