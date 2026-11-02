@@ -159,3 +159,12 @@ test('peinture couleur sans référence : total bloqué',()=>{
  const r=calculateEstimate(s);
  assert.equal(r.complete,false);assert.equal(r.totalHT,null);
 });
+
+test('surface simple : m² saisis directement ont priorité sur les dimensions',()=>{
+ const s=createDefaultState(),w=newWork('surface','Plafond');w.surface.areaOverride=22.4;s.works.push(w);prices(s);
+ const r=calculateEstimate(s);assert.equal(r.geometry[0].net,22.4);
+});
+test('papier peint en m² seul : impossible de prétendre calculer les lés',()=>{
+ const s=createDefaultState(),w=newWork('surface','Panneau');w.surface.areaOverride=22.4;w.surface.mode='wallpaper';s.works.push(w);prices(s);
+ assert.throws(()=>calculateEstimate(s),/dimensions longueur\/largeur/);
+});
