@@ -71,7 +71,7 @@ function productLines(lists,warnings,label,spec,area,unit){
  if(yieldValue==null)missing(warnings,label+' : rendement fabricant absent.');
  if(pack==null)missing(warnings,label+' : conditionnement absent.');
  if(price==null)missing(warnings,label+' : prix HT du pot absent.');
- const key=JSON.stringify([spec.type,spec.finish,spec.color,spec.colorRef,layers,yieldValue,pack,price,loss]);
+ const key=JSON.stringify([spec.type,spec.finish,spec.color,spec.colorRef,yieldValue,pack,price]);
  let group=lists.paintGroups.get(key);
  if(!group){group={key,label:'Peinture '+spec.type+' '+spec.finish+' '+(spec.color==='color'?'couleur '+(spec.colorRef||'(teinte à préciser)'):'blanche'),
    litresTheoriques:0,litresBesoin:0,canCompute:yieldValue!=null,pack,price,areas:[],unit};lists.paintGroups.set(key,group);}
@@ -224,7 +224,8 @@ export function calculateEstimate(state){
  const lines=lists.lines;
  const hoursKnown=lines.filter(l=>l.kind==='labor').every(l=>l.quantity!=null);
  const hours=hoursKnown?r(total(lines.filter(l=>l.kind==='labor').map(l=>l.quantity))):null;
- const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null);
+ const missingColor=warnings.some(w=>w.includes('référence couleur non renseignée'));
+ const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor;
  const confirmed=r(total(lines.filter(l=>l.amount!==null).map(l=>l.amount)));
  const ht=complete?confirmed:null,tax=complete?r(ht*vat/100):null;
  const byKind=kind=>{const rows=lines.filter(l=>l.kind===kind);return rows.every(l=>l.amount!==null)?r(total(rows.map(l=>l.amount))):null;};
