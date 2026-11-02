@@ -51,7 +51,7 @@ export const TRACE_TARGETS = {
   elevationType:'report', elevationLength:'quantity', elevationHeight:'quantity', elevationThickness:'material-variant', elevationMaterial:'material-variant+price-key', elevationMethod:'material-label', elevationChainH:'material+labor', elevationChainV:'material+labor',
   openingType:'associated-work', openingWidth:'quantity', openingHeight:'quantity', openingLintelLength:'quantity', openingLintelRef:'material+labor', openingManualPrice:'price', openingManualHours:'labor', openingCoffrePrice:'price',
   beamLength:'quantity', beamWidth:'quantity', beamHeight:'quantity', beamRef:'material+labor', pignonWidth:'quantity', pignonSlope:'quantity',
-  elevationWaterproof:'material+price', elevationDecoration:'material+price', elevationAntiTermite:'material+price',
+  elevationWaterproof:'material+price', elevationDecoration:'material+price', elevationDecorationPrice:'price', elevationAntiTermite:'material+price',
   genericWorkRef:'material+labor', genericWorkQty:'quantity', refBeton:'quantity', refAcier:'quantity', refCoffrage:'quantity', refHours:'labor',
   truck:'material+price', truckPrice:'price', truckDays:'quantity', saveTruckPrice:'preference', pump:'material+price', pumpPrice:'price', toupie:'material+price', toupiePrice:'price', toupieMode:'price-mode', toupies:'quantity', concreteControlMode:'report+planning-control',
   earthworks:'material+price', earthworksQty:'quantity', earthworksUnit:'unit', earthworksPrice:'price', backfill:'material+price', backfillQty:'quantity', backfillUnit:'unit', backfillPrice:'price', scaffold:'material+price', scaffoldQty:'quantity', scaffoldUnit:'unit', scaffoldPrice:'price', difficultAccess:'labor', difficultAccessHours:'labor',
@@ -398,6 +398,7 @@ function renderAssociatedSlabControls(e,d,{surfaceKey,surfaceLabel,insulationKey
   const insulation=insulationKey
     ? ef(e,insulationLabel,insulationKey,d[insulationKey]??'sans_isolant',{trace:'associatedSlabInsulation',options:[{value:'sans_isolant',label:'Sans isolant'},{value:'avec_isolant',label:'Avec isolant'}]})
     : '';
+  const insulationPriceKey=insulationKey?`${insulationKey}PriceM2`:'';
   let h=`<div class="grid ${insulationKey?'cols-5':'cols-4'}" style="margin-top:14px">
     ${ef(e,surfaceLabel,surfaceKey,d[surfaceKey]??'',{step:'0.1',trace:'associatedSlabSurface'})}
     ${ef(e,'Épaisseur réelle dalle associée (cm)','thickness',d.thickness??'',{required:true,step:'1',trace:'associatedSlabThickness',help:'Obligatoire dès qu’une dalle associée est chiffrée.'})}
@@ -405,6 +406,9 @@ function renderAssociatedSlabControls(e,d,{surfaceKey,surfaceLabel,insulationKey
     ${ef(e,'Classe béton dalle associée','slabConcreteClass',d.slabConcreteClass??'',{required:true,trace:'concreteClass',options:[{value:'',label:'Choisir…'},...concreteClassOptions()]})}
     ${insulation}
   </div>`;
+  if(insulationKey&&d[insulationKey]==='avec_isolant'){
+    h+=`<div class="grid cols-2" style="margin-top:10px">${ef(e,'Prix isolation HT / m²',insulationPriceKey,d[insulationPriceKey]??'',{step:'0.01',trace:'associatedSlabInsulationPrice',help:'Prix provisoire à saisir en attendant l’audit catalogue.'})}</div>`;
+  }
   if(refId){
     h+=`<div class="grid cols-4" style="margin-top:14px">
       <div class="panel soft">${ec(e,'Treillis soudé','treillis',!!d.treillis,'slabTreillis')}<br>${ec(e,'Fibres','fibres',!!d.fibres,'slabFibres')}</div>
@@ -585,7 +589,8 @@ function renderElevationElement(e){
     ${ef(e,'Étanchéité','waterproof',d.waterproof??'',{trace:'elevationWaterproof',options:[{value:'',label:'Aucune'},{value:'delta_ms',label:'Delta MS'},{value:'enduit_hydrofuge',label:'Enduit hydrofuge'}]})}
     ${ef(e,'Décoration extérieure','decoration',d.decoration??'',{trace:'elevationDecoration',options:[{value:'',label:'Aucune'},{value:'genoise_simple',label:'Génoise simple'},{value:'genoise_double',label:'Génoise double'},{value:'corniche_pierre',label:'Corniche pierre'}]})}
     ${ec(e,'Traitement anti-termite','antiTermite',!!d.antiTermite,'elevationAntiTermite')}
-  </div>`;
+  </div>
+  ${['genoise_simple','genoise_double'].includes(d.decoration)?`<div class="grid cols-2" style="margin-top:10px">${ef(e,'Prix génoise HT / ml','decorationPriceMl',d.decorationPriceMl??'',{step:'0.01',trace:'elevationDecorationPrice',help:'Prix provisoire à saisir en attendant l’audit catalogue.'})}</div>`:''}`;
   h+=renderRefOverrides('element',d,'chainage_horizontal').replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
   h+=renderRefOverrides('element',d,'chainage_vertical').replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
   return h;
@@ -977,7 +982,11 @@ function calcFoundationElement(state,e,lines,lab,alerts,reco){
     if(num(d.microSlabSurface)>0){
       if(!d.slabRef) alerts.push(`🚨 ${e.name} : type de dalle associée obligatoire.`);
       else calcSlab(state,d,`${e.name} dalle VS`,num(d.microSlabSurface),lines,lab,alerts,reco,d.slabConcreteClass||g.concreteClass);
-      if(d.microSlabInsulation==='avec_isolant') lines.push(line(`${p}-slab-insulation`,'Isolation dalle sur VS','Isolation',num(d.microSlabSurface),'m²'));
+      if(d.microSlabInsulation==='avec_isolant'){
+        const pr=num(d.microSlabInsulationPriceM2);
+        if(!(pr>0))alerts.push(`🚨 ${e.name} : prix isolation dalle sur VS obligatoire.`);
+        else addDirectPricedLine(lines,`${p}-slab-insulation`,'Isolation dalle sur VS','Isolation',num(d.microSlabSurface),'m²',pr);
+      }
     }
     const L=num(d.beamLength),W=num(d.beamWidthCm),H=num(d.beamHeightCm);
     if(L||W||H){
@@ -1040,7 +1049,11 @@ function calcFoundationElement(state,e,lines,lab,alerts,reco){
     if(num(d.slabSurface)>0){
       if(!d.slabRef)alerts.push(`🚨 ${e.name} : type de dalle associée obligatoire.`);
       else calcSlab(state,d,`${e.name} dalle associée`,num(d.slabSurface),lines,lab,alerts,reco,d.slabConcreteClass||g.concreteClass);
-      if(d.foundationType==='vide_sanitaire'&&d.slabInsulation==='avec_isolant') lines.push(line(`${p}-vs-insulation`,'Isolation plancher VS','Isolation',num(d.slabSurface),'m²'));
+      if(d.foundationType==='vide_sanitaire'&&d.slabInsulation==='avec_isolant'){
+        const pr=num(d.slabInsulationPriceM2);
+        if(!(pr>0))alerts.push(`🚨 ${e.name} : prix isolation plancher VS obligatoire.`);
+        else addDirectPricedLine(lines,`${p}-vs-insulation`,'Isolation plancher VS','Isolation',num(d.slabSurface),'m²',pr);
+      }
     }
     reco.push(`${e.name} : hauteur soubassement calculée = ${fmt(bh*rows,2)} m (${fmt(bh*100,0)} cm × ${rows||0} rangs).`);
   }
@@ -1111,7 +1124,13 @@ function calcElevationWall(state,e,lines,lab,alerts,reco){
   if(hq>0){const ref=resolvedRef(d,'chainage_horizontal');lab.push(labor(`${e.name} — chaînage H`,addRefLines(lines,ref,hq,`${p}-ch`,cc)));}
   if(vq>0){const ref=resolvedRef(d,'chainage_vertical');lab.push(labor(`${e.name} — chaînage V`,addRefLines(lines,ref,vq,`${p}-cv`,cc)));reco.push(`${e.name} : chaînage vertical automatique éventuel = estimation réalisée à partir de ratios Guillaume, modifiable, distincte d’un contrôle DTU.`);}
   if(d.waterproof) lines.push(line(`${p}-waterproof-${d.waterproof}`,d.waterproof==='delta_ms'?'Delta MS':'Enduit hydrofuge','Étanchéité',net,'m²'));
-  if(d.decoration) lines.push(line(`${p}-decor-${d.decoration}`,d.decoration.replaceAll('_',' '),'Décoration extérieure',L,'ml'));
+  if(d.decoration){
+    if(['genoise_simple','genoise_double'].includes(d.decoration)){
+      const pr=num(d.decorationPriceMl);
+      if(!(pr>0))alerts.push(`🚨 ${d.decoration==='genoise_simple'?'Génoise simple':'Génoise double'} : prix HT/ml obligatoire.`);
+      else addDirectPricedLine(lines,`${p}-decor-${d.decoration}`,d.decoration==='genoise_simple'?'Génoise simple':'Génoise double','Décoration extérieure',L,'ml',pr);
+    } else lines.push(line(`${p}-decor-${d.decoration}`,d.decoration.replaceAll('_',' '),'Décoration extérieure',L,'ml'));
+  }
   if(d.antiTermite) lines.push(line(`${p}-anti-termite`,'Traitement anti-termite','Traitements',1,'forfait'));
   reco.push(`${e.name} (${d.wallType||'mur'}) : brute ${fmt(gross,2)} m² ; ouvertures ${fmt(openingArea,2)} m² ; pignons ${fmt(pignonArea,2)} m² ; nette calculée ${fmt(net,2)} m².`);
 }
