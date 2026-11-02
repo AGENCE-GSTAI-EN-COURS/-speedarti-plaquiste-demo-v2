@@ -613,7 +613,7 @@ function renderSlabElement(e){
 }
 
 function renderGenericWorkElement(e){
-  const d=e.data,refId=d.workRef||'beton_proprete',ref=WORK_BY_ID[refId];
+  const d=e.data,requested=d.workRef||'beton_proprete',refId=DISABLED_WORK_IDS.has(requested)?'beton_proprete':requested,ref=WORK_BY_ID[refId];
   return `<div class="grid cols-3">
     ${ef(e,'Ouvrage BA','workRef',refId,{trace:'genericWorkRef',options:workOptions()})}
     ${ef(e,`Quantité (${ref?.unite||'unité'})`,'quantity',d.quantity??'',{required:true,step:'0.001',trace:'genericWorkQty'})}
@@ -1136,7 +1136,9 @@ function calcElevationWall(state,e,lines,lab,alerts,reco){
 }
 
 function calcGenericWork(state,e,lines,lab,alerts){
-  const d=e.data,ref=resolvedRef(d,d.workRef),q=num(d.quantity),cc=concreteClassFor(d,state.globals);
+  const d=e.data,q=num(d.quantity),cc=concreteClassFor(d,state.globals);
+  if(DISABLED_WORK_IDS.has(d.workRef)){alerts.push('🚨 Escalier retiré du module Maçon : utiliser le futur module complémentaire.');return;}
+  const ref=resolvedRef(d,d.workRef);
   if(!ref)alerts.push(`🚨 ${e.name} : ouvrage de référence obligatoire.`);
   if(!(q>0))alerts.push(`🚨 ${e.name} : quantité obligatoire.`);
   if(ref&&q>0)lab.push(labor(`${e.name} — ${ref.label}`,addRefLines(lines,ref,q,`${e.id}-generic`,cc)));
