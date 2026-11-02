@@ -97,10 +97,10 @@ function bindEvents(){
     saveState();render();
   });
 
-  $('[data-simple]').forEach(el=>bindDataField(el,state.simple,el.dataset.simple,false));
-  $('[data-global]').forEach(el=>bindDataField(el,state.globals,el.dataset.global,false));
-  $('[data-root-field]').forEach(el=>bindDataField(el,state,el.dataset.rootField,false));
-  $('[data-el-id][data-field]').forEach(el=>{
+  $$('[data-simple]').forEach(el=>bindDataField(el,state.simple,el.dataset.simple,false));
+  $$('[data-global]').forEach(el=>bindDataField(el,state.globals,el.dataset.global,false));
+  $$('[data-root-field]').forEach(el=>bindDataField(el,state,el.dataset.rootField,false));
+  $$('[data-el-id][data-field]').forEach(el=>{
     const e=findElement(el.dataset.elId); if(e)bindDataField(el,e.data,el.dataset.field,false);
   });
 
