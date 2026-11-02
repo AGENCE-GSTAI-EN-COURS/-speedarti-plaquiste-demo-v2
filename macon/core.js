@@ -891,7 +891,7 @@ function calcWallSimple(state,lines,lab,alerts,reco){
   const L=num(d.length),W=num(d.width),H=num(d.height),T=num(d.thickness);
   const perimeter=W>0?2*(L+W):L;
   const gross=perimeter*H;
-  const openingsArea=(d.openings||[]).reduce((s,o)=>s+num(o.width)*num(o.height),0);
+  const openingsArea=(d.openings||[]).reduce((s,o)=>s+(['seuil_ba','coffre_tunnel_brique','coffre_tunnel_resine'].includes(o.associated)?0:num(o.width)*num(o.height)),0);
   const net=Math.max(0,gross-openingsArea);
   if(!(L>0&&H>0&&T>0))alerts.push('🚨 Dimensions du mur incomplètes.');
   if(openingsArea>gross)alerts.push('🚨 Surface des ouvertures supérieure à la surface du mur.');
@@ -1089,7 +1089,7 @@ function calcElevationWall(state,e,lines,lab,alerts,reco){
   const d=e.data,g=state.globals,p=e.id,L=num(d.length),H=num(d.height),gross=L*H,cc=concreteClassFor(d,g);
   if(!(gross>0)){alerts.push(`🚨 ${e.name} : dimensions incomplètes.`);return;}
   const openings=d.openings||[];
-  const openingArea=openings.reduce((s,o)=>s+num(o.width)*num(o.height),0);
+  const openingArea=openings.reduce((s,o)=>s+(['seuil_ba','coffre_tunnel_brique','coffre_tunnel_resine'].includes(o.type)?0:num(o.width)*num(o.height)),0);
   if(openingArea>gross){alerts.push(`🚨 ${e.name} : ouvertures supérieures à la surface du mur.`);return;}
   const pignonArea=(d.pignons||[]).reduce((s,pn)=>s+(num(pn.width)*num(pn.width)*(num(pn.slope)/100)/4),0);
   const net=Math.max(0,gross-openingArea)+pignonArea;
