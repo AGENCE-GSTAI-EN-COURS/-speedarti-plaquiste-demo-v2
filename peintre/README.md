@@ -1,43 +1,44 @@
-# SpeedArti — Peintre V0.1 (développement isolé)
+# SpeedArti — Métier Peintre V2 (démo commune)
 
-## Où se trouve le module ?
-Le module Peintre est ajouté dans le **dépôt multi-métiers existant**, à côté de Plaquiste, Maçon, Couvreur, Plombier, Électricien et Terrassier. Aucun nouveau dépôt n'est nécessaire.
+## Périmètre
+Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
+Cette V2 est hébergée dans le dépôt multi-métiers déjà utilisé par Plaquiste, Maçon, Terrassier, Couvreur, Électricien et Plombier.
 
-- Ouvrir localement avec un serveur statique, depuis la racine : python3 -m http.server 8000 puis /peintre/
-- Exécuter les tests : node --test peintre/tests.mjs
-- Code statique sans Supabase, API, abonnement, catalogue réel ni enregistrement de devis.
-- Développer et tester sur la branche feature/peintre-v1-isole ; **ne pas fusionner vers main / GitHub Pages sans validation**, car Pages pourrait publier automatiquement.
+### Fichiers actifs
+- index.html : page de démonstration Peintre V2 ;
+- app-v2.mjs : interface 4 étapes, sélection individuelle de chaque support et schéma A/B/C/D ;
+- engine-v2.mjs : moteur physique pur, non raccordé à la production ;
+- styles-v2.css : design conforme aux principes Plaquiste V2 ;
+- tests-v2.mjs : contrôles automatisés des règles et non-régression ;
+- ANGEL_KNOWLEDGE_DELTA.md : préparation à l'enrichissement des connaissances EXISTANTES d'Ángel, pas une nouvelle base.
 
-## Historique de référence
-- Audit **lecture seule** de GSTAI-Sp/speedarti-v2 : PeintreCalculateur.ts, PeintreDimensionsStep.tsx, PeintreOptionsStep.tsx, peintre.rules.json et tests.
-- Fonctionnalités reprises : pièce simple/multi-pièces, déduction d'ouvertures, murs/plafonds, sous-couche, préparation, boiseries, plinthes, papier peint, forfaits, temps de main-d'œuvre.
-- Les coefficients de prix codés en dur dans le vieux moteur (10 €/L, forfaits, etc.) **ne sont pas repris**.
-- Les options « supports/finitions » ne sont pas des contrôles DTU automatiques ; un éventuel contrôle normatif demandera une source documentée.
-- Décisions Guillaume historiques de juillet 2026 : préparations en 4 niveaux, pertes peinture 10 %, papier peint 20 %, forfaits boiseries discutés, couleur ×2 historiquement évoqué. **Ces tarifs/coefs historiques ne deviennent pas des prix 2026 confirmés**. Les prix sont saisis par l'artisan / le futur catalogue.
+L'ancienne V0.1 (app.mjs, engine.mjs, tests.mjs, styles.css) est conservée à titre d'historique et n'est plus chargée dans la démonstration.
 
-## Calculs V0.1
-- Pour chaque pièce rectangulaire : murs bruts = 2 × (longueur + largeur) × hauteur.
-- Ouvertures : somme largeur × hauteur × quantité, déduite des murs, pas du plafond.
-- Plafond, murs à peindre et murs en papier peint sont des surfaces **distinctes**.
-- Peinture : litres théoriques = surface × couches / rendement fabricant ; litres à commander = litres théoriques × (1 + pertes %).
-- Conditionnements : pots à acheter = ceil(litres à commander / taille du pot), et coût de fourniture = pots × prix du pot.
-- Boiseries : surface dédiée renseignée manuellement, **jamais additionnée aux murs pour être repeinte deux fois**.
-- Plinthes : linéaire = somme des périmètres moins largeur des portes ; fourniture de peinture à confirmer.
-- Papier peint : nombre de rouleaux **indicatif par surface** et pertes ; nécessite confirmation du calepinage/raccords.
-- Main-d'œuvre : heures-homme = quantité × temps unitaire saisi ; durée chantier = heures-homme / effectif.
-- Forfaits spéciaux (escaliers, verrières…) : prix unitaire **pose incluse** ; heures à titre de planning, non refacturées comme main-d'œuvre.
-- TVA : saisie explicite par l'artisan, **jamais automatique à partir de l'âge du bâtiment**.
-- Si un prix ou un rendement obligatoire manque : « À confirmer ». **Ne jamais présenter un sous-total partiel comme total de devis**.
+## Parcours
+1. Ajouter une pièce, un mur simple ou une surface simple. On peut mélanger plusieurs ouvrages.
+2. Sur une pièce, le schéma A/B/C/D et Plafond permet d'activer/désactiver et configurer chaque support sans contamination des autres supports.
+3. Par support : peinture (famille, finition, teinte blanc/couleur, référence et couches), papier peint (classique/intissé/vinyle/panoramique), ouvertures déduites / menuiseries peintes / les deux et préparation indépendante (aucune / ponçage léger / ponçage + rattrapage / ratissage complet).
+4. Plinthes automatiques selon les murs actifs avec déduction des largeurs de portes ; ajout manuel possible.
+5. Résultat par surface : métrés nets, fournitures, heures-homme et montants à confirmer.
 
-## Limites et à faire avant toute intégration
-1. Vérification humaine des calculs et des scénarios de terrain (portes, plafond, plusieurs pièces, devis complexes).
-2. Matériaux de préparation / peinture plinthes : références, quantités et conditionnements à compléter ; éviter tout faux devis « complet ».
-3. Calepinage professionnel des lés (raccords, hauteurs de lés, motifs) à enrichir.
-4. Catalogue personnel/standard, suivi stock, vrai devis, TVA chantier, clients et historiques : **adaptateur non connecté**.
-5. Connaissances métier Ángel : dossier de delta préparé, **à intégrer dans la base Ángel existante uniquement**, aucune base parallèle ni assistant autonome.
-6. Revoir les prix historiques avec les fournisseurs en novembre 2026 avant toute suggestion automatique.
+## Sécurité des calculs
+- La préparation est un poste de calcul explicite par support ; ses ratios de temps et consommables sont renseignés par l'artisan ou le catalogue futur. Sans prix/temps, le résultat reste incomplet.
+- Pas de prix fictif, d'article fournisseur inventé, de taux horaire implicite ni de TVA 5,5/10% décidée automatiquement.
+- Consommations peinture = (surface nette × couches / rendement fabricant) × (1 + pertes).
+- Les surfaces avec peintures identiques sont groupées avant arrondi aux pots entiers.
+- Papier peint standard : estimation des lés selon largeur brute, hauteur du mur et raccord ; panoramique : panneaux à saisir après calepinage.
+- Une ouverture peut être « déduction », « menuiserie en supplément » ou « les deux » sans double comptage.
+- Les heures-homme ne sont pas divisées par le nombre d'ouvriers ; seule la durée l'est.
+- Les murs désactivés n'ont aucun effet sur le résultat ni les plinthes automatiques.
 
-## Sécurité
-- GSTAI-Sp/speedarti-v2 : **LECTURE SEULE ABSOLUE**.
-- Rien ici n'est déployé dans SpeedArti et aucun code backend n'est appelé.
-- Code ouvert sur branche isolée, sans intervention sur les autres métiers du dépôt.
+## Tests
+À la racine du dépôt : node --test peintre/tests-v2.mjs
+Les 24 scénarios V2 ont été exécutés avec succès sur le moteur, ainsi qu'une vérification de 10 interactions de l'application par simulation du DOM.
+Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop) ni une validation métier.
+
+## Gardes-fous SpeedArti
+- Jamais de modification sur GSTAI-Sp/speedarti-v2, consulté exclusivement en lecture seule.
+- Aucune connexion Supabase, API applicative, catalogue/stock/devis ni production.
+- Modification autorisée du seul site GitHub Pages de démonstration multi-métiers.
+- Pas de création d'une deuxième base de connaissances Ángel ; seulement un delta à intégrer dans la base centrale existante, après validation.
+- L'enrichissement réel d'Ángel, les connecteurs, l'audit des prix et la validation humaine sont encore des dépendances : V2 démo ≠ module finalisé pour intégration production.
