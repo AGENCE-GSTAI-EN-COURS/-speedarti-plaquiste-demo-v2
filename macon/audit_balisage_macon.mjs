@@ -23,8 +23,6 @@ for(const t of SIMPLE_TYPES.map(x=>x.id)){
   } else if(t==='fondations'){
     for(const ref of ['semelle_filante','semelle_isolee','semelle_sous_mur']){let x=structuredClone(s);Object.assign(x.simple,{foundationRef:ref,length:10,widthCm:40,heightCm:30});add(`simple-foundation-${ref}`,x)}
     let x=structuredClone(s);x.step=3;for(const k of ['resineAntiTermite','implantation','ouvertureFondations','canalisationFourreau','plateformeVs','enduitHydrofugeFondation','deltaMs','etudeSol'])x.globals.foundationOptions[k]={enabled:true,qty:1,unit:'forfait',price:10};add('simple-foundation-options-all',x)
-  } else if(t==='escalier'){
-    for(const ref of ['escalier_ba','paillasse_escalier','palier_ba'])for(const st of ['droit','quart_tournant','demi_tournant']){let x=structuredClone(s);Object.assign(x.simple,{stairRef:ref,stairType:st,surface:8,height:2.8,manualPrice:3000,manualIncludesLabor:true,manualHours:20});add(`simple-stair-${ref}-${st}`,x)}
   } else if(t==='cheminee'){
     for(const c of Object.keys(CHIMNEY_CONDUITS)){let x=structuredClone(s);Object.assign(x.simple,{height:5,count:1,conduit:c,stack:'standard_finition',stackCount:1,cap:'standard',capCount:1});add(`simple-chimney-${c}`,x)}
   }
@@ -40,14 +38,15 @@ for(const ft of ['micro_pieux','plot_isole','vide_sanitaire','terre_plein']){
 }
 for(const method of ['coule_sur_place','prefabrique'])for(const pt of ['standard','hauteur_importante','lourd_complexe'])add(`multi-bearing-${method}-${pt}`,multiOne('murs_porteurs',{length:10,height:3,thickness:20,method,prefabType:pt,realSupplyPrice:180,chainHml:10,chainVml:8,braceQty:2,bracePrice:80,braceHours:.5}));
 for(const mat of ['parpaing','brique','siporex','beton_banche']){
-  let s=multiOne('murs_elevations',{length:20,height:2.5,thickness:20,material:mat,method:'tradi',blocksPerM2:10,mortarKgM2:3,wallHPerM2:.5,chainHml:20,chainVml:12,waterproof:'delta_ms',decoration:'genoise_simple',antiTermite:true});let e=s.elements[0];e.data.openings=[
-    {type:'seuil_ba',width:1,height:1},{type:'appui_fenetre_ba',width:1,height:1},{type:'linteau_ba_courant',width:1.2,height:1,lintelLength:1.5},{type:'linteau_ba_renforce',width:1.2,height:1,lintelLength:1.5},{type:'talonnette_manuelle',width:1,height:1,manualPrice:100,manualHours:1}
+  let s=multiOne('murs_elevations',{length:20,height:2.5,thickness:20,material:mat,method:'tradi',blocksPerM2:10,mortarKgM2:3,wallHPerM2:.5,chainHml:20,chainVml:12,waterproof:'delta_ms',decoration:'genoise_simple',decorationPriceMl:55,antiTermite:true});let e=s.elements[0];e.data.openings=[
+    {type:'seuil_ba',width:1,height:1},{type:'appui_fenetre_ba',width:1,height:1},{type:'linteau_ba_courant',width:1.2,height:1,lintelLength:1.5},{type:'linteau_ba_renforce',width:1.2,height:1,lintelLength:1.5},{type:'coffre_tunnel_brique',width:1.5,coffrePriceMl:40},{type:'coffre_tunnel_resine',width:1.5,coffrePriceMl:45},{type:'talonnette_manuelle',width:1,height:1,manualPrice:100,manualHours:1}
   ];e.data.beams=['poutre_ba_courante','poutre_ba_fortement_chargee','poutre_rive','poutre_redressement'].map(ref=>({length:3,widthCm:20,heightCm:30,ref}));e.data.pignons=[{width:10,slope:35},{width:8,slope:30}];add(`multi-elevation-${mat}`,s)
 }
-for(const ref of ['escalier_ba','paillasse_escalier','palier_ba'])add(`multi-stair-${ref}`,multiOne('escalier',{stairRef:ref,stairType:'demi_tournant',surface:8,height:2.8,manualPrice:3000,manualIncludesLabor:true,manualHours:20}));
 for(const ref of ['dallage_non_arme','dallage_arme','dalle_pleine_ba','dalle_pleine_fortement_armee','dalle_portee','plancher_poutrelles_hourdis','plancher_predalles'])for(const fib of Object.keys(FIBRES))add(`multi-slab-${ref}-${fib}`,multiOne('dalle',{length:10,width:8,thickness:12,slabRef:ref,treillis:true,fibres:true,fibreType:fib,fibreDose:FIBRES[fib].min}));
 for(const c of Object.keys(CHIMNEY_CONDUITS))for(const st of ['',...Object.keys(CHIMNEY_STACKS)])for(const cp of ['',...Object.keys(CHIMNEY_CAPS)])add(`multi-chim-${c}-${st||'none'}-${cp||'none'}`,multiOne('cheminee',{height:5,count:1,conduit:c,stack:st,stackCount:st?1:0,cap:cp,capCount:cp?1:0}));
-for(const w of WORKS)add(`multi-ba-${w.id}`,multiOne('ouvrage_ba',{workRef:w.id,quantity:1}));
+for(const w of WORKS.filter(w=>!['escalier_ba','paillasse_escalier','palier_ba'].includes(w.id)))add(`multi-ba-${w.id}`,multiOne('ouvrage_ba',{workRef:w.id,quantity:1}));
+
+let s65f=multiOne('fondations',{foundationType:'vide_sanitaire',perimeter:40,blockHeight:.2,rows:2,footingWidthCm:40,footingHeightCm:30,foundationConcreteClass:'C25/30',refendLength:5,refendHeight:1,refendFootingWidthCm:40,refendFootingHeightCm:30,slabSurface:80,slabRef:'dallage_arme',slabConcreteClass:'C25/30',thickness:15,slabInsulation:'avec_isolant',slabInsulationPriceM2:25});add('s65-foundation-refend-isolation',s65f);
 
 // all-options state at step3
 let os=base(3,'multiple');os.elements=[newElement('fondations')];Object.assign(os.elements[0].data,{foundationType:'vide_sanitaire',perimeter:40,blockHeight:.2,rows:2,blocksPerM2:10,wallHPerM2:.5,footingWidthCm:40,footingHeightCm:30});
