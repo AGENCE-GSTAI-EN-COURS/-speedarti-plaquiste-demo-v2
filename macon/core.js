@@ -44,7 +44,7 @@ export const TRACE_TARGETS = {
   slabSurface:'quantity', slabLength:'quantity', slabWidth:'quantity', slabThickness:'quantity', slabRef:'material+labor', slabTreillis:'material', treillisType:'material+price+labor', slabFibres:'material', fibreType:'material', fibreDose:'quantity+alert',
   foundationRef:'material+labor', footingLength:'quantity', footingWidth:'quantity', footingHeight:'quantity', excavationDepth:'report+earthworks-context',
   chimneyHeight:'quantity+labor', chimneyCount:'quantity+labor', chimneyConduit:'material+labor', chimneyStack:'material+labor', chimneyStackCount:'quantity+labor', chimneyCap:'material+labor', chimneyCapCount:'quantity+labor', chimneyFoyer:'report', chimneyManualPrice:'price-mode', chimneySupplyOverride:'price', chimneyHoursOverride:'labor', chimneyTotalOverride:'price',
-  foundationType:'route', microCount:'quantity', microDepth:'commercial-price-rule', microPrice:'price', longrineType:'route', longrineLength:'quantity', longrineWidth:'quantity', longrineHeight:'quantity', longrinePrice:'price',
+  foundationType:'route', microCount:'quantity', microDepth:'commercial-price-rule', microPrice:'price', longrineType:'route', longrineEnabled:'route', longrineLength:'quantity', longrineWidth:'quantity', longrineHeight:'quantity', longrinePrice:'price',
   plotCount:'quantity', plotVolumeMode:'quantity-meaning', plotVolume:'quantity', basementPerimeter:'quantity', basementBlockHeight:'quantity', basementRows:'quantity', basementFootingWidth:'quantity', basementFootingHeight:'quantity', basementStiffeners:'quantity',
   refendLength:'quantity', refendHeight:'quantity', refendStiffeners:'quantity', refendFootingWidth:'quantity', refendFootingHeight:'quantity', associatedSlabSurface:'quantity', associatedSlabThickness:'quantity', associatedSlabRef:'material+labor', associatedSlabInsulation:'material', associatedSlabInsulationPrice:'price',
   bearingLength:'quantity', bearingHeight:'quantity', bearingThickness:'quantity', bearingMethod:'route', prefabType:'labor', prefabPriceM2:'price', bearingChainH:'material+labor', bearingChainV:'material+labor', braceQty:'quantity', bracePrice:'price', braceHours:'labor',
@@ -279,7 +279,7 @@ export function renderRefOverrides(scope,container,refId,prefix='ref'){
 export function newElement(cardId){
   const c=MULTI_CARDS.find(x=>x.id===cardId); if(!c)return null;
   const d={refOverrides:{}, openings:[], beams:[], pignons:[]};
-  if(c.type==='fondations') Object.assign(d,{foundationType:'vide_sanitaire',foundationConcreteClass:'',slabConcreteClass:'',longrineConcreteClass:'',blockHeight:.20,treillisType:'ST25C',longrinePrice:LONGRINE_PRICE_ML});
+  if(c.type==='fondations') Object.assign(d,{foundationType:'vide_sanitaire',foundationConcreteClass:'',slabConcreteClass:'',longrineConcreteClass:'',blockHeight:.20,treillisType:'ST25C',longrinePrice:LONGRINE_PRICE_ML,longrineAvecBecquet:false,longrineSansBecquet:false,longrineAvecBecquetPrice:LONGRINE_PRICE_ML,longrineSansBecquetPrice:LONGRINE_PRICE_ML});
   if(c.type==='murs_porteurs') Object.assign(d,{method:'coule_sur_place',thickness:20,prefabType:'standard',prefabPriceM2:PREFAB_DEFAULT_PRICE_M2,concreteClass:''});
   if(c.type==='murs_elevations') Object.assign(d,{wallType:'murs_exterieurs',material:'parpaing',method:'colle',thickness:20,concreteClass:'',prefabType:'standard',prefabPriceM2:PREFAB_DEFAULT_PRICE_M2});
   if(c.type==='dalle') Object.assign(d,{thickness:12,fibreType:'courante',treillisType:'ST25C',concreteClass:''});
@@ -434,14 +434,27 @@ function renderFoundationElement(e){
       ${ef(e,'Prix HT / micro-pieu — fourniture + MO incluse','microPrice',d.microPrice??suggested,{required:true,step:'1',trace:'microPrice',help:suggested?`Proposition Guillaume selon profondeur : ${money(suggested)} / micro-pieu. Modifiable.`:'Saisir une profondeur ≥ 3 m pour obtenir la proposition Guillaume.'})}
     </div>
     ${renderAssociatedSlabControls(e,d,{surfaceKey:'microSlabSurface',surfaceLabel:'Surface dalle sur VS (m²)',insulationKey:'microSlabInsulation',insulationLabel:'Isolation dalle'})}
-    <div class="grid cols-4" style="margin-top:14px">
-      ${ef(e,'Type de longrine','longrineType',d.longrineType??'sans_becquet',{trace:'longrineType',options:[{value:'sans_becquet',label:'Sans becquet'},{value:'avec_becquet',label:'Avec becquet'}]})}
-      ${ef(e,d.longrineType==='avec_becquet'?'Périmètre longrine (m)':'Longueur longrine (m)','beamLength',d.beamLength??'',{step:'0.1',trace:'longrineLength'})}
-      ${ef(e,'Largeur section (cm)','beamWidthCm',d.beamWidthCm??'',{step:'1',trace:'longrineWidth'})}
-      ${ef(e,'Hauteur section (cm)','beamHeightCm',d.beamHeightCm??'',{step:'1',trace:'longrineHeight'})}
-      ${ef(e,'Classe béton longrine','longrineConcreteClass',d.longrineConcreteClass??'',{required:true,trace:'concreteClass',options:[{value:'',label:'Choisir…'},...concreteClassOptions()]})}
-    </div><div class="grid cols-2" style="margin-top:10px">
-      ${ef(e,'Prix longrine HT / ml','longrinePrice',d.longrinePrice??LONGRINE_PRICE_ML,{step:'1',trace:'longrinePrice',help:'Référence métier Guillaume, modifiable. Poste séparé des micro-pieux.'})}
+    <div class="separator"></div><h3>Longrines</h3>
+    <div class="info-box">Les longrines périphériques avec becquet et les longrines de refend sans becquet peuvent être chiffrées simultanément. Les sections restent à renseigner selon l’étude du projet ; aucun dimensionnement structurel n’est inventé par SpeedArti.</div>
+    <div class="panel soft" style="margin-top:12px">
+      ${ec(e,'Longrines périphériques avec becquet','longrineAvecBecquet',!!d.longrineAvecBecquet,'longrineEnabled')}
+      ${d.longrineAvecBecquet?`<div class="grid cols-5" style="margin-top:10px">
+        ${ef(e,'Périmètre avec becquet (m)','longrineAvecBecquetLength',d.longrineAvecBecquetLength??'',{required:true,step:'0.1',trace:'longrineLength'})}
+        ${ef(e,'Largeur section (cm)','longrineAvecBecquetWidthCm',d.longrineAvecBecquetWidthCm??'',{required:true,step:'1',trace:'longrineWidth'})}
+        ${ef(e,'Hauteur section (cm)','longrineAvecBecquetHeightCm',d.longrineAvecBecquetHeightCm??'',{required:true,step:'1',trace:'longrineHeight'})}
+        ${ef(e,'Classe béton','longrineConcreteClass',d.longrineConcreteClass??'',{required:true,trace:'concreteClass',options:[{value:'',label:'Choisir…'},...concreteClassOptions()]})}
+        ${ef(e,'Prix HT / ml','longrineAvecBecquetPrice',d.longrineAvecBecquetPrice??LONGRINE_PRICE_ML,{required:true,step:'1',trace:'longrinePrice'})}
+      </div>`:''}
+    </div>
+    <div class="panel soft" style="margin-top:12px">
+      ${ec(e,'Longrines de refend sans becquet','longrineSansBecquet',!!d.longrineSansBecquet,'longrineEnabled')}
+      ${d.longrineSansBecquet?`<div class="grid cols-5" style="margin-top:10px">
+        ${ef(e,'Longueur sans becquet (m)','longrineSansBecquetLength',d.longrineSansBecquetLength??'',{required:true,step:'0.1',trace:'longrineLength'})}
+        ${ef(e,'Largeur section (cm)','longrineSansBecquetWidthCm',d.longrineSansBecquetWidthCm??'',{required:true,step:'1',trace:'longrineWidth'})}
+        ${ef(e,'Hauteur section (cm)','longrineSansBecquetHeightCm',d.longrineSansBecquetHeightCm??'',{required:true,step:'1',trace:'longrineHeight'})}
+        ${ef(e,'Classe béton','longrineConcreteClass',d.longrineConcreteClass??'',{required:true,trace:'concreteClass',options:[{value:'',label:'Choisir…'},...concreteClassOptions()]})}
+        ${ef(e,'Prix HT / ml','longrineSansBecquetPrice',d.longrineSansBecquetPrice??LONGRINE_PRICE_ML,{required:true,step:'1',trace:'longrinePrice'})}
+      </div>`:''}
     </div>`;
     if(d.slabRef) sub+=renderRefOverrides('element',d,d.slabRef).replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
     sub+=renderRefOverrides('element',d,'longrine_fondation').replaceAll('data-field=',`data-el-id="${e.id}" data-field=`);
@@ -991,15 +1004,22 @@ function calcFoundationElement(state,e,lines,lab,alerts,reco){
         else addDirectPricedLine(lines,`${p}-slab-insulation`,'Isolation dalle sur VS','Isolation',num(d.microSlabSurface),'m²',pr);
       }
     }
-    const L=num(d.beamLength),W=num(d.beamWidthCm),H=num(d.beamHeightCm);
-    if(L||W||H){
-      if(!(L>0&&W>0&&H>0))alerts.push(`🚨 ${e.name} : dimensions de longrine incomplètes.`);
+    const longrines=[
+      d.longrineAvecBecquet?{key:'avec-becquet',label:'Longrine avec becquet',L:num(d.longrineAvecBecquetLength),W:num(d.longrineAvecBecquetWidthCm),H:num(d.longrineAvecBecquetHeightCm),price:num(d.longrineAvecBecquetPrice)||LONGRINE_PRICE_ML}:null,
+      d.longrineSansBecquet?{key:'sans-becquet',label:'Longrine sans becquet',L:num(d.longrineSansBecquetLength),W:num(d.longrineSansBecquetWidthCm),H:num(d.longrineSansBecquetHeightCm),price:num(d.longrineSansBecquetPrice)||LONGRINE_PRICE_ML}:null
+    ].filter(Boolean);
+    // compatibilité avec les états v2.6.5 déjà enregistrés
+    if(!longrines.length&&(num(d.beamLength)>0||num(d.beamWidthCm)>0||num(d.beamHeightCm)>0)){
+      longrines.push({key:d.longrineType==='avec_becquet'?'avec-becquet':'sans-becquet',label:d.longrineType==='avec_becquet'?'Longrine avec becquet':'Longrine sans becquet',L:num(d.beamLength),W:num(d.beamWidthCm),H:num(d.beamHeightCm),price:num(d.longrinePrice)||LONGRINE_PRICE_ML});
+    }
+    for(const lr of longrines){
+      if(!(lr.L>0&&lr.W>0&&lr.H>0))alerts.push(`🚨 ${e.name} : dimensions ${lr.label.toLowerCase()} incomplètes.`);
       else {
-        const v=L*(W/100)*(H/100),ref=resolvedRef(d,'longrine_fondation'),price=num(d.longrinePrice)||LONGRINE_PRICE_ML,cc=d.longrineConcreteClass||g.concreteClass||'';
-        lines.push(line(`${p}-longrine-package`,'Longrine — prix métier Guillaume','Fondations',L,'ml',price,'explicit'));
-        const planning=addRefLinesIncluded(lines,ref,v,`${p}-longrine-included`,cc);
-        if(planning>0)lab.push(labor(`${e.name} — longrine planning`,planning,{includedInManual:true}));
-        reco.push(`${e.name} : longrine ${fmt(L,2)} ml, volume géométrique ${fmt(v,3)} m³ ; prix ${money(price)}/ml séparé des micro-pieux.`);
+        const v=lr.L*(lr.W/100)*(lr.H/100),ref=resolvedRef(d,'longrine_fondation'),cc=d.longrineConcreteClass||g.concreteClass||'';
+        lines.push(line(`${p}-longrine-${lr.key}-package`,lr.label,'Fondations',lr.L,'ml',lr.price,'explicit'));
+        const planning=addRefLinesIncluded(lines,ref,v,`${p}-longrine-${lr.key}-included`,cc);
+        if(planning>0)lab.push(labor(`${e.name} — ${lr.label.toLowerCase()} planning`,planning,{includedInManual:true}));
+        reco.push(`${e.name} : ${lr.label.toLowerCase()} ${fmt(lr.L,2)} ml, volume géométrique ${fmt(v,3)} m³ ; prix ${money(lr.price)}/ml séparé des micro-pieux.`);
       }
     }
     reco.push(`${e.name} : dimensionnement des micro-pieux hors moteur SpeedArti ; étude géotechnique/structure requise.`);
@@ -1388,6 +1408,12 @@ export function validateStep(state,step=state.step){
           if(type==='linteau_ba'&&!(o.lintelRef||['linteau_ba_courant','linteau_ba_renforce'].includes(o.type)))return `${e.name} : référence du linteau obligatoire.`;
           if(type==='talonnette_manuelle'&&!(num(o.quantity||1)>0))return `${e.name} : nombre de talonnettes obligatoire.`;
           if(type==='talonnette_manuelle'&&!(num(o.manualPrice||150)>0))return `${e.name} : prix unitaire de la talonnette obligatoire.`;
+        }
+        if(e.type==='fondations'&&e.data?.foundationType==='micro_pieux'){
+          const d=e.data;
+          if(d.longrineAvecBecquet&&!(num(d.longrineAvecBecquetLength)>0&&num(d.longrineAvecBecquetWidthCm)>0&&num(d.longrineAvecBecquetHeightCm)>0))return `${e.name} : compléter la longrine avec becquet.`;
+          if(d.longrineSansBecquet&&!(num(d.longrineSansBecquetLength)>0&&num(d.longrineSansBecquetWidthCm)>0&&num(d.longrineSansBecquetHeightCm)>0))return `${e.name} : compléter la longrine sans becquet.`;
+          if((d.longrineAvecBecquet||d.longrineSansBecquet)&&!d.longrineConcreteClass)return `${e.name} : classe béton des longrines obligatoire.`;
         }
       }
     }
