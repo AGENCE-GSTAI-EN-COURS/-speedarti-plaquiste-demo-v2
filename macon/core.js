@@ -576,7 +576,7 @@ function renderElevationElement(e){
     </div>`;
     }).join(''):'<p class="muted">Aucune ouverture.</p>'}
   </div></div>`;
-  const openingRefs=[...new Set(openings.map(o=>o.type).filter(id=>WORK_BY_ID[id]))];
+  const openingRefs=[...new Set(openings.map(o=>o.type==='linteau_ba'?(o.lintelRef||'linteau_ba_courant'):o.type).filter(id=>WORK_BY_ID[id]))];
   h+=openingRefs.map(id=>renderRefOverrides('element',d,id).replaceAll('data-field=',`data-el-id="${e.id}" data-field=`)).join('');
 
   const beams=d.beams||[];
@@ -877,7 +877,7 @@ function addOpeningAssociated(lines,lab,o,prefix,container,concreteClass,alerts)
   const w=num(o.width),h=num(o.height),assoc=o.type||o.associated||'';
   const area=['seuil_ba','appui_fenetre_ba','linteau_ba','linteau_ba_courant','linteau_ba_renforce','coffre_tunnel_brique','coffre_tunnel_resine','talonnette_manuelle'].includes(assoc)?0:w*h;
   if(assoc==='talonnette_manuelle'){
-    const q=Math.max(0,num(o.quantity)||1),pr=num(o.manualPrice)||150;
+    const q=Math.max(0,(o.quantity===undefined||o.quantity===null)?1:num(o.quantity)),pr=(o.manualPrice===undefined||o.manualPrice===null)?150:num(o.manualPrice);
     if(q>0&&pr>0) lines.push(line(`${prefix}-talonnette`,'Talonnette — forfait unitaire','Maçonnerie',q,'unité',pr,'explicit'));
     else alerts.push('🚨 Talonnette : nombre et prix unitaire obligatoires.');
     return area;
