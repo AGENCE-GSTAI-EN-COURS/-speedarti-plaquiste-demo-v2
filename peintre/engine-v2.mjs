@@ -141,14 +141,15 @@ function material(lists,warnings,label,area,costM2,tag){
  if(cost==null)missing(warnings,label+' : consommables à chiffrer.');
  lists.lines.push({name:label,kind:'material',tag,unit:'m²',quantity:r(area),unitPrice:cost,amount:cost==null?null:r(area*cost),source:'saisie artisan'});
 }
-function prepare(lists,warnings,label,area,prep,rate,tag){
+function prepare(lists,warnings,label,area,prep,rate,tag,isWood=false){
  const level=prep?.level||'none';
  if(level==='none'||area<=0)return;
  const option=PREPARATIONS.find(o=>o.id===level);
  if(!option)throw Error(label+' : préparation inconnue.');
  const rates=preparationRates(prep);
- labor(lists,warnings,label+' — '+option.title,area,rates.hoursM2,rate,tag);
- material(lists,warnings,label+' — consommables '+option.title,area,rates.consumablePriceM2,tag);
+ const title=isWood&&level==='skim'?'Réparation profonde (sans refabrication)':option.title;
+ labor(lists,warnings,label+' — '+title,area,rates.hoursM2,rate,tag);
+ material(lists,warnings,label+' — consommables '+title,area,rates.consumablePriceM2,tag);
 }
 function wallpaper(lists,warnings,label,s,width,height,netArea,rate,tag){
  const wp=s.wallpaper||{};const kind=wp.kind||'classique';
@@ -223,6 +224,7 @@ export function calculateEstimate(state){
        productLines(lists,warnings,tag,s.paint,net,'pot');
        labor(lists,warnings,tag+' — application '+s.paint.finish,net,s.paint.hoursM2,rate,tag);
      }else if(s.mode==='wallpaper'){
+       if(s.kind==='ceiling'&&work.type==='room'&&work.shape!=='rectangle')missing(warnings,tag+' : calepinage complexe non validé sur plafond '+work.shape+'.');
        wallpaper(lists,warnings,tag,s,g.length,g.height,net,rate,tag);
      }else throw Error('Revêtement inconnu : '+s.mode);
      prepare(lists,warnings,tag,net,s.preparation,rate,tag);
@@ -237,7 +239,7 @@ export function calculateEstimate(state){
        const label=tag+' / '+(x.opening.name||'Menuiserie')+' ('+x.opening.faces+' face(s))';
        productLines(lists,warnings,label,x.opening.paint,x.area,'pot');
        labor(lists,warnings,label+' — peinture menuiserie',x.area,x.opening.paint.hoursM2,rate,label);
-       prepare(lists,warnings,label,x.area,x.opening.preparation,rate,label);
+       prepare(lists,warnings,label,x.area,x.opening.preparation,rate,label,true);
        geometry.push({workId:work.id,surfaceId:x.opening.id,work:work.name,surface:label,kind:'menuiserie',
          gross:r(x.area),deduction:0,net:r(x.area),mode:'paint',treatment:x.opening.preparation?.level||'none'});
      }
@@ -301,7 +303,8 @@ export function calculateEstimate(state){
  const hoursKnown=lines.filter(l=>l.kind==='labor').every(l=>l.quantity!=null);
  const hours=hoursKnown?r(total(lines.filter(l=>l.kind==='labor').map(l=>l.quantity))):null;
  const missingColor=warnings.some(w=>w.includes('référence couleur non renseignée'));
- const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor;
+ const complexCeiling=warnings.some(w=>w.includes('calepinage complexe non validé'));
+ const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor&&!complexCeiling;
  const confirmed=r(total(lines.filter(l=>l.amount!==null).map(l=>l.amount)));
  const ht=complete?confirmed:null,tax=complete?r(ht*vat/100):null;
  const byKind=kind=>{const rows=lines.filter(l=>l.kind===kind);return rows.every(l=>l.amount!==null)?r(total(rows.map(l=>l.amount))):null;};
