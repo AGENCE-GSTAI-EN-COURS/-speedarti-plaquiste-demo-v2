@@ -1016,6 +1016,38 @@ test('S6.6 validation : données bloquantes contrôlées avant étape suivante',
   assert.match(validateStep(s,2),/longueur du linteau obligatoire/i);
 });
 
+test('S6.7 chaînages : même calcul quel que soit le matériau maçonné',()=>{
+  const results={};
+  for(const material of ['parpaing','brique','siporex']){
+    const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+    Object.assign(e.data,{length:14,height:2.8,thickness:20,material,method:'colle',blocksPerM2:10,wallHPerM2:.8,concreteClass:'C25/30'});s.elements=[e];
+    const r=calculate(s);
+    const h=r.lines.find(l=>l.id===e.id+'-ch-beton'),v=r.lines.find(l=>l.id===e.id+'-cv-beton');
+    results[material]={h:h?.qty,v:v?.qty};
+    assert.ok(h&&v,`chaînage absent pour ${material}`);
+  }
+  assert.deepEqual(results.brique,results.parpaing);
+  assert.deepEqual(results.siporex,results.parpaing);
+});
+
+test('S6.7 talonnette : effacer quantité ou prix bloque immédiatement',()=>{
+  const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+  Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',
+    openings:[{type:'talonnette_manuelle',quantity:'',manualPrice:150}]});s.elements=[e];
+  assert.match(validateStep(s,2),/nombre de talonnettes obligatoire/i);
+  e.data.openings[0].quantity=2;e.data.openings[0].manualPrice='';
+  assert.match(validateStep(s,2),/prix unitaire de la talonnette obligatoire/i);
+  const r=calculate(s);assert.ok(!r.lines.some(l=>l.id.includes('talonnette')));
+});
+
+test('S6.7 linteau : la référence choisie expose bien ses ratios modifiables',()=>{
+  const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+  Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',
+    openings:[{type:'linteau_ba',lintelLength:1.8,lintelRef:'linteau_ba_renforce'}]});s.elements=[e];
+  const html=renderConfig(s);
+  assert.match(html,/Ratios indicatifs modifiables — Linteau BA renforcé/);
+});
+
 test('S6.6 Angèle connaît le retour Guillaume du 5 novembre',()=>{
   assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.6');
   assert.ok(searchAngelMacon('longrine becquet talonnette fibres anti termite validation',5).some(x=>x.id==='MAC-S66-RETOUR-GUILLAUME'));
