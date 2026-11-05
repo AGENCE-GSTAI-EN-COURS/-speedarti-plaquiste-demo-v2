@@ -337,3 +337,22 @@ Ces prix manuels temporaires (coffres tunnels, isolation, génoises) restent à 
 - tests de non-régression S6.6 ajoutés.
 
 La liste des sections prédéfinies de longrines n’est pas inventée par SpeedArti : elle doit provenir d’un référentiel validé par Guillaume / étude structure avant d’être proposée automatiquement.
+
+
+## S6.7 — consolidation automatique du 5 novembre 2026
+
+- CI GitHub dédiée au module Maçon : tests fonctionnels + audit balisage à chaque modification du dossier `macon/` ;
+- compatibilité v2.5/v2.6 sécurisée pour les anciens identifiants et libellés de longrines ;
+- chaînages horizontal et vertical verrouillés par test pour produire le même calcul avec parpaing, brique et Siporex à paramètres identiques ;
+- talonnette : effacer explicitement la quantité ou le prix bloque désormais immédiatement l’étape de saisie ; la valeur 150 € HT reste uniquement la valeur proposée par défaut ;
+- linteau générique : la référence courant/renforcé choisie expose bien ses ratios modifiables ;
+- fibres : aucune valorisation automatique tant que le dosage fabricant de la référence choisie n’est pas validé ;
+- catalogue inspecté : aucune référence suffisamment explicite n’a été trouvée pour automatiser sans risque les coffres tunnels, génoises et l’isolation VS ; ces prix restent donc manuels au lieu d’être inventés ;
+- dernier contrôle automatique : **142 tests fonctionnels passés** ; audit de **195 états d’interface** et **3 294 contrôles interactifs** ; **0 erreur de balisage, 0 contrôle non lié, 0 trace inconnue, 0 trace inutilisée**.
+
+### Restes avant validation finale métier
+
+- obtenir de Guillaume / de l’étude structure la liste validée des sections prédéfinies de longrines avec et sans becquet ;
+- valider ou compléter les références/prix fournisseurs pour coffres tunnels, génoises et isolation plancher VS ;
+- faire une recette visuelle réelle ordinateur + mobile sur la démo publiée ;
+- après validation humaine, raccorder le module au SpeedArti réel et à la base de connaissances Ángel existante, sans créer de base parallèle.
