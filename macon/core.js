@@ -1023,7 +1023,7 @@ function calcFoundationElement(state,e,lines,lab,alerts,reco){
         const v=lr.L*(lr.W/100)*(lr.H/100),ref=resolvedRef(d,'longrine_fondation'),cc=d.longrineConcreteClass||g.concreteClass||'';
         lines.push(line(lr.legacy?`${p}-longrine-package`:`${p}-longrine-${lr.key}-package`,lr.label,'Fondations',lr.L,'ml',lr.price,'explicit'));
         const planning=addRefLinesIncluded(lines,ref,v,lr.legacy?`${p}-longrine-included`:`${p}-longrine-${lr.key}-included`,cc);
-        if(planning>0)lab.push(labor(`${e.name} — ${lr.label.toLowerCase()} planning`,planning,{includedInManual:true}));
+        if(planning>0)lab.push(labor(lr.legacy?`${e.name} — longrine planning`:`${e.name} — ${lr.label.toLowerCase()} planning`,planning,{includedInManual:true}));
         reco.push(`${e.name} : ${lr.label.toLowerCase()} ${fmt(lr.L,2)} ml, volume géométrique ${fmt(v,3)} m³ ; prix ${money(lr.price)}/ml séparé des micro-pieux.`);
       }
     }
