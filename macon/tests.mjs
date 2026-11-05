@@ -1007,7 +1007,7 @@ test('S6.6 prix catalogue : fibres courantes et anti-termite tarifés',()=>{
 
 test('S6.6 options : les accordéons ouverts sont restaurés après rerender',()=>{
   const app=fs.readFileSync(new URL('./app.js',import.meta.url),'utf8');
-  assert.match(app,/openAccordions/);assert.match(app,/d\.open=true/);
+  assert.match(app,/\$\$\('details\.accordion\[open\]'/);assert.match(app,/\$\$\('details\.accordion','#stepHost'\)\.forEach/);assert.match(app,/d\.open=true/);
 });
 
 test('S6.6 validation : données bloquantes contrôlées avant étape suivante',()=>{
