@@ -40,8 +40,15 @@ function renderSteps(){
   }).join('');
 }
 function render(){
+  const openAccordions=$('details.accordion[open]','#stepHost').map(d=>d.querySelector('summary')?.textContent?.trim()).filter(Boolean);
   renderSteps();
   $('#stepHost').innerHTML=renderStep(state);
+  if(openAccordions.length){
+    $('details.accordion','#stepHost').forEach(d=>{
+      const label=d.querySelector('summary')?.textContent?.trim();
+      if(label&&openAccordions.includes(label))d.open=true;
+    });
+  }
   globalThis.SpeedArtiAngelMaconContext=SpeedArtiAngelMaconKnowledge.buildContext(state,calculate(state));
   $('#prevBtn').disabled=state.step===0;
   $('#prevBtn').style.opacity=state.step===0?.45:1;
