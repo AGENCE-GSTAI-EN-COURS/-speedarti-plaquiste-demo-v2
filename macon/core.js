@@ -1409,8 +1409,8 @@ export function validateStep(state,step=state.step){
           if(type==='appui_fenetre_ba'&&!(num(o.width)>0))return `${e.name} : largeur de l’appui fenêtre obligatoire.`;
           if(type==='linteau_ba'&&!(num(o.lintelLength)>0))return `${e.name} : longueur du linteau obligatoire.`;
           if(type==='linteau_ba'&&!(o.lintelRef||['linteau_ba_courant','linteau_ba_renforce'].includes(o.type)))return `${e.name} : référence du linteau obligatoire.`;
-          if(type==='talonnette_manuelle'&&!(num(o.quantity||1)>0))return `${e.name} : nombre de talonnettes obligatoire.`;
-          if(type==='talonnette_manuelle'&&!(num(o.manualPrice||150)>0))return `${e.name} : prix unitaire de la talonnette obligatoire.`;
+          if(type==='talonnette_manuelle'&&!(((o.quantity===undefined||o.quantity===null)?1:num(o.quantity))>0))return `${e.name} : nombre de talonnettes obligatoire.`;
+          if(type==='talonnette_manuelle'&&!(((o.manualPrice===undefined||o.manualPrice===null)?150:num(o.manualPrice))>0))return `${e.name} : prix unitaire de la talonnette obligatoire.`;
         }
         if(e.type==='fondations'&&e.data?.foundationType==='micro_pieux'){
           const d=e.data;
