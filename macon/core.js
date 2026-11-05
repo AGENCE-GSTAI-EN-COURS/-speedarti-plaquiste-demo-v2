@@ -1015,13 +1015,13 @@ function calcFoundationElement(state,e,lines,lab,alerts,reco){
     ].filter(Boolean);
     // compatibilité avec les états v2.6.5 déjà enregistrés
     if(!longrines.length&&(num(d.beamLength)>0||num(d.beamWidthCm)>0||num(d.beamHeightCm)>0)){
-      longrines.push({key:d.longrineType==='avec_becquet'?'avec-becquet':'sans-becquet',label:d.longrineType==='avec_becquet'?'Longrine avec becquet':'Longrine sans becquet',L:num(d.beamLength),W:num(d.beamWidthCm),H:num(d.beamHeightCm),price:num(d.longrinePrice)||LONGRINE_PRICE_ML});
+      longrines.push({key:d.longrineType==='avec_becquet'?'avec-becquet':'sans-becquet',legacy:true,label:d.longrineType==='avec_becquet'?'Longrine avec becquet':'Longrine sans becquet',L:num(d.beamLength),W:num(d.beamWidthCm),H:num(d.beamHeightCm),price:num(d.longrinePrice)||LONGRINE_PRICE_ML});
     }
     for(const lr of longrines){
       if(!(lr.L>0&&lr.W>0&&lr.H>0))alerts.push(`🚨 ${e.name} : dimensions ${lr.label.toLowerCase()} incomplètes.`);
       else {
         const v=lr.L*(lr.W/100)*(lr.H/100),ref=resolvedRef(d,'longrine_fondation'),cc=d.longrineConcreteClass||g.concreteClass||'';
-        lines.push(line(`${p}-longrine-${lr.key}-package`,lr.label,'Fondations',lr.L,'ml',lr.price,'explicit'));
+        lines.push(line(lr.legacy?`${p}-longrine-package`:`${p}-longrine-${lr.key}-package`,lr.label,'Fondations',lr.L,'ml',lr.price,'explicit'));
         const planning=addRefLinesIncluded(lines,ref,v,`${p}-longrine-${lr.key}-included`,cc);
         if(planning>0)lab.push(labor(`${e.name} — ${lr.label.toLowerCase()} planning`,planning,{includedInManual:true}));
         reco.push(`${e.name} : ${lr.label.toLowerCase()} ${fmt(lr.L,2)} ml, volume géométrique ${fmt(v,3)} m³ ; prix ${money(lr.price)}/ml séparé des micro-pieux.`);
