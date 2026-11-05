@@ -1,4 +1,4 @@
-import {createDefaultState,newWork,newOpening,calculateEstimate,PREPARATIONS,PREP_DEFAULTS,preparationRates,roomPolygon,roomSegments,roomArea,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
+import {createDefaultState,newWork,newOpening,calculateEstimate,PREPARATIONS,PREP_DEFAULTS,WOOD_PREP_DEFAULTS,preparationRates,roomPolygon,roomSegments,roomArea,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
 import {OPTION_CATEGORIES} from './options-catalog-v2.mjs';
 
 let state=createDefaultState(),step=0,selected={wi:0,key:'A'},lastError='';
@@ -14,7 +14,7 @@ const tick=(title,path,val)=>'<label class="tick"><input type="checkbox" data-pa
 const grid=(...fields)=>'<div class="grid-fields">'+fields.join('')+'</div>';
 const card=(title,body)=>'<section class="card"><h3>'+esc(title)+'</h3>'+body+'</section>';
 const button=(label,action,args='',klass='outline')=>'<button type="button" class="btn '+klass+'" data-action="'+action+'" '+args+'>'+label+'</button>';
-const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.2</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
+const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.3</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
 const gear=(title,html)=>'<details class="advanced"><summary aria-label="Ouvrir les paramètres de '+esc(title)+'"><span class="tool-icon" aria-hidden="true">⚙<small>🔧</small></span><strong>Paramètres '+esc(title)+'</strong><span class="advanced-chevron">▾</span></summary><div class="advanced-body">'+html+'</div></details>';
 function current(){
  const wi=Math.min(Math.max(0,selected.wi),state.works.length-1);
@@ -71,11 +71,11 @@ function paintEditor(path,p){
   select('Teinte',path+'.color',p.color,[['white','Blanc'],['color','Couleur']]),
   ...(p.color==='color'?[field('Référence RAL/NCS',path+'.colorRef',p.colorRef,'text')]:[]),
   field('Couches',path+'.layers',p.layers)
- )+gear('peinture',grid(
+ )+(p.color==='color'&&p.priceSource!=='artisan'?'<p class="hint" style="color:#b45309;font-weight:700">Peinture colorée : renseignez la référence et confirmez le prix du pot dans les paramètres ⚙. Le prix blanc historique n’est pas utilisé automatiquement.</p>':'')+gear('peinture',grid(
    field('Rendement fabricant (m²/L/couche)',path+'.yield',p.yield),
    field('Pertes (%)',path+'.loss',p.loss),
    field('Conditionnement (L/pot)',path+'.potLitres',p.potLitres),
-   field('Prix HT / pot (€)',path+'.potPrice',p.potPrice),
+   field(p.color==='color'?'Prix du pot COLORÉ HT (€) — obligatoire':'Prix HT / pot (€)',path+'.potPrice',p.potPrice),
    field('Temps de pose (h/m², couches comprises)',path+'.hoursM2',p.hoursM2)
  )+'<p class="hint">Repères historiques de démonstration, modifiables. Non certifiés fournisseur.</p>');
 }
@@ -96,7 +96,7 @@ function preparationEditor(path,p,wood=false){
  return select('Préparation du support',path+'.level',p.level,levels)+(p.level!=='none'?gear('préparation',grid(
   field('Temps de préparation (h/m²)',path+'.hoursM2',rate.hoursM2),
   field('Consommables HT/m² (€)',path+'.consumablePriceM2',rate.consumablePriceM2)
- )+'<p class="hint">Valeurs de démonstration par niveau : léger 1 €, rattrapage 3 €, complet 5 €/m². Temps distincts et modifiables.</p>'):'');
+ )+'<p class="hint">Coûts de démonstration : léger 1 €, rattrapage 3 €, profond 5 €/m². '+(wood?'Temps dédiés aux boiseries (0,15 / 0,35 / 0,65 h/m²), à valider avant devis.':'Temps distincts des murs, modifiables.')+'</p>'):'');
 }
 function openingEditor(root,s){
  return '<div class="opening-head"><p class="hint">Ouvertures : déduction, menuiserie à peindre en supplément, ou les deux.</p>'+button('+ Ouverture','add-opening','data-root="'+esc(root)+'"','small-primary')+'</div>'
@@ -126,9 +126,11 @@ function stepSupports(){
  +(w.plinth.enabled?gear('plinthes',grid(
   field('Ajout manuel dans cette pièce (ml)','works.'+wi+'.plinth.manualLength',w.plinth.manualLength),
   field('Temps plinthes (h/ml)','works.'+wi+'.plinth.hoursMl',w.plinth.hoursMl),
-  field('Peinture/consommables HT/ml','works.'+wi+'.plinth.pricePerMl',w.plinth.pricePerMl)
+  field('Hauteur peinte (m)','works.'+wi+'.plinth.paintedHeightM',w.plinth.paintedHeightM),
+  field('Consommables en supplément HT/ml (facultatif)','works.'+wi+'.plinth.pricePerMl',w.plinth.pricePerMl)
  )+tick('Inclure fourniture de plinthes bois (hors peinture)','works.'+wi+'.plinth.includeWood',w.plinth.includeWood)
- +(w.plinth.includeWood?field('Fourniture bois HT/ml','works.'+wi+'.plinth.woodPriceMl',w.plinth.woodPriceMl):'')):'')+'</div>':'')
+ +(w.plinth.includeWood?field('Fourniture bois HT/ml','works.'+wi+'.plinth.woodPriceMl',w.plinth.woodPriceMl):'')
+ +'<p class="hint">La peinture des plinthes est calculée en litres et regroupée avec les pots du chantier ; le bois est exclu par défaut.</p>'+paintEditor('works.'+wi+'.plinth.paint',w.plinth.paint)):'')+'</div>':'')
  +'</aside><section class="editor-column"><div class="support-top"><h2>'+esc(s.name)+'</h2>'+tick('Inclure',path+'.active',s.active)+'</div>'
  +(s.active?'<div class="support-body">'
   +(w.type!=='room'?card('Dimensions',grid(field('Longueur (m)',path+'.length',s.length),field(w.type==='wall'?'Hauteur (m)':'Largeur (m)',path+'.height',s.height),
@@ -167,11 +169,16 @@ function stepOptions(){
      field('Temps (h/unité)',path+'.hoursPerUnit',o.hoursPerUnit))
    +'<p class="hint">Pas de prix prérempli pour les options : confirmez les matériaux et le temps avant devis.</p></div>';
  }).join('')):'')
+ +card('Consommables courants (facultatifs)', '<p class="hint">Rubans, bâches et abrasifs peuvent être ajoutés au chiffrage. Renseignez les quantités et prix réels : aucun tarif n’est inventé.</p>'
+  +(state.supplies||[]).map((x,i)=>'<div class="extra-edit">'+tick(esc(x.name)+' — '+esc(x.unit),'supplies.'+i+'.enabled',x.enabled)
+  +(x.enabled?grid(field('Quantité','supplies.'+i+'.quantity',x.quantity),field('Prix HT / '+esc(x.unit),'supplies.'+i+'.unitPrice',x.unitPrice)):'')+'</div>').join(''))
  +card('Plinthes supplémentaires',gear('ajout manuel hors pièces',grid(
    field('Longueur (ml)','manualPlinth.length',state.manualPlinth.length),
+   field('Hauteur peinte (m)','manualPlinth.paintedHeightM',state.manualPlinth.paintedHeightM),
    field('Temps (h/ml)','manualPlinth.hoursMl',state.manualPlinth.hoursMl),
-   field('Fournitures HT/ml','manualPlinth.pricePerMl',state.manualPlinth.pricePerMl)
- )));
+   field('Consommables supplémentaires HT/ml (facultatif)','manualPlinth.pricePerMl',state.manualPlinth.pricePerMl)
+ )+paintEditor('manualPlinth.paint',state.manualPlinth.paint)));
+
 }
 function stepResults(){
  let res;try{res=calculateEstimate(state);}catch(err){return heading('Résultats','Corrigez les informations de vos ouvrages.')+'<div class="alert error">'+esc(err.message)+'</div>';}
@@ -180,10 +187,11 @@ function stepResults(){
  return heading('Résultats du chiffrage','Fournitures et temps de travail sont séparés. Choisissez le nombre d’ouvriers pour obtenir la durée du chantier.')
  +card('Effectif pour la durée du chantier',grid(field('Nombre d’ouvriers','labor.workers',state.labor.workers))+'<p class="hint">Les heures-homme et leur coût restent identiques ; seule la durée chantier est divisée par le nombre d’ouvriers.</p>')
  +'<div class="metrics">'+[
- ['Heures-homme',fmt(res.hoursMan)+' h'],['Durée chantier',fmt(res.durationHours)+' h'],
+ ['Heures-homme',res.hoursMan==null?fmt(res.knownHoursMan)+' h connues*':fmt(res.hoursMan)+' h'],['Durée chantier',res.durationHours==null?fmt(res.knownDurationHours)+' h connues*':fmt(res.durationHours)+' h'],
  ['Fournitures HT',money(res.materialsHT)],['Main-d’œuvre HT',money(res.laborHT)],
  ['Total HT',money(res.totalHT)],['TVA '+fmt(res.vatRate)+' %',money(res.taxHT)],['Total TTC',money(res.ttc)]
  ].map(([k,v])=>'<div class="metric"><small>'+k+'</small><strong>'+v+'</strong></div>').join('')+'</div>'
+ +(res.unestimatedTasks.length?'<div class="alert error">* Heures partielles : '+fmt(res.knownHoursMan)+' heures-homme calculées, mais '+res.unestimatedTasks.length+' prestation(s) sans temps. Les durées affichées sont des minima, pas un planning définitif.</div>':'')
  +card('Métrés', '<div class="scroll-table"><table><thead><tr><th>Support</th><th>Surface brute</th><th>Déductions</th><th>Surface nette</th></tr></thead><tbody>'
   +res.geometry.map(g=>'<tr><td>'+esc(g.work)+' / '+esc(g.surface)+'</td><td>'+fmt(g.gross)+'</td><td>'+fmt(g.deduction)+'</td><td><strong>'+fmt(g.net)+'</strong></td></tr>').join('')+'</tbody></table></div>')
  +card('Matériaux et fournitures',table('material'))
@@ -237,7 +245,7 @@ function onChange(t){
   const previous=prep.rates||{};
   if(old&&old!=='none')previous[old]={hoursM2:prep.hoursM2,consumablePriceM2:prep.consumablePriceM2};
   prep.rates=previous;
-  const defaults=PREP_DEFAULTS[next]||{hoursM2:'',consumablePriceM2:''};
+  const defaults=(prep.supportType==='wood'?WOOD_PREP_DEFAULTS:PREP_DEFAULTS)[next]||{hoursM2:'',consumablePriceM2:''};
   const rates=previous[next]||defaults;prep.hoursM2=rates.hoursM2;prep.consumablePriceM2=rates.consumablePriceM2;
  }
  if(path.endsWith('.preparation.hoursM2')||path.endsWith('.preparation.consumablePriceM2')){
@@ -252,6 +260,12 @@ function onChange(t){
   const p=get(path.slice(0,-'.layers'.length));
   if(p.autoHours!==false)p.hoursM2=Number((Number(p.layers)*DEMO_REFERENCE.paintHoursPerLayerM2).toFixed(2));
  }
+ if(path.endsWith('.paint.color')){
+  const paint=get(path.slice(0,-'.color'.length));
+  if(next==='color'&&paint.priceSource!=='artisan') {paint.potPrice='';paint.priceSource='color-needs-price';}
+  if(next==='white'&&paint.priceSource!=='artisan') {paint.potPrice=DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL;paint.priceSource='historic-white';}
+ }
+ if(path.endsWith('.paint.potPrice'))get(path.slice(0,-'.potPrice'.length)).priceSource=next===''?'color-needs-price':'artisan';
  if(path.endsWith('.paint.hoursM2'))get(path.slice(0,-'.hoursM2'.length)).autoHours=false;
  if(t.type==='checkbox'||t.tagName==='SELECT'||path.endsWith('.paint.layers')||path==='labor.workers'||/\.(length|width|height|shapeA|shapeB|areaOverride)$/.test(path))render();
 }
