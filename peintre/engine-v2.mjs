@@ -260,6 +260,24 @@ export function calculateEstimate(state){
      }
    }
  }
+
+ // Options sélectionnées : coût de fourniture et temps séparés ; prix manquant n'est jamais zéro.
+ for(const [index,opt] of (state.extras||[]).entries()){
+  if(!opt||opt.enabled===false)continue;
+  const name=String(opt.name||'Prestation '+(index+1)).trim();
+  const qty=req(opt.quantity,name+' quantité'),unit=String(opt.unit||'forfait');
+  const mat=valid(opt.materialUnitHT)?num(opt.materialUnitHT):null;
+  const duration=valid(opt.hoursPerUnit)?num(opt.hoursPerUnit):null;
+  if(mat==null)missing(warnings,name+' : prix des fournitures à confirmer.');
+  if(duration==null)missing(warnings,name+' : temps de réalisation à confirmer.');
+  lists.lines.push({name:name+' — fournitures',kind:'material',tag:name,unit,quantity:qty,unitPrice:mat,
+   amount:mat==null?null:r(qty*mat),source:'option / coût à valider'});
+  lists.lines.push({name:name+' — main-d’œuvre',kind:'labor',tag:name,unit:'h-homme',quantity:duration==null?null:r(qty*duration),
+   unitPrice:rate,amount:duration==null||rate==null?null:r(qty*duration*rate),source:'option / temps à valider'});
+  if(name.toLowerCase().includes('humidité'))missing(warnings,'Humidité : résoudre et vérifier la cause avant traitement.');
+  if(name.toLowerCase().includes('intumescente'))missing(warnings,'Peinture intumescente : système certifié et prescriptions applicables à vérifier.');
+  if(name.toLowerCase().includes('prises et interrupteurs'))missing(warnings,'Électricité : dépose/repose à réaliser par une personne habilitée si nécessaire.');
+ }
  const manual=state.manualPlinth||{};
  if(positive(manual.length)){
    const length=num(manual.length),label='Plinthes ajoutées manuellement';
