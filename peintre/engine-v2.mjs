@@ -128,7 +128,7 @@ function productLines(lists,warnings,label,spec,area,unit){
  if(loss>100)throw Error(label+' : pertes supérieures à 100 %.');
  const yieldValue=positive(spec.yield)?num(spec.yield):null;
  const pack=positive(spec.potLitres)?num(spec.potLitres):null;
- const price=(spec.color==='color'&&spec.priceSource!=='artisan')?null:(valid(spec.potPrice)?num(spec.potPrice):null);
+ const price=(spec.color==='color'&&spec.priceSource==='historic-white'&&num(spec.potPrice)===DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL)?null:(valid(spec.potPrice)?num(spec.potPrice):null);
  if(yieldValue==null)missing(warnings,label+' : rendement fabricant absent.');
  if(pack==null)missing(warnings,label+' : conditionnement absent.');
  if(price==null)missing(warnings,label+(spec.color==='color'?' : prix HT du pot coloré à confirmer selon teinte.':' : prix HT du pot absent.'));
