@@ -895,7 +895,7 @@ function addOpeningAssociated(lines,lab,o,prefix,container,concreteClass,alerts)
     lab.push(labor(ref.label,addRefLines(lines,ref,q,`${prefix}-${refId}`,concreteClass)));
   }
   if(['linteau_ba_courant','linteau_ba_renforce'].includes(refId)){
-    const q=num(o.lintelLength);
+    const q=num(o.lintelLength)||(assoc==='linteau_ba'?0:w);
     const ref=resolvedRef(container,refId);
     lab.push(labor(ref.label,addRefLines(lines,ref,q,`${prefix}-${refId}`,concreteClass)));
   }
