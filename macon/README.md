@@ -321,3 +321,19 @@ Cette correction ne remplace pas l’audit complet du catalogue Maçon, prévu s
 - Interface : **v2.6.5**.
 
 Ces prix manuels temporaires (coffres tunnels, isolation, génoises) restent à auditer avec le catalogue Maçon avant toute intégration production.
+
+
+## v2.6.6 — retour Guillaume du 5 novembre 2026
+
+- micro-pieux : longrines avec becquet et sans becquet utilisables simultanément ;
+- sections de longrines laissées explicites et modifiables, sans dimensionnement structurel automatique ;
+- appui fenêtre BA : suppression de la hauteur d’ouverture inutile ;
+- linteau BA : un seul choix métier, avec longueur + référence courant/renforcé ;
+- talonnettes : quantité + forfait unitaire 150 € HT par défaut ;
+- accordéons Options / Préparation / Finitions conservés ouverts après sélection ;
+- contrôles bloquants remontés dès l’étape de saisie ;
+- fibres dalle courante et traitement anti-termite raccordés au catalogue existant ;
+- connaissances Ángel enrichies (MAC-ANGEL-KB-v1.6) ;
+- tests de non-régression S6.6 ajoutés.
+
+La liste des sections prédéfinies de longrines n’est pas inventée par SpeedArti : elle doit provenir d’un référentiel validé par Guillaume / étude structure avant d’être proposée automatiquement.
