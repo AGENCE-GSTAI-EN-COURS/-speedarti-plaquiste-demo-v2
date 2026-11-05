@@ -961,12 +961,7 @@ function calcSlab(state,d,prefix,surface,lines,lab,alerts,reco,concreteClassOver
   if(d.fibres){
     const f=FIBRES[d.fibreType||'courante'],enteredDose=num(d.fibreDose),dose=enteredDose>0?enteredDose:f.min;
     if(surface>0&&ep>0){
-      {
-        const fibreQtyKg=surface*(ep/100)*dose;
-        const catalogueFibre=CATALOGUE_MACON.find(p=>p.id==='MAC-4482123');
-        const fibrePriceKg=catalogueFibre&&num(catalogueFibre.prixArtisanHt)>0?num(catalogueFibre.prixArtisanHt)/0.6:0;
-        lines.push(line(`${prefix}-fibres`,`Fibres — ${f.label}`,'Ferraillage',fibreQtyKg,'kg',fibrePriceKg,fibrePriceKg>0?'validated':'required',{catalogRole:'fibres',catalogueSelection:catalogueFibre?.id||null}));
-      }
+      lines.push(line(`${prefix}-fibres`,`Fibres — ${f.label}`,'Ferraillage',surface*(ep/100)*dose,'kg',0,'required',{catalogRole:'fibres'}));
       if(enteredDose<=0)reco.push(`${prefix} : dosage fibres prérempli automatiquement à ${f.min} kg/m³, minimum de la plage métier « ${f.label} ». Modifiable.`);
       if(dose<f.min||dose>f.max)alerts.push(`⚠️ ${prefix} : dosage fibres hors plage indicative ${f.min}–${f.max} kg/m³.`);
     }
