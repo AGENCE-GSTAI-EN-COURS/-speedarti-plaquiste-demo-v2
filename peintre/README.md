@@ -1,4 +1,4 @@
-# SpeedArti — Métier Peintre V2.2 (démo commune)
+# SpeedArti — Métier Peintre V2.3 (démo commune)
 
 ## Périmètre
 Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
@@ -65,3 +65,14 @@ Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop)
 - Vérification : 31 tests historiques adaptés + 17 nouveaux = 48 tests moteur réussis, 13 simulations d'interaction réussies. Recette navigateur réel toujours nécessaire.
 - GitHub uniquement : aucune modification de GSTAI-Sp/speedarti-v2, aucune connexion de la production.
 - Connaissances Ángel : delta préparé, import dans la base EXISTANTE en attente, aucune base parallèle.
+
+## Correctifs V2.3 — audit final
+- Plinthes : les fournitures de peinture sont calculées avec la hauteur peinte (0,10 m de démonstration ajustable) et les mêmes pots que les autres supports ; la fourniture de bois et les consommables supplémentaires sont facultatifs.
+- Temps incomplets : afficher les heures-homme connues et la durée minimale correspondante sans inventer le temps manquant des options ; avertissement explicite et total incomplet.
+- Consommables courants : ruban de masquage, bâches de protection et abrasifs configurables, exclus par défaut ; quantité et coût HT renseignés par l’artisan.
+- Peinture couleur : la référence couleur et le prix doivent être confirmés ; le prix blanc historique ne se propage plus automatiquement à une teinte ni après changement de finition/famille.
+- Menuiseries : temps de préparation bois spécifiques de démonstration : léger 0,15, rattrapage 0,35, réparation profonde 0,65 h/m². Les coûts par défaut 1/3/5 € HT/m² restent modifiables. Ces durées ne sont PAS des normes validées.
+- Les tarifs, ratios d'usage, conditions TVA et catalogue fournisseur doivent encore faire l'objet d'une validation métier avant intégration à SpeedArti principal.
+- Tests : 31 historiques + 17 V2.2 + 14 correctifs V2.3 = 62/62, avec contrôle d'interface simulé ; recette sur vrai navigateur mobile/PC non encore réalisée.
+- Connaissances Ángel : les nouvelles règles sont ajoutées au delta documentaire existant, PAS encore importées dans la base de connaissances centrale. Le module demeure non finalisé pour la production.
+
