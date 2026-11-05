@@ -255,6 +255,7 @@ function onChange(t){
  if(path.endsWith('.paint.type')||path.endsWith('.paint.finish')){
   const p=get(path.slice(0,path.lastIndexOf('.'))),type=path.endsWith('.type')?old:p.type,finish=path.endsWith('.finish')?old:p.finish;
   if(Number(p.yield)===demoYield(type,finish))p.yield=demoYield(p.type,p.finish);
+  if(p.color==='color'){p.potPrice='';p.priceSource='color-needs-price';}
  }
  if(path.endsWith('.paint.layers')){
   const p=get(path.slice(0,-'.layers'.length));
@@ -262,8 +263,8 @@ function onChange(t){
  }
  if(path.endsWith('.paint.color')){
   const paint=get(path.slice(0,-'.color'.length));
-  if(next==='color'&&paint.priceSource!=='artisan') {paint.potPrice='';paint.priceSource='color-needs-price';}
-  if(next==='white'&&paint.priceSource!=='artisan') {paint.potPrice=DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL;paint.priceSource='historic-white';}
+  if(next==='color') {paint.potPrice='';paint.priceSource='color-needs-price';}
+  if(next==='white') {paint.potPrice=DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL;paint.priceSource='historic-white';}
  }
  if(path.endsWith('.paint.potPrice'))get(path.slice(0,-'.potPrice'.length)).priceSource=next===''?'color-needs-price':'artisan';
  if(path.endsWith('.paint.hoursM2'))get(path.slice(0,-'.hoursM2'.length)).autoHours=false;
@@ -273,7 +274,13 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-action]');
 document.addEventListener('keydown',e=>{
  const t=e.target.closest('svg [data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();act(t);}
 });
-document.addEventListener('input',e=>{const t=e.target;if(t.dataset.path&&t.tagName==='INPUT'&&t.type!=='checkbox')set(t.dataset.path,t.value);});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.path&&t.tagName==='INPUT'&&t.type!=='checkbox'){
+  if(t.dataset.path.endsWith('.paint.colorRef')){
+   const paint=get(t.dataset.path.slice(0,-'.colorRef'.length));
+   if(paint&&paint.color==='color'&&paint.colorRef!==t.value){paint.potPrice='';paint.priceSource='color-needs-price';}
+  }
+  set(t.dataset.path,t.value);
+ }});
 document.addEventListener('change',e=>onChange(e.target));
 el('previous').addEventListener('click',()=>go(step-1));
 el('next').addEventListener('click',()=>go(step+1));
