@@ -16,6 +16,32 @@ export const PREPARATIONS=Object.freeze([
  {id:'repair',title:'Ponçage + rattrapage'},
  {id:'skim',title:'Ratissage complet'}
 ]);
+
+export function roomPolygon(p) {
+ const L=req(p.length,p.name+' longueur'),W=req(p.width,p.name+' largeur');
+ const shape=p.shape||'rectangle',rect=[[0,0],[L,0],[L,W],[0,W]];
+ if(shape==='rectangle')return rect;
+ const A=req(p.shapeA,p.name+' retrait A'),B=req(p.shapeB,p.name+' retrait B');
+ if(A>=L||B>=W)throw Error(p.name+' : mesures de forme supérieures aux dimensions.');
+ if(shape==='L')return [[0,0],[L,0],[L,W-B],[L-A,W-B],[L-A,W],[0,W]];
+ if(shape==='T'){const x1=(L-A)/2,x2=(L+A)/2;return [[0,0],[L,0],[L,B],[x2,B],[x2,W],[x1,W],[x1,B],[0,B]];}
+ if(shape==='U'){const side=(L-A)/2;return [[0,0],[L,0],[L,W],[L-side,W],[L-side,W-B],[side,W-B],[side,W],[0,W]];}
+ throw Error('Forme inconnue : '+shape);
+}
+export function roomSegments(work) {
+ const pts=roomPolygon(work),ids='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+ return pts.map((p,i)=>{
+  const q=pts[(i+1)%pts.length];
+  return {id:ids[i],length:r(Math.hypot(q[0]-p[0],q[1]-p[1])),from:p,to:q};
+ });
+}
+export function roomArea(work) {
+ const pts=roomPolygon(work);
+ return r(Math.abs(pts.reduce((a,p,i)=>{
+  const q=pts[(i+1)%pts.length];return a+p[0]*q[1]-q[0]*p[1];
+ },0))/2);
+}
+
 export const PAINT_TYPES=Object.freeze(['acrylique','glycero','alkyde','autre']);
 export const PAINT_FINISHES=Object.freeze(['mat','velours','satin','brillant','autre']);
 // Repères issus de GSTAI-Sp/speedarti-v2, PeintreCalculateur.ts (LECTURE SEULE).
@@ -40,9 +66,9 @@ export function newOpening(){
 }
 export function newWork(type='room',name){
  if(type==='room'){
-   const work={id:uid(),type,name:name||'Pièce',length:5,width:4,height:2.5,walls:{},ceiling:newSurface('Plafond','ceiling'),
+   const work={id:uid(),type,name:name||'Pièce',shape:'rectangle',shapeA:2,shapeB:1,length:5,width:4,height:2.5,walls:{},ceiling:newSurface('Plafond','ceiling'),
      plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:''}};
-   for(const letter of ['A','B','C','D'])work.walls[letter]=newSurface('Mur '+letter,'wall');
+   for(const letter of 'ABCDEFGH')work.walls[letter]=newSurface('Mur '+letter,'wall');
    work.ceiling.active=true;return work;
  }
  if(type==='wall'){const s=newSurface('Mur simple','wall');s.length=4;return {id:uid(),type,name:name||'Mur simple',surface:s};}
@@ -54,7 +80,7 @@ export function createDefaultState(){
    labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20};
 }
 export function surfacesFor(work){
- if(work.type==='room')return [...['A','B','C','D'].map(k=>work.walls[k]),work.ceiling];
+ if(work.type==='room')return [...roomSegments(work).map(seg=>work.walls[seg.id]),work.ceiling];
  return [work.surface];
 }
 export function getSurface(work,sid){return surfacesFor(work).find(s=>s.id===sid)||null;}
@@ -65,9 +91,10 @@ function resolved(work,s){
  }
  if(work.type!=='room')return {length:req(s.length,s.name+' longueur'),height:req(s.height,s.name+' hauteur')};
  const len=req(work.length,work.name+' longueur'),width=req(work.width,work.name+' largeur'),h=req(work.height,work.name+' hauteur');
- if(s.id===work.ceiling.id)return {length:len,height:width};
- const letter=Object.keys(work.walls).find(k=>work.walls[k].id===s.id);
- return {length:letter==='A'||letter==='C'?len:width,height:h};
+ if(s.id===work.ceiling.id)return {length:roomArea(work),height:1};
+ const segment=roomSegments(work).find(seg=>work.walls[seg.id].id===s.id);
+ if(!segment)throw Error('Segment de pièce introuvable');
+ return {length:segment.length,height:h};
 }
 function productLines(lists,warnings,label,spec,area,unit){
  if(area<=0)return;
@@ -181,7 +208,7 @@ export function calculateEstimate(state){
        wallpaper(lists,warnings,tag,s,g.length,g.height,net,rate,tag);
      }else throw Error('Revêtement inconnu : '+s.mode);
      prepare(lists,warnings,tag,net,s.preparation,rate,tag);
-     if(work.type==='room'&&s.kind==='wall'){
+     if(work.type==='room'&&s.kind==='wall'&&s.mode==='paint'){
        let subtract=0;
        for(const o of s.openings||[]){
          if((o.mode==='deduct'||o.mode==='both')&&o.type==='door')subtract+=req(o.width,'Largeur porte')*nonneg(o.count,'Nombre portes');
