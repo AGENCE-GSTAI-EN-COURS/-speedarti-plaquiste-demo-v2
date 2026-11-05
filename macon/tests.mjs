@@ -532,7 +532,7 @@ test('v2.5: Murs / Cloisons qualifie mur ou cloison non porteuse',()=>{
 
 test('Angèle Maçon: base chargée avec ouvrages actifs hors escalier',()=>{
   assert.equal(SpeedArtiAngelMaconKnowledge.metier,'macon');
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.6');
   const entries=SpeedArtiAngelMaconKnowledge.entries.filter(e=>e.topic==='ouvrage');assert.equal(entries.length,ACTIVE_WORKS.length);
   for(const id of STAIR_WORK_IDS)assert.ok(!entries.some(e=>e.sourceId===id));
 });
@@ -816,7 +816,7 @@ test('S6.1 simple mur affiche la classe béton quand un ouvrage BA la nécessite
 });
 
 test('S6.1 Angèle connaît les nouvelles règles',()=>{
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.6');
   for(const q of ['ratio parpaing','classe béton chaînage mur','quantité souche chapeau','arrondi TTC TVA'])assert.ok(searchAngelMacon(q,5).length>0,q);
 });
 
@@ -861,7 +861,7 @@ test('S6.3 résultat affiche prix par unité de vente réelle du catalogue',()=>
 });
 
 test('S6.3 Angèle connaît mortier chantier et conditionnement fournisseur',()=>{
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.6');
   assert.ok(searchAngelMacon('ciment sable mortier chantier parpaing',5).length>0);
   assert.ok(searchAngelMacon('armature linteau vendue à la pièce',5).length>0);
 });
@@ -907,7 +907,7 @@ test('S6.4 fondations : soubassement et refend n’exposent plus leurs ratios et
 });
 
 test('S6.4 Angèle connaît la règle ratios internes et navigation',()=>{
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.6');
   assert.ok(searchAngelMacon('consommation par m2 donnée interne SpeedArti artisan',5).length>0);
   assert.ok(searchAngelMacon('réouverture étape 1 navigation retour',5).length>0);
 });
@@ -965,8 +965,60 @@ test('S6.5 escalier : anciens états nettoyés et accès indirect verrouillé',(
 });
 
 test('S6.5 Angèle connaît le retour Guillaume pré-prod',()=>{
-  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.5');
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.6');
   assert.ok(searchAngelMacon('semelle sous refend coffre tunnel isolation génoise mobile',5).some(x=>x.id==='MAC-S65-RETOUR-GUILLAUME'));
+});
+
+
+test('S6.6 ouvertures : appui sans hauteur, linteau simplifié, talonnette forfaitaire',()=>{
+  const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+  Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',
+    openings:[
+      {type:'appui_fenetre_ba',width:1.2},
+      {type:'linteau_ba',lintelLength:1.5,lintelRef:'linteau_ba_renforce'},
+      {type:'talonnette_manuelle',quantity:2,manualPrice:150}
+    ]});s.elements=[e];
+  const html=renderConfig(s);
+  assert.ok(!/Appui fenêtre BA[\s\S]{0,800}Hauteur ouverture/.test(html));
+  assert.match(html,/Longueur linteau \(ml\)/);assert.match(html,/Référence linteau/);
+  assert.match(html,/Nombre de talonnettes/);assert.match(html,/150/);
+  const r=calculate(s),tal=r.lines.find(l=>l.id.includes('talonnette'));
+  assert.equal(tal.qty,2);assert.equal(tal.price,150);
+});
+
+test('S6.6 micro-pieux : longrines avec et sans becquet simultanées',()=>{
+  const s=base();s.mode='multiple';const e=newElement('fondations');
+  Object.assign(e.data,{foundationType:'micro_pieux',microCount:4,microDepth:6,microPrice:900,longrineConcreteClass:'C25/30',
+    longrineAvecBecquet:true,longrineAvecBecquetLength:20,longrineAvecBecquetWidthCm:20,longrineAvecBecquetHeightCm:40,longrineAvecBecquetPrice:135,
+    longrineSansBecquet:true,longrineSansBecquetLength:8,longrineSansBecquetWidthCm:20,longrineSansBecquetHeightCm:40,longrineSansBecquetPrice:135});
+  s.elements=[e];
+  const html=renderConfig(s);assert.match(html,/Longrines périphériques avec becquet/);assert.match(html,/Longrines de refend sans becquet/);
+  const r=calculate(s);
+  assert.equal(r.lines.find(l=>l.id===e.id+'-longrine-avec-becquet-package').qty,20);
+  assert.equal(r.lines.find(l=>l.id===e.id+'-longrine-sans-becquet-package').qty,8);
+});
+
+test('S6.6 prix catalogue : fibres courantes et anti-termite tarifés',()=>{
+  let s=base();s.simpleType='dalle';Object.assign(s.simple,{surface:20,thickness:12,slabRef:'dallage_arme',concreteClass:'C25/30',fibres:true,fibreType:'courante',fibreDose:3});
+  let r=calculate(s),f=r.lines.find(l=>l.id==='simple-fibres');assert.ok(f.price>0);
+  s=base();s.mode='multiple';const e=newElement('murs_elevations');Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',antiTermite:true});s.elements=[e];
+  r=calculate(s);const a=r.lines.find(l=>l.id===e.id+'-anti-termite');assert.ok(a.price>0);assert.equal(a.unit,'m²');
+});
+
+test('S6.6 options : les accordéons ouverts sont restaurés après rerender',()=>{
+  const app=fs.readFileSync(new URL('./app.js',import.meta.url),'utf8');
+  assert.match(app,/openAccordions/);assert.match(app,/d\.open=true/);
+});
+
+test('S6.6 validation : données bloquantes contrôlées avant étape suivante',()=>{
+  const s=base();s.mode='multiple';const e=newElement('murs_elevations');
+  Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',openings:[{type:'linteau_ba',lintelLength:'',lintelRef:'linteau_ba_courant'}]});s.elements=[e];
+  assert.match(validateStep(s,2),/longueur du linteau obligatoire/i);
+});
+
+test('S6.6 Angèle connaît le retour Guillaume du 5 novembre',()=>{
+  assert.equal(SpeedArtiAngelMaconKnowledge.version,'MAC-ANGEL-KB-v1.6');
+  assert.ok(searchAngelMacon('longrine becquet talonnette fibres anti termite validation',5).some(x=>x.id==='MAC-S66-RETOUR-GUILLAUME'));
 });
 
 console.log(`OK — V2.6 Maçon: ${pass.length} contrôles fonctionnels passés`);
