@@ -42,6 +42,21 @@ export function roomArea(work) {
  },0))/2);
 }
 
+
+export const PREP_DEFAULTS=Object.freeze({
+ light:{hoursM2:0.10,consumablePriceM2:1},
+ repair:{hoursM2:0.25,consumablePriceM2:3},
+ skim:{hoursM2:0.45,consumablePriceM2:5}
+});
+export function preparationRates(p) {
+ const level=p?.level||'none',base=PREP_DEFAULTS[level];
+ if(!base)return {hoursM2:0,consumablePriceM2:0};
+ return {
+  hoursM2:p?.hoursM2===''||p?.hoursM2==null?base.hoursM2:p.hoursM2,
+  consumablePriceM2:p?.consumablePriceM2===''||p?.consumablePriceM2==null?base.consumablePriceM2:p.consumablePriceM2
+ };
+}
+
 export const PAINT_TYPES=Object.freeze(['acrylique','glycero','alkyde','autre']);
 export const PAINT_FINISHES=Object.freeze(['mat','velours','satin','brillant','autre']);
 // Repères issus de GSTAI-Sp/speedarti-v2, PeintreCalculateur.ts (LECTURE SEULE).
@@ -55,7 +70,7 @@ export function defaultWallpaper(){
  return {kind:'classique',rollWidth:DEMO_REFERENCE.wallpaperWidthM,rollLength:DEMO_REFERENCE.wallpaperLengthM,repeatCm:0,loss:20,rollPrice:DEMO_REFERENCE.wallpaperPriceHT,panels:'',panelPrice:'',hoursM2:DEMO_REFERENCE.wallpaperHoursM2};
 }
 export function defaultPreparation(){
- return {level:'none',hoursM2:DEMO_REFERENCE.prepHoursM2,consumablePriceM2:''};
+ return {level:'none',hoursM2:'',consumablePriceM2:'',rates:{}};
 }
 export function newSurface(name='Mur',kind='wall'){
  return {id:uid(),name,active:true,kind,mode:'paint',length:3,height:2.5,areaOverride:'',
@@ -67,7 +82,7 @@ export function newOpening(){
 export function newWork(type='room',name){
  if(type==='room'){
    const work={id:uid(),type,name:name||'Pièce',shape:'rectangle',shapeA:2,shapeB:1,length:5,width:4,height:2.5,walls:{},ceiling:newSurface('Plafond','ceiling'),
-     plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:''}};
+     plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:'',includeWood:false,woodPriceMl:''}};
    for(const letter of 'ABCDEFGH')work.walls[letter]=newSurface('Mur '+letter,'wall');
    work.ceiling.active=true;return work;
  }
@@ -76,8 +91,8 @@ export function newWork(type='room',name){
  throw Error('Type d’ouvrage inconnu.');
 }
 export function createDefaultState(){
- return {version:2.1,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:''},
-   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20};
+ return {version:2.2,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:''},
+   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20,taxContext:'new',taxEligibilityConfirmed:false,extras:[]};
 }
 export function surfacesFor(work){
  if(work.type==='room')return [...roomSegments(work).map(seg=>work.walls[seg.id]),work.ceiling];
@@ -131,8 +146,9 @@ function prepare(lists,warnings,label,area,prep,rate,tag){
  if(level==='none'||area<=0)return;
  const option=PREPARATIONS.find(o=>o.id===level);
  if(!option)throw Error(label+' : préparation inconnue.');
- labor(lists,warnings,label+' — '+option.title,area,prep.hoursM2,rate,tag);
- material(lists,warnings,label+' — consommables '+option.title,area,prep.consumablePriceM2,tag);
+ const rates=preparationRates(prep);
+ labor(lists,warnings,label+' — '+option.title,area,rates.hoursM2,rate,tag);
+ material(lists,warnings,label+' — consommables '+option.title,area,rates.consumablePriceM2,tag);
 }
 function wallpaper(lists,warnings,label,s,width,height,netArea,rate,tag){
  const wp=s.wallpaper||{};const kind=wp.kind||'classique';
@@ -186,8 +202,10 @@ export function calculateEstimate(state){
  const rate=valid(state.labor?.hourlyRate)?num(state.labor.hourlyRate):null;
  const workers=req(state.labor?.workers,'Nombre ouvriers');
  if(!Number.isInteger(workers))throw Error('Nombre ouvriers : entier obligatoire.');
- const vat=nonneg(state.vatRate,'TVA');
+ const context=state.taxContext||'manual';
+ const vat=context==='eligible_renovation'?(state.taxEligibilityConfirmed?10:20):context==='new'||context==='professional_local'?20:nonneg(state.vatRate,'TVA');
  if(![0,5.5,10,20].includes(vat))throw Error('Taux de TVA non autorisé dans la démo.');
+ if(context==='eligible_renovation'&&!state.taxEligibilityConfirmed)missing(warnings,'TVA 10 % non confirmée : vérifier logement d’habitation ancien de plus de deux ans et travaux éligibles ; TVA 20 % retenue.');
  if(!state.works.length)missing(warnings,'Ajoutez au moins un ouvrage.');
  let active=0;
  for(const work of state.works){
@@ -233,6 +251,10 @@ export function calculateEstimate(state){
        if(price==null)missing(warnings,label+' : fourniture à confirmer.');
        lists.lines.push({name:label+' — peinture/consommables',kind:'material',tag:label,unit:'ml',quantity:r(length),
          unitPrice:price,amount:price==null?null:r(length*price),source:'saisie artisan'});
+       if(work.plinth.includeWood){const pu=valid(work.plinth.woodPriceMl)?num(work.plinth.woodPriceMl):null;
+         if(pu==null)missing(warnings,label+' : prix fourniture de plinthes bois manquant.');
+         lists.lines.push({name:label+' — fourniture plinthes bois',kind:'material',tag:label,unit:'ml',quantity:r(length),unitPrice:pu,amount:pu==null?null:r(length*pu),source:'option bois activée'});
+       }
        geometry.push({workId:work.id,surfaceId:'plinth-'+work.id,work:work.name,surface:'Plinthes',kind:'plinth',
          gross:r(length),deduction:0,net:r(length),mode:'paint',treatment:'none'});
      }
@@ -265,7 +287,7 @@ export function calculateEstimate(state){
  const confirmed=r(total(lines.filter(l=>l.amount!==null).map(l=>l.amount)));
  const ht=complete?confirmed:null,tax=complete?r(ht*vat/100):null;
  const byKind=kind=>{const rows=lines.filter(l=>l.kind===kind);return rows.every(l=>l.amount!==null)?r(total(rows.map(l=>l.amount))):null;};
- return {version:2,geometry,lines,warnings,complete,confirmedHT:confirmed,
+ return {version:2.2,geometry,lines,warnings,complete,confirmedHT:confirmed,
    materialsHT:byKind('material'),laborHT:byKind('labor'),hoursMan:hours,
    durationHours:hours==null?null:r(hours/workers),totalHT:ht,vatRate:vat,taxHT:tax,ttc:ht==null?null:r(ht+tax)};
 }
