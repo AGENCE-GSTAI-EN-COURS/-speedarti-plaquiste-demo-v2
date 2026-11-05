@@ -1,4 +1,4 @@
-// SpeedArti Peintre V2.1 — moteur de DÉMONSTRATION, hors production.
+// SpeedArti Peintre V2.3 — moteur de DÉMONSTRATION, hors production.
 // Références historiques de l'ancien calculateur SpeedArti V2 (non validées fournisseurs).
 const num = v => v === '' || v === null || v === undefined ? null : Number(v);
 const valid = v => Number.isFinite(num(v)) && num(v) >= 0;
@@ -49,7 +49,7 @@ export const PREP_DEFAULTS=Object.freeze({
  skim:{hoursM2:0.45,consumablePriceM2:5}
 });
 export function preparationRates(p) {
- const level=p?.level||'none',base=PREP_DEFAULTS[level];
+ const level=p?.level||'none',base=(p?.supportType==='wood'?WOOD_PREP_DEFAULTS:PREP_DEFAULTS)[level];
  if(!base)return {hoursM2:0,consumablePriceM2:0};
  return {
   hoursM2:p?.hoursM2===''||p?.hoursM2==null?base.hoursM2:p.hoursM2,
@@ -57,6 +57,17 @@ export function preparationRates(p) {
  };
 }
 
+// Hypothèses de temps BOIS distinctes de la préparation des murs, à valider métier.
+export const WOOD_PREP_DEFAULTS=Object.freeze({
+ light:{hoursM2:0.15,consumablePriceM2:1},
+ repair:{hoursM2:0.35,consumablePriceM2:3},
+ skim:{hoursM2:0.65,consumablePriceM2:5}
+});
+export const COMMON_SUPPLIES=Object.freeze([
+ {id:'masking',name:'Ruban de masquage',unit:'rouleau'},
+ {id:'floor',name:'Bâches et protection de sols',unit:'unité'},
+ {id:'abrasive',name:'Abrasifs et consommables de finition',unit:'lot'}
+]);
 export const PAINT_TYPES=Object.freeze(['acrylique','glycero','alkyde','autre']);
 export const PAINT_FINISHES=Object.freeze(['mat','velours','satin','brillant','autre']);
 // Repères issus de GSTAI-Sp/speedarti-v2, PeintreCalculateur.ts (LECTURE SEULE).
@@ -64,25 +75,25 @@ export const PAINT_FINISHES=Object.freeze(['mat','velours','satin','brillant','a
 export const DEMO_REFERENCE=Object.freeze({yieldAcrylique:10,yieldGlycero:12,yieldSatin:9,paintPotL:10,paintPricePerLHT:10,paintHoursPerLayerM2:0.15,prepHoursM2:0.2,wallpaperWidthM:0.53,wallpaperLengthM:10,wallpaperPriceHT:25,wallpaperHoursM2:0.25,hourlyRateHT:42});
 export function demoYield(type,finish){return finish==='satin'?DEMO_REFERENCE.yieldSatin:type==='glycero'?DEMO_REFERENCE.yieldGlycero:DEMO_REFERENCE.yieldAcrylique;}
 export function defaultPaint(){
- return {type:'acrylique',finish:'mat',color:'white',colorRef:'',layers:2,yield:DEMO_REFERENCE.yieldAcrylique,loss:10,potLitres:DEMO_REFERENCE.paintPotL,potPrice:DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL,hoursM2:2*DEMO_REFERENCE.paintHoursPerLayerM2,autoHours:true};
+ return {type:'acrylique',finish:'mat',color:'white',colorRef:'',layers:2,yield:DEMO_REFERENCE.yieldAcrylique,loss:10,potLitres:DEMO_REFERENCE.paintPotL,potPrice:DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL,priceSource:'historic-white',hoursM2:2*DEMO_REFERENCE.paintHoursPerLayerM2,autoHours:true};
 }
 export function defaultWallpaper(){
  return {kind:'classique',rollWidth:DEMO_REFERENCE.wallpaperWidthM,rollLength:DEMO_REFERENCE.wallpaperLengthM,repeatCm:0,loss:20,rollPrice:DEMO_REFERENCE.wallpaperPriceHT,panels:'',panelPrice:'',hoursM2:DEMO_REFERENCE.wallpaperHoursM2};
 }
-export function defaultPreparation(){
- return {level:'none',hoursM2:'',consumablePriceM2:'',rates:{}};
+export function defaultPreparation(supportType='wall'){
+ return {supportType,level:'none',hoursM2:'',consumablePriceM2:'',rates:{}};
 }
 export function newSurface(name='Mur',kind='wall'){
  return {id:uid(),name,active:true,kind,mode:'paint',length:3,height:2.5,areaOverride:'',
    paint:defaultPaint(),wallpaper:defaultWallpaper(),preparation:defaultPreparation(),openings:[]};
 }
 export function newOpening(){
- return {id:uid(),name:'Porte',type:'door',mode:'deduct',width:0.9,height:2.1,count:1,faces:1,paint:defaultPaint(),preparation:defaultPreparation()};
+ return {id:uid(),name:'Porte',type:'door',mode:'deduct',width:0.9,height:2.1,count:1,faces:1,paint:defaultPaint(),preparation:defaultPreparation('wood')};
 }
 export function newWork(type='room',name){
  if(type==='room'){
    const work={id:uid(),type,name:name||'Pièce',shape:'rectangle',shapeA:2,shapeB:1,length:5,width:4,height:2.5,walls:{},ceiling:newSurface('Plafond','ceiling'),
-     plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:'',includeWood:false,woodPriceMl:''}};
+     plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:'',paintedHeightM:0.10,paint:defaultPaint(),includeWood:false,woodPriceMl:''}};
    for(const letter of 'ABCDEFGH')work.walls[letter]=newSurface('Mur '+letter,'wall');
    work.ceiling.active=true;return work;
  }
@@ -91,8 +102,8 @@ export function newWork(type='room',name){
  throw Error('Type d’ouvrage inconnu.');
 }
 export function createDefaultState(){
- return {version:2.2,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:''},
-   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20,taxContext:'new',taxEligibilityConfirmed:false,extras:[]};
+ return {version:2.3,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:'',paintedHeightM:0.10,paint:defaultPaint()},
+   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20,taxContext:'new',taxEligibilityConfirmed:false,extras:[],supplies:COMMON_SUPPLIES.map(x=>({...x,enabled:false,quantity:1,unitPrice:''}))};
 }
 export function surfacesFor(work){
  if(work.type==='room')return [...roomSegments(work).map(seg=>work.walls[seg.id]),work.ceiling];
@@ -117,10 +128,10 @@ function productLines(lists,warnings,label,spec,area,unit){
  if(loss>100)throw Error(label+' : pertes supérieures à 100 %.');
  const yieldValue=positive(spec.yield)?num(spec.yield):null;
  const pack=positive(spec.potLitres)?num(spec.potLitres):null;
- const price=valid(spec.potPrice)?num(spec.potPrice):null;
+ const price=(spec.color==='color'&&spec.priceSource==='historic-white'&&num(spec.potPrice)===DEMO_REFERENCE.paintPricePerLHT*DEMO_REFERENCE.paintPotL)?null:(valid(spec.potPrice)?num(spec.potPrice):null);
  if(yieldValue==null)missing(warnings,label+' : rendement fabricant absent.');
  if(pack==null)missing(warnings,label+' : conditionnement absent.');
- if(price==null)missing(warnings,label+' : prix HT du pot absent.');
+ if(price==null)missing(warnings,label+(spec.color==='color'?' : prix HT du pot coloré à confirmer selon teinte.':' : prix HT du pot absent.'));
  const key=JSON.stringify([spec.type,spec.finish,spec.color,spec.colorRef,yieldValue,pack,price]);
  let group=lists.paintGroups.get(key);
  if(!group){group={key,label:'Peinture '+spec.type+' '+spec.finish+' '+(spec.color==='color'?'couleur '+(spec.colorRef||'(teinte à préciser)'):'blanche'),
@@ -249,10 +260,14 @@ export function calculateEstimate(state){
      if(length>0){
        const label=work.name+' / plinthes';
        labor(lists,warnings,label+' — application',length,work.plinth.hoursMl,rate,label);
-       const price=valid(work.plinth.pricePerMl)?num(work.plinth.pricePerMl):null;
-       if(price==null)missing(warnings,label+' : fourniture à confirmer.');
-       lists.lines.push({name:label+' — peinture/consommables',kind:'material',tag:label,unit:'ml',quantity:r(length),
-         unitPrice:price,amount:price==null?null:r(length*price),source:'saisie artisan'});
+       const paintHeight=positive(work.plinth.paintedHeightM)?num(work.plinth.paintedHeightM):0.1;
+       productLines(lists,warnings,label+' — peinture',work.plinth.paint||defaultPaint(),length*paintHeight,'pot');
+       // Fournitures facultatives distinctes des pots de peinture (non comprises par défaut).
+       if(positive(work.plinth.pricePerMl)){
+         const price=num(work.plinth.pricePerMl);
+         lists.lines.push({name:label+' — consommables supplémentaires',kind:'material',tag:label,unit:'ml',
+           quantity:r(length),unitPrice:price,amount:r(length*price),source:'option artisan'});
+       }
        if(work.plinth.includeWood){const pu=valid(work.plinth.woodPriceMl)?num(work.plinth.woodPriceMl):null;
          if(pu==null)missing(warnings,label+' : prix fourniture de plinthes bois manquant.');
          lists.lines.push({name:label+' — fourniture plinthes bois',kind:'material',tag:label,unit:'ml',quantity:r(length),unitPrice:pu,amount:pu==null?null:r(length*pu),source:'option bois activée'});
@@ -280,14 +295,26 @@ export function calculateEstimate(state){
   if(name.toLowerCase().includes('intumescente'))missing(warnings,'Peinture intumescente : système certifié et prescriptions applicables à vérifier.');
   if(name.toLowerCase().includes('prises et interrupteurs'))missing(warnings,'Électricité : dépose/repose à réaliser par une personne habilitée si nécessaire.');
  }
+ // Consommables courants cochés par l'artisan. Aucun montant fictif ni double-compte implicite.
+ for(const item of (state.supplies||[])){
+   if(!item.enabled)continue;
+   const quantity=req(item.quantity,item.name+' quantité');
+   const price=valid(item.unitPrice)?num(item.unitPrice):null;
+   if(price==null)missing(warnings,item.name+' : prix HT/unité à renseigner.');
+   lists.lines.push({name:item.name,kind:'material',tag:'Consommables courants',unit:item.unit||'unité',
+     quantity,unitPrice:price,amount:price==null?null:r(quantity*price),source:'sélection artisan / à valider'});
+ }
  const manual=state.manualPlinth||{};
  if(positive(manual.length)){
    const length=num(manual.length),label='Plinthes ajoutées manuellement';
    labor(lists,warnings,label+' — application',length,manual.hoursMl,rate,label);
-   const price=valid(manual.pricePerMl)?num(manual.pricePerMl):null;
-   if(price==null)missing(warnings,label+' : fourniture à confirmer.');
-   lists.lines.push({name:label+' — peinture/consommables',kind:'material',tag:label,unit:'ml',quantity:r(length),
-     unitPrice:price,amount:price==null?null:r(length*price),source:'saisie artisan'});
+   const paintHeight=positive(manual.paintedHeightM)?num(manual.paintedHeightM):0.1;
+   productLines(lists,warnings,label+' — peinture',manual.paint||defaultPaint(),length*paintHeight,'pot');
+   if(positive(manual.pricePerMl)){
+     const price=num(manual.pricePerMl);
+     lists.lines.push({name:label+' — consommables supplémentaires',kind:'material',tag:label,unit:'ml',quantity:r(length),
+       unitPrice:price,amount:r(length*price),source:'option artisan'});
+   }
  }
  for(const group of lists.paintGroups.values()){
    const quantity=group.canCompute&&group.pack!=null?Math.ceil(group.litresBesoin/group.pack):null;
@@ -300,15 +327,17 @@ export function calculateEstimate(state){
  if(rate==null&&lists.lines.some(l=>l.kind==='labor'))missing(warnings,'Taux horaire de l’artisan à confirmer.');
  const lines=lists.lines;
  missing(warnings,'Tarifs, rendements et temps préremplis : repères historiques de démonstration SpeedArti V2, à vérifier avant un devis client.');
- const hoursKnown=lines.filter(l=>l.kind==='labor').every(l=>l.quantity!=null);
- const hours=hoursKnown?r(total(lines.filter(l=>l.kind==='labor').map(l=>l.quantity))):null;
+ const laborRows=lines.filter(l=>l.kind==='labor');
+ const unestimatedTasks=laborRows.filter(l=>l.quantity==null).map(l=>l.name);
+ const knownHoursMan=r(total(laborRows.filter(l=>l.quantity!=null).map(l=>l.quantity)));
+ const hours=unestimatedTasks.length?null:knownHoursMan;
  const missingColor=warnings.some(w=>w.includes('référence couleur non renseignée'));
  const complexCeiling=warnings.some(w=>w.includes('calepinage complexe non validé'));
  const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor&&!complexCeiling;
  const confirmed=r(total(lines.filter(l=>l.amount!==null).map(l=>l.amount)));
  const ht=complete?confirmed:null,tax=complete?r(ht*vat/100):null;
  const byKind=kind=>{const rows=lines.filter(l=>l.kind===kind);return rows.every(l=>l.amount!==null)?r(total(rows.map(l=>l.amount))):null;};
- return {version:2.2,geometry,lines,warnings,complete,confirmedHT:confirmed,
-   materialsHT:byKind('material'),laborHT:byKind('labor'),hoursMan:hours,
-   durationHours:hours==null?null:r(hours/workers),totalHT:ht,vatRate:vat,taxHT:tax,ttc:ht==null?null:r(ht+tax)};
+ return {version:2.3,geometry,lines,warnings,complete,confirmedHT:confirmed,
+   materialsHT:byKind('material'),laborHT:byKind('labor'),hoursMan:hours,knownHoursMan,unestimatedTasks,
+   durationHours:hours==null?null:r(hours/workers),knownDurationHours:r(knownHoursMan/workers),totalHT:ht,vatRate:vat,taxHT:tax,ttc:ht==null?null:r(ht+tax)};
 }

@@ -33,3 +33,18 @@ Ce document est une **liste de connaissances à fusionner dans la base Ángel EX
 - PNT-V2-WALL-016 : papier peint panoramique = nombre réel de panneaux, largeur/hauteur/raccord du produit à vérifier ; le mode classique peut estimer des lés, mais ne doit pas assimiler toute surface nette à des rouleaux commercialement exacts.
 - PNT-V2-PRICE-017 : regrouper les quantités de même produit avant arrondi aux conditionnements ; conserver une référence de teinte distincte par couleur.
 - PNT-V2-SAFETY-018 : une démo GitHub Pages ne constitue jamais une connexion à la base de connaissances centrale. Statut « connaissances Ángel à intégrer », pas « terminé ».
+
+## Delta V2.2 / V2.3 à fusionner dans les connaissances EXISTANTES d’Ángel (NON IMPORTÉ)
+- PNT-GEO-019 : les pièces Rectangle, L, T et U se décrivent par segments de murs A à H, le plafond se calcule selon l’aire du polygone.
+- PNT-PREP-020 : préparation par support avec aucune par défaut ; consommables de démonstration 1, 3 ou 5 € HT/m², temps différents et modifiables.
+- PNT-WOOD-021 : sur menuiserie, la préparation profonde est nommée « Réparation profonde (sans refabrication) » ; temps de démonstration spécifiques boiseries 0,15 / 0,35 / 0,65 h/m², non normatifs, modifiables.
+- PNT-PLINTH-022 : plinthes automatiques sur murs actifs peints uniquement ; peinture calculée avec linéaire × hauteur peinte, mutualisée par produit et conditionnement ; bois hors prestation par défaut.
+- PNT-OPTIONS-023 : 64 options facultatives réparties en six familles, avec quantités, unités, fournitures, temps à renseigner ; montant incomplet si référence non connue.
+- PNT-VAT-024 : contexte fiscal avec TVA 20 % par défaut ; 10 % seulement si éligibilité du logement et des travaux confirmée, non automaticité fiscale.
+- PNT-WORKERS-025 : ouvriers choisis dans les résultats ; effectif ne change pas les heures-homme ni le coût, seulement la durée.
+- PNT-SUPPLIES-026 : ruban de masquage, bâches et abrasifs complémentaires facultatifs ; ne pas créer de prix sans référence et éviter les doubles comptes.
+- PNT-HOURS-027 : lorsqu'une option manque de temps, conserver le total des heures connues comme minimum partiel et signaler explicitement les tâches non estimées.
+- PNT-COLOR-028 : une peinture colorée doit avoir sa référence RAL/NCS et un prix vérifié selon produit et teinte ; ne jamais reprendre automatiquement le prix blanc historique ; revalidation si changement de teinte, famille ou finition.
+- PNT-SAFETY-029 : valeurs V2.3 = estimations de démonstration, pas de catalogue officiel ; ne pas considérer l’intégration Ángel comme terminée avant une fusion dans la base existante et une validation.
+
+Statut : PENDING_REVIEW / NOT_IMPORTED. Ce fichier est un delta documentaire, pas une base parallèle ni une connexion à la base d'Ángel.
