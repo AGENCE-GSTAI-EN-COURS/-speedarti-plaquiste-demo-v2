@@ -1,4 +1,4 @@
-# SpeedArti — Métier Peintre V2.1 (démo commune)
+# SpeedArti — Métier Peintre V2.2 (démo commune)
 
 ## Périmètre
 Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
@@ -50,3 +50,18 @@ Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop)
 - Répare les résultats vides dus aux rendements, prix et temps non renseignés par défaut.
 - Une pièce de 5 × 4 × 2,5 m, avec plafond et peinture acrylique deux couches, produit une estimation de démonstration : 14,3 L, 2 pots, 19,5 heures-homme et 1 019 € HT avec les anciens repères indiqués ci-dessus.
 - Prix, rendements, références, temps et TVA à vérifier avant vrai devis. Une préparation avec consommables non tarifés reste « à confirmer » sans présenter un sous-total incomplet comme montant définitif.
+
+## Sprint V2.2 — retour Guillaume du 4 novembre 2026
+
+- Étape 1 : modèle géométrique identique à Plaquiste (Rectangle, L, T, U), murs A à H suivant la forme, plafond indépendant, murs simples et surfaces simples.
+- Étape 2 : réglages avancés de peinture, papier peint, préparations, menuiseries et plinthes dans des panneaux engrenage + clé.
+- Préparations par support : aucune par défaut, léger 1 €/m², rattrapage 3 €/m², complet 5 €/m². Temps estimatifs de démonstration : 0,10 / 0,25 / 0,45 h/m², modifiables et non validés comme normes.
+- Menuiserie : Réparation profonde (sans refabrication) remplace Ratissage complet.
+- Plinthes : uniquement les murs peints actifs ; fourniture de bois exclue par défaut.
+- Étape 3 Options : six familles, 64 prestations ; fournitures, unités et heures libres à renseigner, aucun prix inventé.
+- Étape 4 : choix des ouvriers dans les résultats ; seule la durée du chantier change, pas les heures-homme ni leur coût.
+- TVA : taux 10 % seulement si rénovation d'un logement éligible confirmée, 20 % par défaut dans la démonstration ; règles fiscales à contrôler avant devis.
+- Plafond L/T/U en papier peint : calepinage non validé, total incomplet avec alerte.
+- Vérification : 31 tests historiques adaptés + 17 nouveaux = 48 tests moteur réussis, 13 simulations d'interaction réussies. Recette navigateur réel toujours nécessaire.
+- GitHub uniquement : aucune modification de GSTAI-Sp/speedarti-v2, aucune connexion de la production.
+- Connaissances Ángel : delta préparé, import dans la base EXISTANTE en attente, aucune base parallèle.

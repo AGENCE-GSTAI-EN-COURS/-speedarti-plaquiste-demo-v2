@@ -16,6 +16,47 @@ export const PREPARATIONS=Object.freeze([
  {id:'repair',title:'Ponçage + rattrapage'},
  {id:'skim',title:'Ratissage complet'}
 ]);
+
+export function roomPolygon(p) {
+ const L=req(p.length,p.name+' longueur'),W=req(p.width,p.name+' largeur');
+ const shape=p.shape||'rectangle',rect=[[0,0],[L,0],[L,W],[0,W]];
+ if(shape==='rectangle')return rect;
+ const A=req(p.shapeA,p.name+' retrait A'),B=req(p.shapeB,p.name+' retrait B');
+ if(A>=L||B>=W)throw Error(p.name+' : mesures de forme supérieures aux dimensions.');
+ if(shape==='L')return [[0,0],[L,0],[L,W-B],[L-A,W-B],[L-A,W],[0,W]];
+ if(shape==='T'){const x1=(L-A)/2,x2=(L+A)/2;return [[0,0],[L,0],[L,B],[x2,B],[x2,W],[x1,W],[x1,B],[0,B]];}
+ if(shape==='U'){const side=(L-A)/2;return [[0,0],[L,0],[L,W],[L-side,W],[L-side,W-B],[side,W-B],[side,W],[0,W]];}
+ throw Error('Forme inconnue : '+shape);
+}
+export function roomSegments(work) {
+ const pts=roomPolygon(work),ids='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+ return pts.map((p,i)=>{
+  const q=pts[(i+1)%pts.length];
+  return {id:ids[i],length:r(Math.hypot(q[0]-p[0],q[1]-p[1])),from:p,to:q};
+ });
+}
+export function roomArea(work) {
+ const pts=roomPolygon(work);
+ return r(Math.abs(pts.reduce((a,p,i)=>{
+  const q=pts[(i+1)%pts.length];return a+p[0]*q[1]-q[0]*p[1];
+ },0))/2);
+}
+
+
+export const PREP_DEFAULTS=Object.freeze({
+ light:{hoursM2:0.10,consumablePriceM2:1},
+ repair:{hoursM2:0.25,consumablePriceM2:3},
+ skim:{hoursM2:0.45,consumablePriceM2:5}
+});
+export function preparationRates(p) {
+ const level=p?.level||'none',base=PREP_DEFAULTS[level];
+ if(!base)return {hoursM2:0,consumablePriceM2:0};
+ return {
+  hoursM2:p?.hoursM2===''||p?.hoursM2==null?base.hoursM2:p.hoursM2,
+  consumablePriceM2:p?.consumablePriceM2===''||p?.consumablePriceM2==null?base.consumablePriceM2:p.consumablePriceM2
+ };
+}
+
 export const PAINT_TYPES=Object.freeze(['acrylique','glycero','alkyde','autre']);
 export const PAINT_FINISHES=Object.freeze(['mat','velours','satin','brillant','autre']);
 // Repères issus de GSTAI-Sp/speedarti-v2, PeintreCalculateur.ts (LECTURE SEULE).
@@ -29,7 +70,7 @@ export function defaultWallpaper(){
  return {kind:'classique',rollWidth:DEMO_REFERENCE.wallpaperWidthM,rollLength:DEMO_REFERENCE.wallpaperLengthM,repeatCm:0,loss:20,rollPrice:DEMO_REFERENCE.wallpaperPriceHT,panels:'',panelPrice:'',hoursM2:DEMO_REFERENCE.wallpaperHoursM2};
 }
 export function defaultPreparation(){
- return {level:'none',hoursM2:DEMO_REFERENCE.prepHoursM2,consumablePriceM2:''};
+ return {level:'none',hoursM2:'',consumablePriceM2:'',rates:{}};
 }
 export function newSurface(name='Mur',kind='wall'){
  return {id:uid(),name,active:true,kind,mode:'paint',length:3,height:2.5,areaOverride:'',
@@ -40,9 +81,9 @@ export function newOpening(){
 }
 export function newWork(type='room',name){
  if(type==='room'){
-   const work={id:uid(),type,name:name||'Pièce',length:5,width:4,height:2.5,walls:{},ceiling:newSurface('Plafond','ceiling'),
-     plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:''}};
-   for(const letter of ['A','B','C','D'])work.walls[letter]=newSurface('Mur '+letter,'wall');
+   const work={id:uid(),type,name:name||'Pièce',shape:'rectangle',shapeA:2,shapeB:1,length:5,width:4,height:2.5,walls:{},ceiling:newSurface('Plafond','ceiling'),
+     plinth:{enabled:false,manualLength:0,hoursMl:0.1,pricePerMl:'',includeWood:false,woodPriceMl:''}};
+   for(const letter of 'ABCDEFGH')work.walls[letter]=newSurface('Mur '+letter,'wall');
    work.ceiling.active=true;return work;
  }
  if(type==='wall'){const s=newSurface('Mur simple','wall');s.length=4;return {id:uid(),type,name:name||'Mur simple',surface:s};}
@@ -50,11 +91,11 @@ export function newWork(type='room',name){
  throw Error('Type d’ouvrage inconnu.');
 }
 export function createDefaultState(){
- return {version:2.1,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:''},
-   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20};
+ return {version:2.2,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:''},
+   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20,taxContext:'new',taxEligibilityConfirmed:false,extras:[]};
 }
 export function surfacesFor(work){
- if(work.type==='room')return [...['A','B','C','D'].map(k=>work.walls[k]),work.ceiling];
+ if(work.type==='room')return [...roomSegments(work).map(seg=>work.walls[seg.id]),work.ceiling];
  return [work.surface];
 }
 export function getSurface(work,sid){return surfacesFor(work).find(s=>s.id===sid)||null;}
@@ -65,9 +106,10 @@ function resolved(work,s){
  }
  if(work.type!=='room')return {length:req(s.length,s.name+' longueur'),height:req(s.height,s.name+' hauteur')};
  const len=req(work.length,work.name+' longueur'),width=req(work.width,work.name+' largeur'),h=req(work.height,work.name+' hauteur');
- if(s.id===work.ceiling.id)return {length:len,height:width};
- const letter=Object.keys(work.walls).find(k=>work.walls[k].id===s.id);
- return {length:letter==='A'||letter==='C'?len:width,height:h};
+ if(s.id===work.ceiling.id)return {length:roomArea(work),height:1};
+ const segment=roomSegments(work).find(seg=>work.walls[seg.id].id===s.id);
+ if(!segment)throw Error('Segment de pièce introuvable');
+ return {length:segment.length,height:h};
 }
 function productLines(lists,warnings,label,spec,area,unit){
  if(area<=0)return;
@@ -99,13 +141,15 @@ function material(lists,warnings,label,area,costM2,tag){
  if(cost==null)missing(warnings,label+' : consommables à chiffrer.');
  lists.lines.push({name:label,kind:'material',tag,unit:'m²',quantity:r(area),unitPrice:cost,amount:cost==null?null:r(area*cost),source:'saisie artisan'});
 }
-function prepare(lists,warnings,label,area,prep,rate,tag){
+function prepare(lists,warnings,label,area,prep,rate,tag,isWood=false){
  const level=prep?.level||'none';
  if(level==='none'||area<=0)return;
  const option=PREPARATIONS.find(o=>o.id===level);
  if(!option)throw Error(label+' : préparation inconnue.');
- labor(lists,warnings,label+' — '+option.title,area,prep.hoursM2,rate,tag);
- material(lists,warnings,label+' — consommables '+option.title,area,prep.consumablePriceM2,tag);
+ const rates=preparationRates(prep);
+ const title=isWood&&level==='skim'?'Réparation profonde (sans refabrication)':option.title;
+ labor(lists,warnings,label+' — '+title,area,rates.hoursM2,rate,tag);
+ material(lists,warnings,label+' — consommables '+title,area,rates.consumablePriceM2,tag);
 }
 function wallpaper(lists,warnings,label,s,width,height,netArea,rate,tag){
  const wp=s.wallpaper||{};const kind=wp.kind||'classique';
@@ -159,8 +203,10 @@ export function calculateEstimate(state){
  const rate=valid(state.labor?.hourlyRate)?num(state.labor.hourlyRate):null;
  const workers=req(state.labor?.workers,'Nombre ouvriers');
  if(!Number.isInteger(workers))throw Error('Nombre ouvriers : entier obligatoire.');
- const vat=nonneg(state.vatRate,'TVA');
+ const context=state.taxContext||'manual';
+ const vat=context==='eligible_renovation'?(state.taxEligibilityConfirmed?10:20):context==='new'||context==='professional_local'?20:nonneg(state.vatRate,'TVA');
  if(![0,5.5,10,20].includes(vat))throw Error('Taux de TVA non autorisé dans la démo.');
+ if(context==='eligible_renovation'&&!state.taxEligibilityConfirmed)missing(warnings,'TVA 10 % non confirmée : vérifier logement d’habitation ancien de plus de deux ans et travaux éligibles ; TVA 20 % retenue.');
  if(!state.works.length)missing(warnings,'Ajoutez au moins un ouvrage.');
  let active=0;
  for(const work of state.works){
@@ -178,10 +224,11 @@ export function calculateEstimate(state){
        productLines(lists,warnings,tag,s.paint,net,'pot');
        labor(lists,warnings,tag+' — application '+s.paint.finish,net,s.paint.hoursM2,rate,tag);
      }else if(s.mode==='wallpaper'){
+       if(s.kind==='ceiling'&&work.type==='room'&&work.shape!=='rectangle')missing(warnings,tag+' : calepinage complexe non validé sur plafond '+work.shape+'.');
        wallpaper(lists,warnings,tag,s,g.length,g.height,net,rate,tag);
      }else throw Error('Revêtement inconnu : '+s.mode);
      prepare(lists,warnings,tag,net,s.preparation,rate,tag);
-     if(work.type==='room'&&s.kind==='wall'){
+     if(work.type==='room'&&s.kind==='wall'&&s.mode==='paint'){
        let subtract=0;
        for(const o of s.openings||[]){
          if((o.mode==='deduct'||o.mode==='both')&&o.type==='door')subtract+=req(o.width,'Largeur porte')*nonneg(o.count,'Nombre portes');
@@ -192,7 +239,7 @@ export function calculateEstimate(state){
        const label=tag+' / '+(x.opening.name||'Menuiserie')+' ('+x.opening.faces+' face(s))';
        productLines(lists,warnings,label,x.opening.paint,x.area,'pot');
        labor(lists,warnings,label+' — peinture menuiserie',x.area,x.opening.paint.hoursM2,rate,label);
-       prepare(lists,warnings,label,x.area,x.opening.preparation,rate,label);
+       prepare(lists,warnings,label,x.area,x.opening.preparation,rate,label,true);
        geometry.push({workId:work.id,surfaceId:x.opening.id,work:work.name,surface:label,kind:'menuiserie',
          gross:r(x.area),deduction:0,net:r(x.area),mode:'paint',treatment:x.opening.preparation?.level||'none'});
      }
@@ -206,10 +253,32 @@ export function calculateEstimate(state){
        if(price==null)missing(warnings,label+' : fourniture à confirmer.');
        lists.lines.push({name:label+' — peinture/consommables',kind:'material',tag:label,unit:'ml',quantity:r(length),
          unitPrice:price,amount:price==null?null:r(length*price),source:'saisie artisan'});
+       if(work.plinth.includeWood){const pu=valid(work.plinth.woodPriceMl)?num(work.plinth.woodPriceMl):null;
+         if(pu==null)missing(warnings,label+' : prix fourniture de plinthes bois manquant.');
+         lists.lines.push({name:label+' — fourniture plinthes bois',kind:'material',tag:label,unit:'ml',quantity:r(length),unitPrice:pu,amount:pu==null?null:r(length*pu),source:'option bois activée'});
+       }
        geometry.push({workId:work.id,surfaceId:'plinth-'+work.id,work:work.name,surface:'Plinthes',kind:'plinth',
          gross:r(length),deduction:0,net:r(length),mode:'paint',treatment:'none'});
      }
    }
+ }
+
+ // Options sélectionnées : coût de fourniture et temps séparés ; prix manquant n'est jamais zéro.
+ for(const [index,opt] of (state.extras||[]).entries()){
+  if(!opt||opt.enabled===false)continue;
+  const name=String(opt.name||'Prestation '+(index+1)).trim();
+  const qty=req(opt.quantity,name+' quantité'),unit=String(opt.unit||'forfait');
+  const mat=valid(opt.materialUnitHT)?num(opt.materialUnitHT):null;
+  const duration=valid(opt.hoursPerUnit)?num(opt.hoursPerUnit):null;
+  if(mat==null)missing(warnings,name+' : prix des fournitures à confirmer.');
+  if(duration==null)missing(warnings,name+' : temps de réalisation à confirmer.');
+  lists.lines.push({name:name+' — fournitures',kind:'material',tag:name,unit,quantity:qty,unitPrice:mat,
+   amount:mat==null?null:r(qty*mat),source:'option / coût à valider'});
+  lists.lines.push({name:name+' — main-d’œuvre',kind:'labor',tag:name,unit:'h-homme',quantity:duration==null?null:r(qty*duration),
+   unitPrice:rate,amount:duration==null||rate==null?null:r(qty*duration*rate),source:'option / temps à valider'});
+  if(name.toLowerCase().includes('humidité'))missing(warnings,'Humidité : résoudre et vérifier la cause avant traitement.');
+  if(name.toLowerCase().includes('intumescente'))missing(warnings,'Peinture intumescente : système certifié et prescriptions applicables à vérifier.');
+  if(name.toLowerCase().includes('prises et interrupteurs'))missing(warnings,'Électricité : dépose/repose à réaliser par une personne habilitée si nécessaire.');
  }
  const manual=state.manualPlinth||{};
  if(positive(manual.length)){
@@ -234,11 +303,12 @@ export function calculateEstimate(state){
  const hoursKnown=lines.filter(l=>l.kind==='labor').every(l=>l.quantity!=null);
  const hours=hoursKnown?r(total(lines.filter(l=>l.kind==='labor').map(l=>l.quantity))):null;
  const missingColor=warnings.some(w=>w.includes('référence couleur non renseignée'));
- const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor;
+ const complexCeiling=warnings.some(w=>w.includes('calepinage complexe non validé'));
+ const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor&&!complexCeiling;
  const confirmed=r(total(lines.filter(l=>l.amount!==null).map(l=>l.amount)));
  const ht=complete?confirmed:null,tax=complete?r(ht*vat/100):null;
  const byKind=kind=>{const rows=lines.filter(l=>l.kind===kind);return rows.every(l=>l.amount!==null)?r(total(rows.map(l=>l.amount))):null;};
- return {version:2,geometry,lines,warnings,complete,confirmedHT:confirmed,
+ return {version:2.2,geometry,lines,warnings,complete,confirmedHT:confirmed,
    materialsHT:byKind('material'),laborHT:byKind('labor'),hoursMan:hours,
    durationHours:hours==null?null:r(hours/workers),totalHT:ht,vatRate:vat,taxHT:tax,ttc:ht==null?null:r(ht+tax)};
 }

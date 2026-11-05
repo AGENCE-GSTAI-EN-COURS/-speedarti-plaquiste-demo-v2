@@ -4,16 +4,18 @@
     "status": "DEMO_ON_GITHUB_PAGES_NOT_CONNECTED_TO_PRODUCTION",
     "repository": "AGENCE-GSTAI-EN-COURS/-speedarti-plaquiste-demo-v2",
     "branch": "main",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "source_reference_read_only": "GSTAI-Sp/speedarti-v2",
     "other_trades_unchanged": true
   },
   "runtime": {
     "entry": "peintre/index.html",
-    "app": "peintre/app-v2.mjs",
+    "app": "peintre/app-v2-2.mjs",
     "engine": "peintre/engine-v2.mjs",
-    "stylesheet": "peintre/styles-v2.css",
-    "tests": "peintre/tests-v2.mjs"
+    "stylesheet": "peintre/styles-v2-2.css",
+    "tests": "peintre/tests-v2.mjs",
+    "optionsCatalog": "peintre/options-catalog-v2.mjs",
+    "additionalTests": "peintre/tests-v2-2.mjs"
   },
   "connectors": [
     {
@@ -50,15 +52,15 @@
     {
       "id": "angel",
       "target": "BASE_CONNAISSANCE_ANGEL_EXISTANTE",
-      "status": "DELTA_NOT_IMPORTED",
+      "status": "DELTA_REVIEW_REQUIRED_EXISTING_KB",
       "delta": "peintre/ANGEL_KNOWLEDGE_DELTA.md",
       "rule": "Aucune base de connaissance parallèle"
     }
   ],
   "review": {
-    "engine_tests": "31/31",
-    "ui_simulated_interactions": "9/9 (correctif V2.1)",
-    "real_browser_test": "NOT_YET_RUN",
+    "engine_tests": "48/48",
+    "ui_simulated_interactions": "13/13",
+    "real_browser_test": "PENDING",
     "human_acceptance": "PENDING"
   },
   "security": {
