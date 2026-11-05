@@ -84,6 +84,12 @@ const baseEntries=[
     answer:'Le module Maçon ne propose plus l’escalier. Un mur de refend en soubassement comprend sa semelle filante. Les coffres tunnels brique/résine sont chiffrés au ml avec prix explicite. Le seuil BA ne demande plus de hauteur de baie. L’isolation de plancher et les génoises demandent un prix explicite tant que l’audit catalogue n’est pas terminé. Les saisies numériques mobiles ne doivent plus provoquer de rerendu complet du formulaire.'
   },
   {
+    id:'MAC-S66-RETOUR-GUILLAUME',topic:'parcours',
+    tags:['s6.6','micropieux','longrine','becquet','sans becquet','linteau','appui fenetre','talonnette','fibres','anti termite','validation'],
+    title:'S6.6 — corrections Guillaume du 5 novembre',
+    answer:'Micro-pieux : SpeedArti permet de chiffrer simultanément des longrines périphériques avec becquet et des longrines de refend sans becquet. Les sections restent des données de projet à renseigner selon l’étude, sans dimensionnement automatique. Ouvertures : appui fenêtre BA sans hauteur inutile ; linteau BA avec uniquement longueur et référence courant/renforcé ; talonnette avec quantité et forfait unitaire 150 € HT par défaut. Les prix fibres et anti-termite sont raccordés au catalogue existant. Une donnée obligatoire doit bloquer le passage à l’étape suivante dès l’étape où elle est saisie.'
+  },
+  {
     id:'MAC-MURS-OUVERTURES',topic:'murs',
     tags:['mur','murs','ouverture','ouvertures','fenetre','porte','surface nette','linteau','seuil','appui'],
     title:'Déduction des ouvertures dans les murs',
@@ -367,7 +373,7 @@ export function getAngelMaconEntry(id){
 }
 
 export const SpeedArtiAngelMaconKnowledge=Object.freeze({
-  version:'MAC-ANGEL-KB-v1.5',
+  version:'MAC-ANGEL-KB-v1.6',
   metier:'macon',
   source:'macon/references.js + macon/core.js + macon/catalogue-macon.js + macon/speedarti-integration.js (main)',
   entries:ANGEL_MACON_ENTRIES,
