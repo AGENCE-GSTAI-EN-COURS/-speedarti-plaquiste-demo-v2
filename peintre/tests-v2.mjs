@@ -91,10 +91,11 @@ test('préparation sur un seul mur uniquement',()=>{
  assert.equal(r.lines.find(l=>l.name.includes('consommables Ratissage complet')).amount,40);
  assert.equal(r.complete,true);
 });
-test('préparation sans prix de consommable bloque le total',()=>{
+test('préparation légère applique le coût de repli 1 €/m² et le temps modifié',()=>{
  const s=prices(roomState());s.works[0].walls.A.preparation.level='light';
  s.works[0].walls.A.preparation.hoursM2=.2;
- const r=calculateEstimate(s);assert.equal(r.complete,false);assert.equal(r.totalHT,null);
+ const r=calculateEstimate(s);assert.equal(r.complete,true);
+ assert.equal(r.lines.find(l=>l.name.includes('consommables Ponçage léger')).unitPrice,1);
 });
 test('produits identiques regroupés en pots entiers',()=>{
  const s=prices(roomState()),w=s.works[0];w.walls.B.active=false;w.walls.D.active=false;w.ceiling.active=false;
@@ -128,8 +129,8 @@ test('aucun taux horaire : aucun total inventé',()=>{
  const s=prices(roomState());s.labor.hourlyRate='';
  const r=calculateEstimate(s);assert.equal(r.complete,false);assert.equal(r.totalHT,null);
 });
-test('TVA appliquée uniquement à un total complet',()=>{
- const s=prices(roomState());s.vatRate=10;
+test('TVA manuelle explicitement justifiée',()=>{
+ const s=prices(roomState());s.taxContext='manual';s.vatRate=10;
  const r=calculateEstimate(s);assert.equal(r.taxHT,r.totalHT*.1);
  s.vatRate=8;assert.throws(()=>calculateEstimate(s),/TVA/);
 });
