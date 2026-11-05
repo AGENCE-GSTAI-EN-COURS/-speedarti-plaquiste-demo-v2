@@ -253,7 +253,7 @@ function onChange(t){
   if(p.autoHours!==false)p.hoursM2=Number((Number(p.layers)*DEMO_REFERENCE.paintHoursPerLayerM2).toFixed(2));
  }
  if(path.endsWith('.paint.hoursM2'))get(path.slice(0,-'.hoursM2'.length)).autoHours=false;
- if(t.type==='checkbox'||t.tagName==='SELECT'||path.endsWith('.paint.layers')||path==='labor.workers'||path.endsWith('.shape'))render();
+ if(t.type==='checkbox'||t.tagName==='SELECT'||path.endsWith('.paint.layers')||path==='labor.workers'||/\.(length|width|height|shapeA|shapeB|areaOverride)$/.test(path))render();
 }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t)act(t);});
 document.addEventListener('keydown',e=>{
