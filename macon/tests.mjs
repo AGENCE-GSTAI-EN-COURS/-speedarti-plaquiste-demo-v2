@@ -1000,7 +1000,7 @@ test('S6.6 micro-pieux : longrines avec et sans becquet simultanées',()=>{
 
 test('S6.6 prix catalogue : fibres à confirmer, anti-termite tarifé',()=>{
   let s=base();s.simpleType='dalle';Object.assign(s.simple,{surface:20,thickness:12,slabRef:'dallage_arme',concreteClass:'C25/30',fibres:true,fibreType:'courante',fibreDose:3});
-  let r=calculate(s),f=r.lines.find(l=>l.id==='simple-fibres');assert.equal(f.price,0);assert.equal(f.priceMode,'required');
+  let r=calculate(s),f=r.lines.find(l=>l.id==='Dalle-fibres');assert.equal(f.price,0);assert.equal(f.priceMode,'required');
   s=base();s.mode='multiple';const e=newElement('murs_elevations');Object.assign(e.data,{length:10,height:2.5,thickness:20,material:'parpaing',method:'tradi',concreteClass:'C25/30',antiTermite:true});s.elements=[e];
   r=calculate(s);const a=r.lines.find(l=>l.id===e.id+'-anti-termite');assert.ok(a.price>0);assert.equal(a.unit,'m²');
 });
