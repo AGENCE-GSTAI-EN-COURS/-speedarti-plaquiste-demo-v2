@@ -1,5 +1,6 @@
 import {createDefaultState,newWork,newOpening,calculateEstimate,PREPARATIONS,PREP_DEFAULTS,WOOD_PREP_DEFAULTS,preparationRates,roomPolygon,roomSegments,roomArea,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
 import {OPTION_CATEGORIES} from './options-catalog-v2.mjs';
+import {BAREME_OPTION_GROUPS,referenceForOption,alreadySelected,createExtra} from './guillaume-mapping-v2-4.mjs';
 
 let state=createDefaultState(),step=0,selected={wi:0,key:'A'},lastError='';
 const el=id=>document.getElementById(id);
@@ -14,7 +15,7 @@ const tick=(title,path,val)=>'<label class="tick"><input type="checkbox" data-pa
 const grid=(...fields)=>'<div class="grid-fields">'+fields.join('')+'</div>';
 const card=(title,body)=>'<section class="card"><h3>'+esc(title)+'</h3>'+body+'</section>';
 const button=(label,action,args='',klass='outline')=>'<button type="button" class="btn '+klass+'" data-action="'+action+'" '+args+'>'+label+'</button>';
-const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.3</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
+const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.4</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
 const gear=(title,html)=>'<details class="advanced"><summary aria-label="Ouvrir les paramètres de '+esc(title)+'"><span class="tool-icon" aria-hidden="true">⚙<small>🔧</small></span><strong>Paramètres '+esc(title)+'</strong><span class="advanced-chevron">▾</span></summary><div class="advanced-body">'+html+'</div></details>';
 function current(){
  const wi=Math.min(Math.max(0,selected.wi),state.works.length-1);
@@ -82,9 +83,9 @@ function paintEditor(path,p){
 function wallpaperEditor(path,p){
  return grid(
    select('Papier peint',path+'.kind',p.kind,[['classique','Classique'],['intisse','Intissé'],['vinyle','Vinyle'],['panoramique','Panoramique']]),
-   ...(p.kind==='panoramique'?[field('Panneaux validés',path+'.panels',p.panels),field('Prix HT/panneau',path+'.panelPrice',p.panelPrice)]:[])
+   ...(p.kind==='panoramique'?[field('Panneaux validés',path+'.panels',p.panels),field('Prix HT / panneau (€)',path+'.panelPrice',p.panelPrice)]:[field('Prix HT / rouleau (€)',path+'.rollPrice',p.rollPrice)])
  )+gear('papier peint',grid(
-  ...(p.kind!=='panoramique'?[field('Largeur rouleau (m)',path+'.rollWidth',p.rollWidth),field('Longueur rouleau (m)',path+'.rollLength',p.rollLength),field('Prix HT / rouleau',path+'.rollPrice',p.rollPrice)]:[]),
+  ...(p.kind!=='panoramique'?[field('Largeur rouleau (m)',path+'.rollWidth',p.rollWidth),field('Longueur rouleau (m)',path+'.rollLength',p.rollLength)]:[]),
   field('Raccord motif (cm)',path+'.repeatCm',p.repeatCm),
   field('Pertes (%)',path+'.loss',p.loss),
   field('Temps de pose (h/m²)',path+'.hoursM2',p.hoursM2)
@@ -145,21 +146,19 @@ function stepSupports(){
 function optionControls(group) {
  return '<details class="option-group"><summary><strong>'+esc(group.name)+'</strong><small>'+group.items.length+' prestations</small></summary><div class="option-items">'
  +group.items.map(option=>{
-  const chosen=state.extras.some(x=>x.catalogId===option.id);
-  return '<div class="option-line"><span>'+esc(option.label)+'</span>'+button(chosen?'Ajoutée ✓':'+ Ajouter','add-extra','data-option="'+option.id+'" '+(chosen?'disabled':''),'small-primary')+'</div>';
+  const chosen=alreadySelected(option,state.extras),ref=referenceForOption(option);
+  const info=ref?'<small class="row-sub">Repère Guillaume : '+fmt(ref.materialUnitHT)+' € HT/'+esc(ref.unit)+' de fournitures · '+fmt(ref.hoursPerUnit)+' h/'+esc(ref.unit)+' · '+esc(ref.source)+' ligne '+ref.sourceRow+'</small>':'<small class="row-sub">Sans barème : données à compléter</small>';
+  return '<div class="option-line"><span>'+esc(option.label)+info+'</span>'+button(chosen?'Variante déjà ajoutée ✓':'+ Ajouter','add-extra','data-option="'+option.id+'" '+(chosen?'disabled':''),'small-primary')+'</div>';
  }).join('')+'</div></details>';
 }
 function stepOptions(){
  return heading('Options','Sélectionnez seulement les prestations nécessaires. Les détails de prix et les temps apparaissent pour chaque prestation ajoutée.')
- +card('Contexte fiscal du chantier',grid(
-  select('Type de chantier', 'taxContext',state.taxContext,[['new','Construction neuve'],['professional_local','Local professionnel'],['eligible_renovation','Rénovation logement (> 2 ans) potentiellement éligible'],['manual','Autre / taux à valider']]),
-  ...(state.taxContext==='manual'?[select('Taux TVA à confirmer','vatRate',state.vatRate,[[20,'20 %'],[10,'10 %'],[5.5,'5,5 %'],[0,'0 % (justifié)']])]:[]))
-  +(state.taxContext==='eligible_renovation'?tick('Je confirme logement ancien et travaux éligibles à 10 %','taxEligibilityConfirmed',state.taxEligibilityConfirmed):'')
-  +'<p class="hint">Le taux de 10 % n’est pas automatique pour toute rénovation. Vérifier les conditions fiscales applicables avant devis.</p>')
  +card('Paramètres entreprise', '<p class="note">Taux horaire de référence entreprise : <strong>'+money(state.labor.hourlyRate)+'/h</strong>. À terme récupéré depuis les paramètres SpeedArti.</p>'
   +gear('entreprise (simulation)',field('Taux horaire HT (€)','labor.hourlyRate',state.labor.hourlyRate)))
  +'<h2>Prestations supplémentaires</h2><p class="hint">Chaque option reste indépendante, avec unité, quantité, fournitures et heures de main-d’œuvre.</p>'
  +OPTION_CATEGORIES.map(optionControls).join('')
+ +'<details class="option-group"><summary><strong>Barème Guillaume — 92 références (m² / ml / unité / forfait)</strong><small>Variantes chiffrées</small></summary><div class="option-items"><p class="hint">Données indicatives issues des deux PDF de Guillaume. Unité inchangée, coûts et temps modifiables. Ne pas sélectionner deux variantes du même service.</p>'
+ +BAREME_OPTION_GROUPS.map(optionControls).join('')+'</div></details>'
  +(state.extras.length?card('Prestations sélectionnées',state.extras.map((o,i)=>{
   const path='extras.'+i;
   return '<div class="extra-edit"><div class="opening-header"><strong>'+esc(o.name)+'</strong>'+button('Supprimer','remove-extra','data-index="'+i+'"','danger')+'</div>'
@@ -167,11 +166,12 @@ function stepOptions(){
      select('Unité',path+'.unit',o.unit,[['forfait','Forfait'],['m²','m²'],['ml','ml'],['unité','Unité']]),
      field('Fournitures HT/unité (€)',path+'.materialUnitHT',o.materialUnitHT),
      field('Temps (h/unité)',path+'.hoursPerUnit',o.hoursPerUnit))
-   +'<p class="hint">Pas de prix prérempli pour les options : confirmez les matériaux et le temps avant devis.</p></div>';
+   +(o.referenceSource?'<p class="hint"><strong>Source :</strong> '+esc(o.referenceSource)+' — ligne '+esc(o.referenceRow)+' · montant et temps indicatifs, modifiables. '+esc(o.notes||'')+'</p>':'<p class="hint">Pas de barème suffisamment comparable : saisissez les matériaux et le temps.</p>')+'</div>';
  }).join('')):'')
  +card('Consommables courants (facultatifs)', '<p class="hint">Rubans, bâches et abrasifs peuvent être ajoutés au chiffrage. Renseignez les quantités et prix réels : aucun tarif n’est inventé.</p>'
   +(state.supplies||[]).map((x,i)=>'<div class="extra-edit">'+tick(esc(x.name)+' — '+esc(x.unit),'supplies.'+i+'.enabled',x.enabled)
-  +(x.enabled?grid(field('Quantité','supplies.'+i+'.quantity',x.quantity),field('Prix HT / '+esc(x.unit),'supplies.'+i+'.unitPrice',x.unitPrice)):'')+'</div>').join(''))
+  +(x.enabled?grid(field('Quantité','supplies.'+i+'.quantity',x.quantity),field('Prix HT / '+esc(x.unit),'supplies.'+i+'.unitPrice',x.unitPrice)):'')
+  +'<p class="hint">Prix de départ HT indicatif : '+money(x.unitPrice)+' / '+esc(x.unit)+'. '+esc(x.priceSource||'')+' · modifiable.</p></div>').join(''))
  +card('Plinthes supplémentaires',gear('ajout manuel hors pièces',grid(
    field('Longueur (ml)','manualPlinth.length',state.manualPlinth.length),
    field('Hauteur peinte (m)','manualPlinth.paintedHeightM',state.manualPlinth.paintedHeightM),
@@ -185,7 +185,11 @@ function stepResults(){
  const rows=(kind)=>res.lines.filter(x=>x.kind===kind).map(x=>'<tr><td>'+esc(x.name)+'<small class="row-sub">'+esc(x.tag)+'</small></td><td>'+fmt(x.quantity)+' '+esc(x.unit)+'</td><td>'+money(x.unitPrice)+'</td><td><strong>'+money(x.amount)+'</strong></td></tr>').join('');
  const table=(kind)=>'<div class="scroll-table"><table><thead><tr><th>Poste</th><th>Quantité</th><th>Prix HT/unité</th><th>Total HT</th></tr></thead><tbody>'+rows(kind)+'</tbody></table></div>';
  return heading('Résultats du chiffrage','Fournitures et temps de travail sont séparés. Choisissez le nombre d’ouvriers pour obtenir la durée du chantier.')
- +card('Effectif pour la durée du chantier',grid(field('Nombre d’ouvriers','labor.workers',state.labor.workers))+'<p class="hint">Les heures-homme et leur coût restent identiques ; seule la durée chantier est divisée par le nombre d’ouvriers.</p>')
+ +card('Contexte fiscal du chantier',grid(
+  select('Type de chantier', 'taxContext',state.taxContext,[['new','Construction neuve'],['professional_local','Local professionnel'],['eligible_renovation','Rénovation logement (> 2 ans) potentiellement éligible'],['manual','Autre / taux à valider']]),
+  ...(state.taxContext==='manual'?[select('Taux TVA à confirmer','vatRate',state.vatRate,[[20,'20 %'],[10,'10 %'],[5.5,'5,5 %'],[0,'0 % (justifié)']])]:[]))
+  +(state.taxContext==='eligible_renovation'?tick('Je confirme logement ancien et travaux éligibles à 10 %','taxEligibilityConfirmed',state.taxEligibilityConfirmed):'')
+  +'<p class="hint">Le taux de 10 % n’est pas automatique pour toute rénovation. Vérifier les conditions fiscales applicables avant devis.</p>') +card('Effectif pour la durée du chantier',grid(field('Nombre d’ouvriers','labor.workers',state.labor.workers))+'<p class="hint">Les heures-homme et leur coût restent identiques ; seule la durée chantier est divisée par le nombre d’ouvriers.</p>')
  +'<div class="metrics">'+[
  ['Heures-homme',res.hoursMan==null?fmt(res.knownHoursMan)+' h connues*':fmt(res.hoursMan)+' h'],['Durée chantier',res.durationHours==null?fmt(res.knownDurationHours)+' h connues*':fmt(res.durationHours)+' h'],
  ['Fournitures HT',money(res.materialsHT)],['Main-d’œuvre HT',money(res.laborHT)],
@@ -225,8 +229,8 @@ function act(t){
  if(action==='add-opening'){get(t.dataset.root).openings.push(newOpening());render();return;}
  if(action==='remove-opening'){get(t.dataset.root).openings.splice(index,1);render();return;}
  if(action==='add-extra'){
-  const opt=OPTION_CATEGORIES.flatMap(g=>g.items).find(x=>x.id===t.dataset.option);
-  if(opt&&!state.extras.some(x=>x.catalogId===opt.id))state.extras.push({catalogId:opt.id,name:opt.label,unit:opt.unit,quantity:1,materialUnitHT:'',hoursPerUnit:''});
+  const opt=[...OPTION_CATEGORIES,...BAREME_OPTION_GROUPS].flatMap(g=>g.items).find(x=>x.id===t.dataset.option);
+  if(opt&&!alreadySelected(opt,state.extras))state.extras.push(createExtra(opt));
   render();return;
  }
  if(action==='remove-extra'){state.extras.splice(index,1);render();return;}
