@@ -4,7 +4,7 @@
     "status": "DEMO_ON_GITHUB_PAGES_NOT_CONNECTED_TO_PRODUCTION",
     "repository": "AGENCE-GSTAI-EN-COURS/-speedarti-plaquiste-demo-v2",
     "branch": "main",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "source_reference_read_only": "GSTAI-Sp/speedarti-v2",
     "other_trades_unchanged": true
   },
@@ -15,7 +15,11 @@
     "stylesheet": "peintre/styles-v2-2.css",
     "tests": "peintre/tests-v2.mjs",
     "optionsCatalog": "peintre/options-catalog-v2.mjs",
-    "additionalTests": "peintre/tests-v2-2.mjs"
+    "additionalTests": "peintre/tests-v2-2.mjs",
+    "bareme": "peintre/guillaume-bareme-v2-4.mjs",
+    "baremeMapping": "peintre/guillaume-mapping-v2-4.mjs",
+    "testsV24": "peintre/tests-v2-4.mjs",
+    "testsUI": "peintre/tests-ui-v2-4.mjs"
   },
   "connectors": [
     {
@@ -52,15 +56,15 @@
     {
       "id": "angel",
       "target": "BASE_CONNAISSANCE_ANGEL_EXISTANTE",
-      "status": "DELTA_V2_3_PREPARED_NOT_IMPORTED",
+      "status": "DELTA_V2_4_PREPARED_NOT_IMPORTED",
       "delta": "peintre/ANGEL_KNOWLEDGE_DELTA.md",
       "rule": "Aucune base de connaissance parallèle"
     }
   ],
   "review": {
-    "engine_tests": "62/62",
-    "ui_simulated_interactions": "14/14 (correctifs V2.3)",
-    "real_browser_test": "PENDING (automation wallet unavailable)",
+    "engine_tests": "77/77 (simulation V2.4)",
+    "ui_simulated_interactions": "15/15 (simulation V2.4) + test Node CI",
+    "real_browser_test": "PENDING",
     "human_acceptance": "PENDING"
   },
   "security": {
@@ -72,6 +76,18 @@
     "source": "PeintreCalculateur.ts depuis GSTAI-Sp/speedarti-v2, LECTURE SEULE",
     "status": "HISTORICAL_DEMO_NOT_VERIFIED_2026_SUPPLIER_PRICES",
     "editable": true,
-    "wood_preparation": "Hypothèses de démonstration modifiables (non validées) : 0.15, 0.35, 0.65 h/m²"
+    "wood_preparation": "Hypothèses de démonstration modifiables (non validées) : 0.15, 0.35, 0.65 h/m²",
+    "pdf_sources": [
+      {
+        "file": "peinture.pdf",
+        "rows": 67
+      },
+      {
+        "file": "peinture 2.pdf",
+        "rows": 25
+      }
+    ],
+    "matched_generic_options": 62,
+    "pricing_status": "INDICATIF, MODIFIABLE, PAS TARIFS FOURNISSEURS CERTIFIÉS"
   }
 }

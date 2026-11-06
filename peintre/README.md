@@ -1,4 +1,4 @@
-# SpeedArti — Métier Peintre V2.3 (démo commune)
+# SpeedArti — Métier Peintre V2.4 (démo commune)
 
 ## Périmètre
 Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
@@ -76,3 +76,17 @@ Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop)
 - Tests : 31 historiques + 17 V2.2 + 14 correctifs V2.3 = 62/62, avec contrôle d'interface simulé ; recette sur vrai navigateur mobile/PC non encore réalisée.
 - Connaissances Ángel : les nouvelles règles sont ajoutées au delta documentaire existant, PAS encore importées dans la base de connaissances centrale. Le module demeure non finalisé pour la production.
 
+
+## Sprint V2.4 — barèmes Guillaume, 6 novembre 2026
+- 92 lignes PDF conservées dans guillaume-bareme-v2-4.mjs : 67 depuis « peinture.pdf » (3 pages), 25 depuis « peinture 2.pdf » (1 page). Unité, fournitures HT, heures/unité, note de limites et référence ligne/page traçables. Les titres visuellement tronqués ont été reconstitués.
+- Les 64 options historiques restent présentes. 62/64 ont une correspondance explicite à une référence PDF ; les deux correspondances trop ambiguës restent manuelles, sans prix inventé.
+- Les 92 variantes PDF sont consultables séparément (m², ml, unité, forfait). L’ajout d’une option reprend unité et données du PDF, modifiables par l’artisan. Aucun passage automatique m² ↔ ml ou forfait n’est effectué.
+- Les groupes de prestations équivalentes sont sélectionnables une fois seulement ; le moteur bloque les doublons de variantes, notamment les plinthes au ml et au m². Les plinthes automatiques ne se cumulent pas avec l’option « Peinture des plinthes ».
+- Les montants de fourniture égaux à 0 € dans le PDF restent des 0 € de fourniture, sans supprimer le temps. Les majorations commerciales comme « Intervention en urgence » demandent un prix explicitement chiffré, car 0 € n'est pas un montant final.
+- Étape 2 : prix HT/rouleau de papier peint immédiatement visible ; prix HT/panneau pour panoramique. Largeur, longueur, raccord, pertes et temps restent dans Paramètres.
+- Étape 3 : sélection des prestations, barèmes, prix personnalisables, consommables courants. Contexte fiscal supprimé de cette étape.
+- Étape 4 : contexte fiscal et éventuelle éligibilité TVA 10 %, choix ouvriers, résultats et avertissements.
+- Consommables courants — prix indicatifs HT modifiables, facultatifs : ruban LIMA 48×50 m (Bati-Avenue 2,47 €), bâche L’Outil Parfait 4×5 m (Bati-Avenue 3,55 €), 10 abrasifs (Tecnomat 2,92 €). Ces produits et formats représentent des exemples d’offres, pas une moyenne de marché certifiée ni une facture entreprise.
+- Démo seulement : pas de connexion du catalogue, de l’authentification, des stocks, des devis, ni des paramètres réels artisan. Pas de modification de production, ni de GSTAI-Sp/speedarti-v2.
+- Tests automatisés : 62 anciens + 15 nouveaux = 77 tests moteur ; un test de parcours interface Node ; workflow GitHub Actions Peintre dédié.
+- La base Ángel existante n'est PAS encore mise à jour ; delta documentaire ci-dessous à traiter et revoir.

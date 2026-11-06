@@ -48,3 +48,14 @@ Ce document est une **liste de connaissances à fusionner dans la base Ángel EX
 - PNT-SAFETY-029 : valeurs V2.3 = estimations de démonstration, pas de catalogue officiel ; ne pas considérer l’intégration Ángel comme terminée avant une fusion dans la base existante et une validation.
 
 Statut : PENDING_REVIEW / NOT_IMPORTED. Ce fichier est un delta documentaire, pas une base parallèle ni une connexion à la base d'Ángel.
+
+## Delta V2.4 — Connaissances centrales Ángel à fusionner (NON IMPORTÉ)
+- PNT-GUILLAUME-030 : 92 références métier sourcées dans peinture.pdf (67) et peinture 2.pdf (25) : unités physiques, fournitures HT, heures par unité, hypothèses d’application et pages/lignes, non validées fournisseur.
+- PNT-GUILLAUME-031 : garder distinctes les variantes m², ml, unité, forfait ; la sélection d'un service équivalent dans deux unités ne doit pas engendrer un double comptage.
+- PNT-GUILLAUME-032 : 62/64 options générales ont un rattachement métier explicite ; les deux sans équivalence sûre nécessitent une saisie manuelle et non une déduction automatique.
+- PNT-GUILLAUME-033 : un coût fournitures 0 € n'annule pas les heures de main-d’œuvre ; une majoration d'urgence/horaires décalés doit être chiffrée explicitement, même si le PDF inscrit 0 € de fournitures.
+- PNT-GUILLAUME-034 : le prix HT du rouleau de papier peint est un élément essentiel à demander ; le panoramique exige un prix par panneau et le nombre de panneaux.
+- PNT-GUILLAUME-035 : les trois consommables courants utilisent des repères publics de départ en HT (2,47 / 3,55 / 2,92), modifiables, distincts des prix négociés de l'artisan.
+- PNT-GUILLAUME-036 : le contexte TVA et effectif sont à expliquer au moment des résultats ; 10 % de TVA uniquement si conditions d'éligibilité confirmées.
+
+Ne pas créer de nouvelle base Ángel, ni déclarer le statut terminé sans raccordement effectif, test et validation humaine.
