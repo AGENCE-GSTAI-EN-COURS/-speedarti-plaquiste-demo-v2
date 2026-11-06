@@ -1,0 +1,20 @@
+name: "Tests Peintre SpeedArti"
+on:
+  push:
+    paths:
+      - 'peintre/**'
+      - '.github/workflows/peintre-tests.yml'
+  pull_request:
+    paths:
+      - 'peintre/**'
+      - '.github/workflows/peintre-tests.yml'
+jobs:
+  peintre-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Vérifier tests calcul et interface
+        run: node --test peintre/tests-v2.mjs peintre/tests-v2-2.mjs peintre/tests-v2-3.mjs peintre/tests-v2-4.mjs peintre/tests-ui-v2-4.mjs
