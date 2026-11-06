@@ -1,4 +1,4 @@
-// SpeedArti Peintre V2.3 — moteur de DÉMONSTRATION, hors production.
+// SpeedArti Peintre V2.4 — moteur de DÉMONSTRATION, hors production.
 // Références historiques de l'ancien calculateur SpeedArti V2 (non validées fournisseurs).
 const num = v => v === '' || v === null || v === undefined ? null : Number(v);
 const valid = v => Number.isFinite(num(v)) && num(v) >= 0;
@@ -64,9 +64,9 @@ export const WOOD_PREP_DEFAULTS=Object.freeze({
  skim:{hoursM2:0.65,consumablePriceM2:5}
 });
 export const COMMON_SUPPLIES=Object.freeze([
- {id:'masking',name:'Ruban de masquage',unit:'rouleau'},
- {id:'floor',name:'Bâches et protection de sols',unit:'unité'},
- {id:'abrasive',name:'Abrasifs et consommables de finition',unit:'lot'}
+ {id:'masking',name:'Ruban de masquage 48 mm × 50 m',unit:'rouleau',unitPrice:2.47,priceSource:'Bati-Avenue, réf. LIMA 48×50 (repère HT novembre 2026)',url:'https://www.bati-avenue.com/ruban-de-masquage-masking-48mm-x-50m-lima-0000091040048.html'},
+ {id:'floor',name:'Bâche de protection 4 × 5 m (20 m²)',unit:'bâche',unitPrice:3.55,priceSource:'Bati-Avenue L’Outil Parfait 40µm (repère HT novembre 2026)',url:'https://www.bati-avenue.com/bache-de-protection-epaisse-dimensions-4-x-5-m-surface-20-m-l-outil-parfait-1049000-l2861049000.html'},
+ {id:'abrasive',name:'Abrasifs — lot de 10 feuilles',unit:'lot',unitPrice:2.92,priceSource:'Tecnomat réf. 394863 (repère HT novembre 2026)',url:'https://www.tecnomat.fr/produits/papier-abrasif-lot-de-10-394863.html'}
 ]);
 export const PAINT_TYPES=Object.freeze(['acrylique','glycero','alkyde','autre']);
 export const PAINT_FINISHES=Object.freeze(['mat','velours','satin','brillant','autre']);
@@ -102,8 +102,8 @@ export function newWork(type='room',name){
  throw Error('Type d’ouvrage inconnu.');
 }
 export function createDefaultState(){
- return {version:2.3,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:'',paintedHeightM:0.10,paint:defaultPaint()},
-   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20,taxContext:'new',taxEligibilityConfirmed:false,extras:[],supplies:COMMON_SUPPLIES.map(x=>({...x,enabled:false,quantity:1,unitPrice:''}))};
+ return {version:2.4,projectName:'Chiffrage peintre',works:[],manualPlinth:{length:0,hoursMl:0.1,pricePerMl:'',paintedHeightM:0.10,paint:defaultPaint()},
+   labor:{hourlyRate:DEMO_REFERENCE.hourlyRateHT,workers:1},vatRate:20,taxContext:'new',taxEligibilityConfirmed:false,extras:[],supplies:COMMON_SUPPLIES.map(x=>({...x,enabled:false,quantity:1}))};
 }
 export function surfacesFor(work){
  if(work.type==='room')return [...roomSegments(work).map(seg=>work.walls[seg.id]),work.ceiling];
@@ -278,19 +278,33 @@ export function calculateEstimate(state){
    }
  }
 
- // Options sélectionnées : coût de fourniture et temps séparés ; prix manquant n'est jamais zéro.
+ // Les variantes physiques équivalentes ne doivent jamais être cumulées dans un même devis.
+ const seenServices=new Map(),duplicatedServices=[];
+ for(const opt of state.extras||[]){
+   if(opt.enabled===false)continue;
+   const key=opt.serviceKey||opt.catalogId||String(opt.name||'').toLowerCase().trim();
+   if(seenServices.has(key))duplicatedServices.push(String(opt.name||key));
+   else seenServices.set(key,opt);
+ }
+ if(duplicatedServices.length)missing(warnings,'Prestations équivalentes comptées plusieurs fois : '+duplicatedServices.join(', ')+'. Choisir une variante par ouvrage.');
+ if((state.extras||[]).some(x=>x.enabled!==false && x.serviceKey==='plinth-paint') &&
+     state.works.some(w=>w.type==='room'&&w.plinth?.enabled))
+   {duplicatedServices.push('plinth-paint');missing(warnings,'Plinthes : choisir les plinthes automatiques OU l’option de peinture des plinthes, pas les deux.');}
+  // Options sélectionnées : coût de fourniture et temps séparés ; prix manquant n'est jamais zéro.
  for(const [index,opt] of (state.extras||[]).entries()){
   if(!opt||opt.enabled===false)continue;
   const name=String(opt.name||'Prestation '+(index+1)).trim();
   const qty=req(opt.quantity,name+' quantité'),unit=String(opt.unit||'forfait');
   const mat=valid(opt.materialUnitHT)?num(opt.materialUnitHT):null;
   const duration=valid(opt.hoursPerUnit)?num(opt.hoursPerUnit):null;
+  const isMajorations=/intervention en urgence|horaires décalés/i.test(name);
+  if(isMajorations&&mat===0)missing(warnings,name+' : majoration commerciale à renseigner (0 € issu du barème n’est pas un prix de vente).');
   if(mat==null)missing(warnings,name+' : prix des fournitures à confirmer.');
   if(duration==null)missing(warnings,name+' : temps de réalisation à confirmer.');
   lists.lines.push({name:name+' — fournitures',kind:'material',tag:name,unit,quantity:qty,unitPrice:mat,
-   amount:mat==null?null:r(qty*mat),source:'option / coût à valider'});
+   amount:mat==null?null:r(qty*mat),source:opt.referenceSource?'barème indicatif Guillaume '+opt.referenceSource+' / ligne '+opt.referenceRow:'option / coût à valider',notes:opt.notes||''});
   lists.lines.push({name:name+' — main-d’œuvre',kind:'labor',tag:name,unit:'h-homme',quantity:duration==null?null:r(qty*duration),
-   unitPrice:rate,amount:duration==null||rate==null?null:r(qty*duration*rate),source:'option / temps à valider'});
+   unitPrice:rate,amount:duration==null||rate==null?null:r(qty*duration*rate),source:opt.referenceSource?'barème indicatif Guillaume '+opt.referenceSource+' / ligne '+opt.referenceRow:'option / temps à valider',notes:opt.notes||''});
   if(name.toLowerCase().includes('humidité'))missing(warnings,'Humidité : résoudre et vérifier la cause avant traitement.');
   if(name.toLowerCase().includes('intumescente'))missing(warnings,'Peinture intumescente : système certifié et prescriptions applicables à vérifier.');
   if(name.toLowerCase().includes('prises et interrupteurs'))missing(warnings,'Électricité : dépose/repose à réaliser par une personne habilitée si nécessaire.');
@@ -333,11 +347,12 @@ export function calculateEstimate(state){
  const hours=unestimatedTasks.length?null:knownHoursMan;
  const missingColor=warnings.some(w=>w.includes('référence couleur non renseignée'));
  const complexCeiling=warnings.some(w=>w.includes('calepinage complexe non validé'));
- const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor&&!complexCeiling;
+ const missingMajorations=warnings.some(w=>w.includes('majoration commerciale à renseigner'));
+ const complete=active>0&&lines.length>0&&lines.every(l=>l.amount!==null)&&!missingColor&&!complexCeiling&&!missingMajorations&&!duplicatedServices.length;
  const confirmed=r(total(lines.filter(l=>l.amount!==null).map(l=>l.amount)));
  const ht=complete?confirmed:null,tax=complete?r(ht*vat/100):null;
  const byKind=kind=>{const rows=lines.filter(l=>l.kind===kind);return rows.every(l=>l.amount!==null)?r(total(rows.map(l=>l.amount))):null;};
- return {version:2.3,geometry,lines,warnings,complete,confirmedHT:confirmed,
+ return {version:2.4,geometry,lines,warnings,complete,confirmedHT:confirmed,
    materialsHT:byKind('material'),laborHT:byKind('labor'),hoursMan:hours,knownHoursMan,unestimatedTasks,
    durationHours:hours==null?null:r(hours/workers),knownDurationHours:r(knownHoursMan/workers),totalHT:ht,vatRate:vat,taxHT:tax,ttc:ht==null?null:r(ht+tax)};
 }
