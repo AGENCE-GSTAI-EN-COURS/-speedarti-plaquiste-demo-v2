@@ -60,6 +60,7 @@ test('consommables courants exclus par défaut',()=>{
 });
 test('consommables sélectionnés non tarifés bloquent uniquement le total',()=>{
  const {state}=fixture();state.supplies[0].enabled=true;state.supplies[0].quantity=2;
+ state.supplies[0].unitPrice=''; // tarif volontairement vidé par l'artisan
  const r=calculateEstimate(state);
  assert.equal(r.complete,false);assert.equal(r.totalHT,null);assert.equal(r.hoursMan,19.5);
  assert.ok(r.warnings.some(w=>w.includes('Ruban de masquage')));
@@ -68,7 +69,7 @@ test('consommables chiffrés remontent dans les matériaux',()=>{
  const {state}=fixture();state.supplies[0].enabled=true;
  state.supplies[0].quantity=2;state.supplies[0].unitPrice=5;
  const r=calculateEstimate(state);assert.equal(r.complete,true);
- assert.equal(r.lines.find(l=>l.name==='Ruban de masquage').amount,10);
+ assert.equal(r.lines.find(l=>l.name.startsWith('Ruban de masquage')).amount,10);
 });
 test('peinture colorée au prix blanc historique : quantité oui, total non',()=>{
  const {state,room}=fixture();const paint=room.walls.A.paint;paint.color='color';paint.colorRef='RAL 7001';
