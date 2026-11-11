@@ -317,12 +317,15 @@ export function calculateEstimate(state){
  }
 
  // Les variantes physiques équivalentes ne doivent jamais être cumulées dans un même devis.
- const seenServices=new Map(),duplicatedServices=[];
+ const seenServices=new Map(),seenManual=new Set(),seenBase=new Set(),duplicatedServices=[];
  for(const opt of state.extras||[]){
    if(opt.enabled===false)continue;
-   const key=opt.serviceKey||opt.catalogId||String(opt.name||'').toLowerCase().trim();
-   if(seenServices.has(key))duplicatedServices.push(String(opt.name||key));
-   else seenServices.set(key,opt);
+   const base=opt.serviceKey||opt.catalogId||String(opt.name||'').toLowerCase().trim();
+   const scoped=opt.unit==='m²'&&opt.autoQuantity&&opt.targetWorkId&&opt.targetSurfaceId;
+   const key=base+'::'+(scoped?opt.targetWorkId+'::'+opt.targetSurfaceId:'manual');
+   if(seenServices.has(key)||(scoped&&seenManual.has(base))||(!scoped&&seenBase.has(base)))
+     duplicatedServices.push(String(opt.name||base));
+   else {seenServices.set(key,opt);seenBase.add(base);if(!scoped)seenManual.add(base);}
  }
  if(duplicatedServices.length)missing(warnings,'Prestations équivalentes comptées plusieurs fois : '+duplicatedServices.join(', ')+'. Choisir une variante par ouvrage.');
  if((state.extras||[]).some(x=>x.enabled!==false && x.serviceKey==='plinth-paint') &&
