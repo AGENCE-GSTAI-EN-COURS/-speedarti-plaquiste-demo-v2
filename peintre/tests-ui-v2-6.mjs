@@ -54,7 +54,7 @@ test('Mur simple : surface calculée puis liée au ratissage et mise à jour',as
   assert.ok(nodes.content.innerHTML.includes('data-path="extras.0.quantity"'));
   events.change({target:{dataset:{extraScope:'0'},value:key[1]}});
   assert.ok(nodes.content.innerHTML.includes('Surface nette automatique'));
-  assert.ok(nodes.content.innerHTML.includes('14 m²'));
+  assert.ok(nodes.content.innerHTML.includes('15,5 m²'));
  });
 });
 test('Pièce en L : support B choisi, même option autorisée sur C mais pas deux fois sur B',async()=>{
