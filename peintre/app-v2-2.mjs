@@ -1,8 +1,13 @@
 import {createDefaultState,newWork,newOpening,calculateEstimate,PREPARATIONS,PREP_DEFAULTS,WOOD_PREP_DEFAULTS,preparationRates,roomPolygon,roomSegments,roomArea,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
 import {OPTION_CATEGORIES} from './options-catalog-v2.mjs';
-import {BAREME_OPTION_GROUPS,referenceForOption,alreadySelected,createExtra} from './guillaume-mapping-v2-4.mjs';
+import {referenceForOption,alreadySelected,createExtra} from './guillaume-mapping-v2-4.mjs';
+import {CLASSIFIED_OPTION_CATEGORIES,filterCategory} from './classified-options-v2-5.mjs';
 
 let state=createDefaultState(),step=0,selected={wi:0,key:'A'},lastError='';
+const categoryOpen=Object.fromEntries(CLASSIFIED_OPTION_CATEGORIES.map((g,i)=>[g.id,i===0]));
+const optionSearch=Object.create(null);
+let cartExpanded=false;
+let cartScrollToLast=false;
 const el=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 const money=x=>x==null?'À confirmer':Number(x).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
@@ -15,7 +20,7 @@ const tick=(title,path,val)=>'<label class="tick"><input type="checkbox" data-pa
 const grid=(...fields)=>'<div class="grid-fields">'+fields.join('')+'</div>';
 const card=(title,body)=>'<section class="card"><h3>'+esc(title)+'</h3>'+body+'</section>';
 const button=(label,action,args='',klass='outline')=>'<button type="button" class="btn '+klass+'" data-action="'+action+'" '+args+'>'+label+'</button>';
-const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.4</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
+const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.5</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
 const gear=(title,html)=>'<details class="advanced"><summary aria-label="Ouvrir les paramètres de '+esc(title)+'"><span class="tool-icon" aria-hidden="true">⚙<small>🔧</small></span><strong>Paramètres '+esc(title)+'</strong><span class="advanced-chevron">▾</span></summary><div class="advanced-body">'+html+'</div></details>';
 function current(){
  const wi=Math.min(Math.max(0,selected.wi),state.works.length-1);
@@ -143,32 +148,100 @@ function stepSupports(){
   +'</div>':'<div class="excluded">Support désactivé et exclu du chiffrage.</div>')
  +'</section></div>';
 }
-function optionControls(group) {
- return '<details class="option-group"><summary><strong>'+esc(group.name)+'</strong><small>'+group.items.length+' prestations</small></summary><div class="option-items">'
- +group.items.map(option=>{
-  const chosen=alreadySelected(option,state.extras),ref=referenceForOption(option);
-  const info=ref?'<small class="row-sub">Repère Guillaume : '+fmt(ref.materialUnitHT)+' € HT/'+esc(ref.unit)+' de fournitures · '+fmt(ref.hoursPerUnit)+' h/'+esc(ref.unit)+' · '+esc(ref.source)+' ligne '+ref.sourceRow+'</small>':'<small class="row-sub">Sans barème : données à compléter</small>';
-  return '<div class="option-line"><span>'+esc(option.label)+info+'</span>'+button(chosen?'Variante déjà ajoutée ✓':'+ Ajouter','add-extra','data-option="'+option.id+'" '+(chosen?'disabled':''),'small-primary')+'</div>';
- }).join('')+'</div></details>';
+function classifiedOptions(group){
+ const query=optionSearch[group.id]||'';
+ const filtered=filterCategory(group,query);
+ const expanded=categoryOpen[group.id]===true;
+ const items=filtered.map(item=>{
+   const variants=item.variants.length?item.variants:[{id:item.id,label:item.label,unit:item.unit,materialUnitHT:null,hoursPerUnit:null}];
+   const actions=variants.map(v=>{
+     const already=alreadySelected(v,state.extras);
+     const isKnown=v.materialUnitHT!=null&&v.hoursPerUnit!=null;
+     const label=variants.length>1?'+ '+esc(v.unit):'+ Ajouter';
+     const helper=isKnown
+       ?fmt(v.materialUnitHT)+' € HT/'+esc(v.unit)+' fourn. • '+fmt(v.hoursPerUnit)+' h/'+esc(v.unit)
+       :'Prix et temps à compléter';
+     return '<div class="variant-option"><div><strong>'+esc(v.unit)+'</strong><small>'+helper
+         +(v.source?'<span class="source">Référence Guillaume · '+esc(v.source)+' ligne '+esc(v.sourceRow)+'</span>':'')+'</small></div>'
+         +button(already?'Déjà sélectionnée ✓':label,'add-extra','data-option="'+esc(v.id)+'" '+(already?'disabled':''),'small-primary')+'</div>';
+   }).join('');
+   return '<article class="classified-option" data-option-id="'+esc(item.id)+'"><div class="option-details"><strong>'+esc(item.label)+'</strong>'
+     +(item.variants.length>1?'<span class="option-variant-note">'+item.variants.length+' variantes de chiffrage — choisir une unité</span>':'')
+     +(item.variants.length===0?'<small>Pas de barème équivalent certain : saisie manuelle</small>':'')+'</div>'
+     +'<div class="variant-list">'+actions+'</div></article>';
+ }).join('');
+ return '<section class="classified-category" data-category="'+esc(group.id)+'">'
+ +'<button class="category-toggle" data-action="toggle-category" data-category="'+esc(group.id)+'" aria-expanded="'+expanded+'">'
+  +'<span><strong>'+esc(group.name)+'</strong><small>'+group.items.length+' prestations / variantes disponibles</small></span>'
+  +'<span class="category-arrow" aria-hidden="true">'+(expanded?'−':'+')+'</span></button>'
+ +(expanded?'<div class="classified-body"><label class="category-search-label" for="search-'+esc(group.id)+'">Rechercher dans '+esc(group.name.toLowerCase())+'</label>'
+  +'<div class="category-search"><span aria-hidden="true">⌕</span><input id="search-'+esc(group.id)+'" type="search" data-category-search="'+esc(group.id)+'" value="'+esc(query)+'" placeholder="Rechercher une prestation ou un revêtement..." autocomplete="off" aria-label="Rechercher dans '+esc(group.name)+'"></div>'
+  +'<p class="category-count" data-search-count="'+esc(group.id)+'">'+filtered.length+' / '+group.items.length+' prestations affichées</p>'
+  +'<div class="classified-rows" data-search-list="'+esc(group.id)+'">'+items+'<div class="empty-option" '+(filtered.length?'hidden':'')+'>Aucun résultat dans cette catégorie.</div></div></div>':'')
+ +'</section>';
+}
+function moneyOrPending(value) {
+ return value===null||value===undefined||value===''?'À confirmer':money(value);
+}
+function optionTotals(opt){
+ const q=Number(opt.quantity),price=opt.materialUnitHT===''?null:Number(opt.materialUnitHT),hours=opt.hoursPerUnit===''?null:Number(opt.hoursPerUnit);
+ const rate=Number(state.labor.hourlyRate);
+ const quantity=Number.isFinite(q)&&q>0?q:0;
+ const validPrice=price!==null&&Number.isFinite(price)&&price>=0;
+ const validHours=hours!==null&&Number.isFinite(hours)&&hours>=0;
+ const material=validPrice?quantity*price:null,labour=validHours&&Number.isFinite(rate)?quantity*hours*rate:null;
+ return {material,labour,hours:validHours?quantity*hours:null,amount:material===null||labour===null?null:material+labour};
+}
+function cartView(){
+ const totals=state.extras.map(optionTotals);
+ const complete=totals.every(x=>x.amount!==null);
+ const known=totals.filter(x=>x.amount!==null).reduce((sum,x)=>sum+x.amount,0);
+ const content=state.extras.length?state.extras.map((o,i)=>{
+  const path='extras.'+i,price=optionTotals(o);
+  return '<article class="cart-item"><div class="cart-item-top"><div><strong>'+esc(o.name)+'</strong>'
+   +'<small>'+esc(o.referenceSource?o.referenceSource+' · ligne '+o.referenceRow:'Prestation à paramétrer')+'</small></div>'
+   +button('✕','remove-extra','data-index="'+i+'" aria-label="Supprimer '+esc(o.name)+'"','danger')+'</div>'
+   +'<div class="cart-fields">'+field('Quantité',path+'.quantity',o.quantity)
+   +(o.referenceId?'<div class="cart-unit"><span>Unité du barème</span><strong>'+esc(o.unit)+'</strong></div>':
+      select('Unité',path+'.unit',o.unit,[['forfait','Forfait'],['m²','m²'],['ml','ml'],['unité','Unité']]))
+   +field('Fournitures HT / '+esc(o.unit),path+'.materialUnitHT',o.materialUnitHT)
+   +field('Temps h / '+esc(o.unit),path+'.hoursPerUnit',o.hoursPerUnit)+'</div>'
+   +(o.notes?'<small class="cart-note">'+esc(o.notes)+'</small>':'')
+   +'<div class="cart-line-total">'+(price.amount===null?'<span>À compléter</span>':'<strong>'+money(price.amount)+' HT</strong>')+'</div>'
+   +'</article>';
+ }).join(''):'<div class="cart-empty">Cliquez sur une prestation à gauche pour l’ajouter au panier.</div>';
+ return '<aside id="peintre-options-cart" class="options-cart '+(cartExpanded?'expanded':'')+'" aria-label="Panier des prestations sélectionnées">'
+   +'<div class="cart-header"><span><strong>Panier des options</strong><small>'+state.extras.length+' prestation(s) sélectionnée(s)</small></span>'
+   +'<button type="button" class="cart-mobile-toggle" data-action="toggle-cart" aria-label="'+(cartExpanded?'Réduire':'Ouvrir')+' le panier" aria-expanded="'+cartExpanded+'">'+(cartExpanded?'−':'+')+'</button></div>'
+   +'<div class="cart-content"><div class="cart-list">'+content+'</div>'
+   +'<div class="cart-total"><span>'+(complete?'Sous-total options HT':'Sous-total connu HT · incomplet')+'</span><strong>'+money(known)+'</strong></div>'
+   +(!complete?'<p class="cart-warning">Certaines prestations attendent un prix ou un temps. Le total du devis reste incomplet.</p>':'')
+   +'<p class="cart-disclaimer">Tarifs de fournitures HT et temps indicatifs issus des barèmes Guillaume, modifiables. Le taux horaire entreprise complète la main-d’œuvre.</p></div></aside>';
+}
+function fiscalFields(){
+ return grid(
+  select('Type de chantier','taxContext',state.taxContext,[
+   ['new','Construction neuve — 20 %'],
+   ['professional_local','Local professionnel — 20 %'],
+   ['eligible_renovation','Rénovation d’un logement de plus de 2 ans — 10 % si éligible'],
+   ['manual','Autre / taux à valider']
+  ]),
+  field('Nombre d’ouvriers','labor.workers',state.labor.workers),
+  ...(state.taxContext==='manual'?[select('Taux TVA à confirmer','vatRate',state.vatRate,[[20,'20 %'],[10,'10 %'],[5.5,'5,5 %'],[0,'0 %']])]:[])
+ )+(state.taxContext==='eligible_renovation'?
+ tick('Je confirme l’ancienneté du logement et l’éligibilité des travaux au taux de 10 %','taxEligibilityConfirmed',state.taxEligibilityConfirmed):'')
+ +'<p class="hint">Le taux de 10 % n’est pas automatique pour toutes les rénovations ; les règles fiscales applicables doivent être vérifiées avant devis.</p>';
 }
 function stepOptions(){
- return heading('Options','Sélectionnez seulement les prestations nécessaires. Les détails de prix et les temps apparaissent pour chaque prestation ajoutée.')
- +card('Paramètres entreprise', '<p class="note">Taux horaire de référence entreprise : <strong>'+money(state.labor.hourlyRate)+'/h</strong>. À terme récupéré depuis les paramètres SpeedArti.</p>'
-  +gear('entreprise (simulation)',field('Taux horaire HT (€)','labor.hourlyRate',state.labor.hourlyRate)))
- +'<h2>Prestations supplémentaires</h2><p class="hint">Chaque option reste indépendante, avec unité, quantité, fournitures et heures de main-d’œuvre.</p>'
- +OPTION_CATEGORIES.map(optionControls).join('')
- +'<details class="option-group"><summary><strong>Barème Guillaume — 92 références (m² / ml / unité / forfait)</strong><small>Variantes chiffrées</small></summary><div class="option-items"><p class="hint">Données indicatives issues des deux PDF de Guillaume. Unité inchangée, coûts et temps modifiables. Ne pas sélectionner deux variantes du même service.</p>'
- +BAREME_OPTION_GROUPS.map(optionControls).join('')+'</div></details>'
- +(state.extras.length?card('Prestations sélectionnées',state.extras.map((o,i)=>{
-  const path='extras.'+i;
-  return '<div class="extra-edit"><div class="opening-header"><strong>'+esc(o.name)+'</strong>'+button('Supprimer','remove-extra','data-index="'+i+'"','danger')+'</div>'
-   +grid(field('Quantité',path+'.quantity',o.quantity),
-     select('Unité',path+'.unit',o.unit,[['forfait','Forfait'],['m²','m²'],['ml','ml'],['unité','Unité']]),
-     field('Fournitures HT/unité (€)',path+'.materialUnitHT',o.materialUnitHT),
-     field('Temps (h/unité)',path+'.hoursPerUnit',o.hoursPerUnit))
-   +(o.referenceSource?'<p class="hint"><strong>Source :</strong> '+esc(o.referenceSource)+' — ligne '+esc(o.referenceRow)+' · montant et temps indicatifs, modifiables. '+esc(o.notes||'')+'</p>':'<p class="hint">Pas de barème suffisamment comparable : saisissez les matériaux et le temps.</p>')+'</div>';
- }).join('')):'')
- +card('Consommables courants (facultatifs)', '<p class="hint">Rubans, bâches et abrasifs peuvent être ajoutés au chiffrage. Renseignez les quantités et prix réels : aucun tarif n’est inventé.</p>'
+ return heading('Options','Toutes les prestations Peintre et les 92 références Guillaume sont réparties dans les six familles métier. Recherchez, sélectionnez, puis modifiez votre panier sur le côté.')
+ +card('Paramètres du chantier — avant les options',fiscalFields()
+   +'<div class="company-rate"><span>Taux horaire entreprise</span><strong>'+money(state.labor.hourlyRate)+' / h</strong><small>Valeur de démonstration : les paramètres entreprise seront utilisés dans SpeedArti.</small></div>'
+   +gear('taux horaire entreprise (simulation uniquement)',field('Taux horaire HT (€)','labor.hourlyRate',state.labor.hourlyRate)))
+ +'<div class="options-layout"><div class="options-catalog">'
+ +'<h2>Choisissez vos prestations</h2>'
+ +'<p class="hint">Six familles, sans rubrique « Barème Guillaume » séparée. Les options aux unités différentes restent des variantes d’un même service.</p>'
+ +CLASSIFIED_OPTION_CATEGORIES.map(classifiedOptions).join('')
+ +card('Consommables courants (facultatifs)', '<p class="hint">Rubans, bâches et abrasifs : prix indicatifs HT modifiables.</p>'
   +(state.supplies||[]).map((x,i)=>'<div class="extra-edit">'+tick(esc(x.name)+' — '+esc(x.unit),'supplies.'+i+'.enabled',x.enabled)
   +(x.enabled?grid(field('Quantité','supplies.'+i+'.quantity',x.quantity),field('Prix HT / '+esc(x.unit),'supplies.'+i+'.unitPrice',x.unitPrice)):'')
   +'<p class="hint">Prix de départ HT indicatif : '+money(x.unitPrice)+' / '+esc(x.unit)+'. '+esc(x.priceSource||'')+' · modifiable.</p></div>').join(''))
@@ -176,10 +249,11 @@ function stepOptions(){
    field('Longueur (ml)','manualPlinth.length',state.manualPlinth.length),
    field('Hauteur peinte (m)','manualPlinth.paintedHeightM',state.manualPlinth.paintedHeightM),
    field('Temps (h/ml)','manualPlinth.hoursMl',state.manualPlinth.hoursMl),
-   field('Consommables supplémentaires HT/ml (facultatif)','manualPlinth.pricePerMl',state.manualPlinth.pricePerMl)
- )+paintEditor('manualPlinth.paint',state.manualPlinth.paint)));
-
+   field('Consommables supplémentaires HT/ml','manualPlinth.pricePerMl',state.manualPlinth.pricePerMl)
+ )+paintEditor('manualPlinth.paint',state.manualPlinth.paint)))
+ +'</div>'+cartView()+'</div>';
 }
+
 function stepResults(){
  let res;try{res=calculateEstimate(state);}catch(err){return heading('Résultats','Corrigez les informations de vos ouvrages.')+'<div class="alert error">'+esc(err.message)+'</div>';}
  const rows=(kind)=>res.lines.filter(x=>x.kind===kind).map(x=>'<tr><td>'+esc(x.name)+'<small class="row-sub">'+esc(x.tag)+'</small></td><td>'+fmt(x.quantity)+' '+esc(x.unit)+'</td><td>'+money(x.unitPrice)+'</td><td><strong>'+money(x.amount)+'</strong></td></tr>').join('');
@@ -206,10 +280,17 @@ function stepResults(){
  +button('Exporter le chiffrage en JSON','export','','primary');
 }
 function render(){
+ const previousCart=el('content').querySelector?.('.cart-content');
+ const previousScroll=previousCart?.scrollTop||0;
  const names=['Ouvrages','Revêtements','Options','Résultats'];
  el('steps').innerHTML=names.map((v,i)=>'<button class="step '+(step===i?'active':'')+'" data-action="go" data-index="'+i+'" '+(i>0&&!state.works.length?'disabled':'')+'><b>'+(i+1)+'. '+v+'</b></button>').join('');
  try{el('content').innerHTML=[stepWorks,stepSupports,stepOptions,stepResults][step]();lastError='';}
  catch(e){lastError=e.message;el('content').innerHTML='<div class="alert error">'+esc(e.message)+'</div>';}
+ if(step===2){
+  const cart=el('content').querySelector?.('.cart-content');
+  if(cart){cart.scrollTop=cartScrollToLast?cart.scrollHeight:previousScroll;}
+ }
+ cartScrollToLast=false;
  el('previous').disabled=step===0;el('next').disabled=step===3||!state.works.length;
  el('next').textContent=step===2?'Calculer →':'Suivant →';
  el('stepcount').textContent='Étape '+(step+1)+' / 4';
@@ -229,15 +310,19 @@ function act(t){
  if(action==='add-opening'){get(t.dataset.root).openings.push(newOpening());render();return;}
  if(action==='remove-opening'){get(t.dataset.root).openings.splice(index,1);render();return;}
  if(action==='add-extra'){
-  const opt=[...OPTION_CATEGORIES,...BAREME_OPTION_GROUPS].flatMap(g=>g.items).find(x=>x.id===t.dataset.option);
-  if(opt&&!alreadySelected(opt,state.extras))state.extras.push(createExtra(opt));
+  const opt=[...OPTION_CATEGORIES,...CLASSIFIED_OPTION_CATEGORIES].flatMap(g=>g.items.flatMap(x=>[x,...(x.variants||[])])).find(x=>x.id===t.dataset.option);
+  if(opt&&!alreadySelected(opt,state.extras)){
+    state.extras.push(createExtra(opt));cartExpanded=true;cartScrollToLast=true;
+  }
   render();return;
  }
  if(action==='remove-extra'){state.extras.splice(index,1);render();return;}
+ if(action==='toggle-category'){const cat=t.dataset.category;categoryOpen[cat]=!categoryOpen[cat];render();return;}
+ if(action==='toggle-cart'){cartExpanded=!cartExpanded;render();return;}
  if(action==='export'){
-  const data={origin:'SpeedArti démo Peintre V2.2',state,result:calculateEstimate(state)};
+  const data={origin:'SpeedArti démo Peintre V2.5',state,result:calculateEstimate(state)};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');
-  a.href=url;a.download='speedarti-peintre-v2-2-demo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);
+  a.href=url;a.download='speedarti-peintre-v2-5-demo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);
  }
 }
 function onChange(t){
@@ -272,13 +357,29 @@ function onChange(t){
  }
  if(path.endsWith('.paint.potPrice'))get(path.slice(0,-'.potPrice'.length)).priceSource=next===''?'color-needs-price':'artisan';
  if(path.endsWith('.paint.hoursM2'))get(path.slice(0,-'.hoursM2'.length)).autoHours=false;
- if(t.type==='checkbox'||t.tagName==='SELECT'||path.endsWith('.paint.layers')||path==='labor.workers'||/\.(length|width|height|shapeA|shapeB|areaOverride)$/.test(path))render();
+ if(t.type==='checkbox'||t.tagName==='SELECT'||path.endsWith('.paint.layers')||path==='labor.workers'||path==='labor.hourlyRate'||path.startsWith('extras.')||/\.(length|width|height|shapeA|shapeB|areaOverride)$/.test(path))render();
 }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t)act(t);});
 document.addEventListener('keydown',e=>{
  const t=e.target.closest('svg [data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();act(t);}
 });
-document.addEventListener('input',e=>{const t=e.target;if(t.dataset.path&&t.tagName==='INPUT'&&t.type!=='checkbox'){
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.dataset.categorySearch){
+  const id=t.dataset.categorySearch;optionSearch[id]=t.value;
+  const group=CLASSIFIED_OPTION_CATEGORIES.find(x=>x.id===id);
+  const matches=group?filterCategory(group,t.value):[];
+  const panel=t.closest?.('[data-category]');const list=panel?.querySelector?.('[data-search-list]');
+  const names=new Set(matches.map(x=>x.id));
+  if(list){
+    list.querySelectorAll?.('[data-option-id]').forEach(row=>{row.hidden=!names.has(row.dataset.optionId);});
+    const empty=list.querySelector?.('.empty-option');
+    if(empty)empty.hidden=matches.length>0;
+  }
+  const count=panel?.querySelector?.('[data-search-count]');
+  if(count&&group)count.textContent=matches.length+' / '+group.items.length+' prestations affichées';
+  return;
+ }
+ if(t.dataset.path&&t.tagName==='INPUT'&&t.type!=='checkbox'){
   if(t.dataset.path.endsWith('.paint.colorRef')){
    const paint=get(t.dataset.path.slice(0,-'.colorRef'.length));
    if(paint&&paint.color==='color'&&paint.colorRef!==t.value){paint.potPrice='';paint.priceSource='color-needs-price';}

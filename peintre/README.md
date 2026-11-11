@@ -1,4 +1,4 @@
-# SpeedArti — Métier Peintre V2.4 (démo commune)
+# SpeedArti — Métier Peintre V2.5 (démo commune)
 
 ## Périmètre
 Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
@@ -90,3 +90,16 @@ Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop)
 - Démo seulement : pas de connexion du catalogue, de l’authentification, des stocks, des devis, ni des paramètres réels artisan. Pas de modification de production, ni de GSTAI-Sp/speedarti-v2.
 - Tests automatisés : 62 anciens + 15 nouveaux = 77 tests moteur ; un test de parcours interface Node ; workflow GitHub Actions Peintre dédié.
 - La base Ángel existante n'est PAS encore mise à jour ; delta documentaire ci-dessous à traiter et revoir.
+
+
+## Sprint V2.5 — Étape 3 conforme aux six familles Guillaume
+- Les 64 options métier existantes et **les 92 lignes du barème PDF** sont désormais accessibles au sein des **six familles Guillaume**. Aucune septième catégorie « Barème Guillaume » distincte.
+- Les 92 identifiants PDF uniques sont couverts, avec leur unité, coût fournitures HT, temps h/unité, note métier et source d'origine. Les variantes physiques d'un même service (par exemple ml vs m²) sont proposées dans une seule fiche pour limiter les doublons.
+- Chaque famille dispose d'un panneau déployable et d'une barre de recherche indépendante, insensible à la casse et aux accents.
+- Un **panier latéral fixe durant le défilement** montre immédiatement les prestations ajoutées. Sur mobile, un volet inférieur rétractable suit l'utilisateur.
+- Le panier permet de modifier quantités, coût fournitures HT et heures par unité, de retirer des postes et de consulter le sous-total indicatif. Pour une référence Guillaume, l'unité est verrouillée : choisir l'autre variante au lieu de convertir implicitement les tarifs.
+- La sélection d'un équivalent déjà présent est désactivée et refusée par le moteur. La suppression le rend de nouveau disponible. La position de défilement interne du panier est conservée, la dernière prestation ajoutée est amenée dans le panier.
+- En haut de l'étape 3 : **type de chantier, effectif, TVA conditionnelle**, taux horaire entreprise indiqué comme paramètre externe. Dans cette démo isolée, son réglage de simulation demeure repliable, sans prétendre à une connexion aux paramètres de production.
+- Les mêmes paramètres fiscaux peuvent être revérifiés à l'étape 4 Résultats ; une seule source de calcul est utilisée.
+- Tests : 77 tests moteur V2 à V2.4 inchangés, nouveaux contrôles V2.5 de couverture du catalogue, filtres, variantes, panier et parcours d'étape. Workflow GitHub Actions étendu.
+- L'interface réelle sur navigateur PC/mobile et l'import dans la base de connaissances **existante** d'Ángel restent à valider. Aucun changement dans GSTAI-Sp/speedarti-v2 ou la production.
