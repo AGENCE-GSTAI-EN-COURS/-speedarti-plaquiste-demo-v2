@@ -145,14 +145,17 @@ export function measureAllSurfaces(state,{includeInactive=false}={}){
 // quand les cotes ou ouvertures changent. Le mode manuel est conservé pour les forfaits
 // et options au m² nécessitant un métrage indépendant.
 export function optionQuantity(state,option){
- if(option.unit!=='m²'||!option.autoQuantity)return {quantity:option.quantity===''?null:option.quantity,automatic:false,reason:option.quantity===''?'Renseigner un métrage ou sélectionner un support':null};
+ if(option.unit!=='m²'||(!option.autoQuantity&&!option.targetWorkId))
+   return {quantity:option.quantity===''?null:option.quantity,automatic:false,reason:option.quantity===''?'Renseigner un métrage ou sélectionner un support':null};
  const work=(state.works||[]).find(w=>w.id===option.targetWorkId);
  if(!work)return {quantity:null,automatic:true,reason:'Ouvrage lié introuvable'};
  let surface;
  try{surface=surfacesFor(work).find(x=>x.id===option.targetSurfaceId);}
  catch(e){return {quantity:null,automatic:true,reason:'Forme de pièce à corriger : '+e.message};}
  if(!surface)return {quantity:null,automatic:true,reason:'Mur ou plafond lié introuvable (forme de pièce modifiée)'};
- if(!surface.active||surface.mode==='none')return {quantity:null,automatic:true,reason:'Support lié désactivé ou exclu'};
+ if(!surface.active||surface.mode==='none')return {quantity:null,automatic:!!option.autoQuantity,reason:'Support lié désactivé ou exclu'};
+ if(!option.autoQuantity)return {quantity:option.quantity===''?null:option.quantity,automatic:false,
+   reason:option.quantity===''?'Renseigner la quantité personnalisée':null,work:work.name,surface:surface.name};
  try{
   const m=measureSurface(work,surface);
   if(m.net<=0)return {quantity:null,automatic:true,reason:'Surface nette nulle'};
