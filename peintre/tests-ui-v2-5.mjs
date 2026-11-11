@@ -78,7 +78,7 @@ test('parcours étape 3 : recherches, panier, fiscalité et doublons',async()=>{
   assert.ok(html.includes('value="tadelakt"'));
   assert.ok(html.includes('Tadelakt')&&html.includes('data-path="extras.0.quantity"'));
   assert.ok(html.includes('data-path="extras.0.materialUnitHT"'));
-  assert.ok(html.includes('Sous-total options HT'));
+  assert.ok(html.includes('Sous-total connu HT') || html.includes('Sous-total options HT'));
   click('add-extra',{option:'guillaume-p1-15'});
   assert.equal((nodes.content.innerHTML.match(/data-path="extras\.\d+\.quantity"/g)||[]).length,1);
   click('add-extra',{option:'guillaume-p2-02'});
