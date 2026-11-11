@@ -7,6 +7,7 @@ let state=createDefaultState(),step=0,selected={wi:0,key:'A'},lastError='';
 const categoryOpen=Object.fromEntries(CLASSIFIED_OPTION_CATEGORIES.map((g,i)=>[g.id,i===0]));
 const optionSearch=Object.create(null);
 let cartExpanded=false;
+let cartScrollToLast=false;
 const el=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 const money=x=>x==null?'À confirmer':Number(x).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
@@ -279,10 +280,17 @@ function stepResults(){
  +button('Exporter le chiffrage en JSON','export','','primary');
 }
 function render(){
+ const previousCart=el('content').querySelector?.('.cart-content');
+ const previousScroll=previousCart?.scrollTop||0;
  const names=['Ouvrages','Revêtements','Options','Résultats'];
  el('steps').innerHTML=names.map((v,i)=>'<button class="step '+(step===i?'active':'')+'" data-action="go" data-index="'+i+'" '+(i>0&&!state.works.length?'disabled':'')+'><b>'+(i+1)+'. '+v+'</b></button>').join('');
  try{el('content').innerHTML=[stepWorks,stepSupports,stepOptions,stepResults][step]();lastError='';}
  catch(e){lastError=e.message;el('content').innerHTML='<div class="alert error">'+esc(e.message)+'</div>';}
+ if(step===2){
+  const cart=el('content').querySelector?.('.cart-content');
+  if(cart){cart.scrollTop=cartScrollToLast?cart.scrollHeight:previousScroll;}
+ }
+ cartScrollToLast=false;
  el('previous').disabled=step===0;el('next').disabled=step===3||!state.works.length;
  el('next').textContent=step===2?'Calculer →':'Suivant →';
  el('stepcount').textContent='Étape '+(step+1)+' / 4';
@@ -304,7 +312,7 @@ function act(t){
  if(action==='add-extra'){
   const opt=[...OPTION_CATEGORIES,...CLASSIFIED_OPTION_CATEGORIES].flatMap(g=>g.items.flatMap(x=>[x,...(x.variants||[])])).find(x=>x.id===t.dataset.option);
   if(opt&&!alreadySelected(opt,state.extras)){
-    state.extras.push(createExtra(opt));cartExpanded=true;
+    state.extras.push(createExtra(opt));cartExpanded=true;cartScrollToLast=true;
   }
   render();return;
  }
