@@ -86,7 +86,7 @@ function availableSelections(option){
  const scope=effectiveScope();
  if(!scope||scope==='manual')return state.extras;
  const [w,s]=scope.split('::');
- return state.extras.filter(x=>!x.autoQuantity||x.targetWorkId===w&&x.targetSurfaceId===s);
+ return state.extras.filter(x=>!x.targetWorkId||!x.targetSurfaceId||x.targetWorkId===w&&x.targetSurfaceId===s);
 }
 function alreadyForScope(option){return alreadySelected(option,availableSelections(option));}
 function scopePicker(){
@@ -97,7 +97,7 @@ function scopePicker(){
  +'<option value="manual" '+(selected==='manual'?'selected':'')+'>Métrage libre à saisir</option></select></label>';
 }
 function extraScopePicker(opt,i){
- const value=opt.autoQuantity?opt.targetWorkId+'::'+opt.targetSurfaceId:opt.quantity===''?'':'manual';
+ const value=opt.targetWorkId&&opt.targetSurfaceId?opt.targetWorkId+'::'+opt.targetSurfaceId:opt.quantity===''?'':'manual';
  return '<label class="field cart-scope"><span>À appliquer sur</span><select data-extra-scope="'+i+'">'
  +'<option value="" '+(!value?'selected':'')+'>Choisir un support</option>'
  +activeScopes().map(x=>'<option value="'+esc(x.key)+'" '+(value===x.key?'selected':'')+'>'+esc(x.label)+'</option>').join('')
@@ -270,7 +270,9 @@ function cartView(){
    +'<small>'+esc(o.referenceSource?o.referenceSource+' · ligne '+o.referenceRow:'Prestation à paramétrer')+'</small></div>'
    +button('✕','remove-extra','data-index="'+i+'" aria-label="Supprimer '+esc(o.name)+'"','danger')+'</div>'
    +(o.unit==='m²'?extraScopePicker(o,i):'')
-   +'<div class="cart-fields">'+(o.autoQuantity?'<div class="cart-auto-quantity"><span>Surface nette automatique</span><strong>'+(price.qtySource.quantity===null?'À confirmer':fmt(price.qtySource.quantity)+' m²')+'</strong><small>Actualisée si les dimensions ou ouvertures changent</small></div>':field('Quantité',path+'.quantity',o.quantity))
+   +'<div class="cart-fields">'+field(o.unit==='m²'?'Quantité (m²)':'Quantité',path+'.quantity',o.autoQuantity?(price.qtySource.quantity??''):o.quantity)
+   +(o.unit==='m²'&&o.targetWorkId&&o.targetSurfaceId?'<div class="cart-qty-mode"><small>'+(o.autoQuantity?'Surface du support préremplie automatiquement':'Quantité personnalisée pour ce support')+'</small>'
+      +(o.autoQuantity?'<small>Modifiez la quantité pour une surface partielle.</small>':button('↺ Reprendre les m² du support','reset-extra-quantity','data-index="'+i+'"','small-primary'))+'</div>':'')
    +(o.referenceId?'<div class="cart-unit"><span>Unité du barème</span><strong>'+esc(o.unit)+'</strong></div>':
       select('Unité',path+'.unit',o.unit,[['forfait','Forfait'],['m²','m²'],['ml','ml'],['unité','Unité']]))
    +field('Fournitures HT / '+esc(o.unit),path+'.materialUnitHT',o.materialUnitHT)
@@ -402,12 +404,21 @@ function act(t){
   render();return;
  }
  if(action==='remove-extra'){state.extras.splice(index,1);render();return;}
+ if(action==='reset-extra-quantity'){
+   const extra=state.extras[index];
+   if(extra&&extra.unit==='m²'&&extra.targetWorkId&&extra.targetSurfaceId){
+     extra.autoQuantity=true;
+     const current=optionQuantity(state,extra);
+     extra.quantity=current.quantity??'';
+   }
+   render();return;
+ }
  if(action==='toggle-category'){const cat=t.dataset.category;categoryOpen[cat]=!categoryOpen[cat];render();return;}
  if(action==='toggle-cart'){cartExpanded=!cartExpanded;render();return;}
  if(action==='export'){
-  const data={origin:'SpeedArti démo Peintre V2.5',state,result:calculateEstimate(state)};
+  const data={origin:'SpeedArti démo Peintre V2.7',state,result:calculateEstimate(state)};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');
-  a.href=url;a.download='speedarti-peintre-v2-5-demo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);
+  a.href=url;a.download='speedarti-peintre-v2-7-demo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);
  }
 }
 function onChange(t){
@@ -434,6 +445,12 @@ function onChange(t){
  const path=t.dataset.path;if(!path)return;
  const old=get(path),next=t.type==='checkbox'?t.checked:t.value;
  set(path,next);
+ // Saisir une quantité personnalise uniquement cette prestation, sans perdre son mur.
+ const quantityMatch=/^extras\.(\d+)\.quantity$/.exec(path);
+ if(quantityMatch){
+   const extra=state.extras[Number(quantityMatch[1])];
+   if(extra&&extra.unit==='m²'&&extra.autoQuantity)extra.autoQuantity=false;
+ }
  if(path.endsWith('.preparation.level')){
   const prep=get(path.slice(0,-'.level'.length));
   const previous=prep.rates||{};
