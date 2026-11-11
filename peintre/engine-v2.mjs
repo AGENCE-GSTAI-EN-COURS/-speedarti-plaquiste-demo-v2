@@ -1,4 +1,4 @@
-// SpeedArti Peintre V2.4 — moteur de DÉMONSTRATION, hors production.
+// SpeedArti Peintre V2.6 — moteur de DÉMONSTRATION, hors production.
 // Références historiques de l'ancien calculateur SpeedArti V2 (non validées fournisseurs).
 const num = v => v === '' || v === null || v === undefined ? null : Number(v);
 const valid = v => Number.isFinite(num(v)) && num(v) >= 0;
@@ -122,6 +122,44 @@ function resolved(work,s){
  if(!segment)throw Error('Segment de pièce introuvable');
  return {length:segment.length,height:h};
 }
+// Mètres carrés contrôlés depuis la même géométrie que le devis.
+// On distingue la surface brute et la surface NETTE après déduction des ouvertures.
+export function measureSurface(work,s){
+ const g=resolved(work,s),warn=[],opening=openingGeometry(s,g,warn);
+ const gross=r(g.length*g.height),deduction=r(opening.deduction);
+ return {workId:work.id,surfaceId:s.id,work:work.name,surface:s.name,kind:s.kind,
+   length:r(g.length),height:r(g.height),gross,deduction,net:r(Math.max(0,gross-deduction)),
+   active:Boolean(s.active)&&s.mode!=='none',mode:s.mode};
+}
+export function measureAllSurfaces(state,{includeInactive=false}={}){
+ const rows=[];
+ for(const work of (state.works||[])){
+  for(const surface of surfacesFor(work)){
+   if(!includeInactive&&(!surface.active||surface.mode==='none'))continue;
+   rows.push(measureSurface(work,surface));
+  }
+ }
+ return rows;
+}
+// Options au m² liées à un support : la quantité reste une formule et se recalcule
+// quand les cotes ou ouvertures changent. Le mode manuel est conservé pour les forfaits
+// et options au m² nécessitant un métrage indépendant.
+export function optionQuantity(state,option){
+ if(option.unit!=='m²'||!option.autoQuantity)return {quantity:option.quantity,automatic:false,reason:null};
+ const work=(state.works||[]).find(w=>w.id===option.targetWorkId);
+ if(!work)return {quantity:null,automatic:true,reason:'Ouvrage lié introuvable'};
+ let surface;
+ try{surface=surfacesFor(work).find(x=>x.id===option.targetSurfaceId);}
+ catch(e){return {quantity:null,automatic:true,reason:'Forme de pièce à corriger : '+e.message};}
+ if(!surface)return {quantity:null,automatic:true,reason:'Mur ou plafond lié introuvable (forme de pièce modifiée)'};
+ if(!surface.active||surface.mode==='none')return {quantity:null,automatic:true,reason:'Support lié désactivé ou exclu'};
+ try{
+  const m=measureSurface(work,surface);
+  if(m.net<=0)return {quantity:null,automatic:true,reason:'Surface nette nulle'};
+  return {quantity:m.net,automatic:true,reason:null,work:work.name,surface:surface.name};
+ }catch(e){return {quantity:null,automatic:true,reason:'Dimensions du support à corriger : '+e.message};}
+}
+
 function productLines(lists,warnings,label,spec,area,unit){
  if(area<=0)return;
  const layers=req(spec.layers,label+' couches'),loss=nonneg(spec.loss,label+' pertes');
@@ -294,7 +332,10 @@ export function calculateEstimate(state){
  for(const [index,opt] of (state.extras||[]).entries()){
   if(!opt||opt.enabled===false)continue;
   const name=String(opt.name||'Prestation '+(index+1)).trim();
-  const qty=req(opt.quantity,name+' quantité'),unit=String(opt.unit||'forfait');
+  const unit=String(opt.unit||'forfait');
+  const resolvedQty=optionQuantity(state,opt);
+  const qty=resolvedQty.quantity===null?null:req(resolvedQty.quantity,name+' quantité');
+  if(resolvedQty.reason)missing(warnings,name+' : '+resolvedQty.reason+'.');
   const mat=valid(opt.materialUnitHT)?num(opt.materialUnitHT):null;
   const duration=valid(opt.hoursPerUnit)?num(opt.hoursPerUnit):null;
   const isMajorations=/intervention en urgence|horaires décalés/i.test(name);
@@ -302,9 +343,9 @@ export function calculateEstimate(state){
   if(mat==null)missing(warnings,name+' : prix des fournitures à confirmer.');
   if(duration==null)missing(warnings,name+' : temps de réalisation à confirmer.');
   lists.lines.push({name:name+' — fournitures',kind:'material',tag:name,unit,quantity:qty,unitPrice:mat,
-   amount:mat==null?null:r(qty*mat),source:opt.referenceSource?'barème indicatif Guillaume '+opt.referenceSource+' / ligne '+opt.referenceRow:'option / coût à valider',notes:opt.notes||''});
-  lists.lines.push({name:name+' — main-d’œuvre',kind:'labor',tag:name,unit:'h-homme',quantity:duration==null?null:r(qty*duration),
-   unitPrice:rate,amount:duration==null||rate==null?null:r(qty*duration*rate),source:opt.referenceSource?'barème indicatif Guillaume '+opt.referenceSource+' / ligne '+opt.referenceRow:'option / temps à valider',notes:opt.notes||''});
+   amount:mat==null||qty===null?null:r(qty*mat),source:opt.referenceSource?'barème indicatif Guillaume '+opt.referenceSource+' / ligne '+opt.referenceRow:'option / coût à valider',notes:opt.notes||''});
+  lists.lines.push({name:name+' — main-d’œuvre',kind:'labor',tag:name,unit:'h-homme',quantity:duration==null||qty===null?null:r(qty*duration),
+   unitPrice:rate,amount:duration==null||qty===null||rate==null?null:r(qty*duration*rate),source:opt.referenceSource?'barème indicatif Guillaume '+opt.referenceSource+' / ligne '+opt.referenceRow:'option / temps à valider',notes:opt.notes||''});
   if(name.toLowerCase().includes('humidité'))missing(warnings,'Humidité : résoudre et vérifier la cause avant traitement.');
   if(name.toLowerCase().includes('intumescente'))missing(warnings,'Peinture intumescente : système certifié et prescriptions applicables à vérifier.');
   if(name.toLowerCase().includes('prises et interrupteurs'))missing(warnings,'Électricité : dépose/repose à réaliser par une personne habilitée si nécessaire.');
@@ -352,7 +393,7 @@ export function calculateEstimate(state){
  const confirmed=r(total(lines.filter(l=>l.amount!==null).map(l=>l.amount)));
  const ht=complete?confirmed:null,tax=complete?r(ht*vat/100):null;
  const byKind=kind=>{const rows=lines.filter(l=>l.kind===kind);return rows.every(l=>l.amount!==null)?r(total(rows.map(l=>l.amount))):null;};
- return {version:2.4,geometry,lines,warnings,complete,confirmedHT:confirmed,
+ return {version:2.6,geometry,lines,warnings,complete,confirmedHT:confirmed,
    materialsHT:byKind('material'),laborHT:byKind('labor'),hoursMan:hours,knownHoursMan,unestimatedTasks,
    durationHours:hours==null?null:r(hours/workers),knownDurationHours:r(knownHoursMan/workers),totalHT:ht,vatRate:vat,taxHT:tax,ttc:ht==null?null:r(ht+tax)};
 }
