@@ -145,7 +145,7 @@ export function measureAllSurfaces(state,{includeInactive=false}={}){
 // quand les cotes ou ouvertures changent. Le mode manuel est conservé pour les forfaits
 // et options au m² nécessitant un métrage indépendant.
 export function optionQuantity(state,option){
- if(option.unit!=='m²'||!option.autoQuantity)return {quantity:option.quantity,automatic:false,reason:null};
+ if(option.unit!=='m²'||!option.autoQuantity)return {quantity:option.quantity===''?null:option.quantity,automatic:false,reason:option.quantity===''?'Renseigner un métrage ou sélectionner un support':null};
  const work=(state.works||[]).find(w=>w.id===option.targetWorkId);
  if(!work)return {quantity:null,automatic:true,reason:'Ouvrage lié introuvable'};
  let surface;
