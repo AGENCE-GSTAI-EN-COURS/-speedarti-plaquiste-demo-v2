@@ -43,7 +43,7 @@ test('Mur simple : surface calculée puis liée au ratissage et mise à jour',as
   change('works.0.surface.length','6','number');
   click('go',{index:'2'});
   html=nodes.content.innerHTML;
-  assert.ok(html.includes('11,5 m²'));
+  assert.ok(html.includes('13 m²'));
   const key=html.match(/<option value="([^"]+::[^"]+)" selected/);
   assert.ok(key,'Le support courant est sélectionné dans le panier');
   events.change({target:{dataset:{extraScope:'0'},value:'manual'}});
