@@ -221,7 +221,7 @@ function classifiedOptions(group){
  const items=filtered.map(item=>{
    const variants=item.variants.length?item.variants:[{id:item.id,label:item.label,unit:item.unit,materialUnitHT:null,hoursPerUnit:null}];
    const actions=variants.map(v=>{
-     const already=alreadySelected(v,state.extras);
+     const already=alreadyForScope(v);
      const isKnown=v.materialUnitHT!=null&&v.hoursPerUnit!=null;
      const label=variants.length>1?'+ '+esc(v.unit):'+ Ajouter';
      const helper=isKnown
@@ -250,13 +250,14 @@ function moneyOrPending(value) {
  return value===null||value===undefined||value===''?'À confirmer':money(value);
 }
 function optionTotals(opt){
- const q=Number(opt.quantity),price=opt.materialUnitHT===''?null:Number(opt.materialUnitHT),hours=opt.hoursPerUnit===''?null:Number(opt.hoursPerUnit);
+ const qtySource=optionQuantity(state,opt);
+ const q=qtySource.quantity===null||qtySource.quantity===''?NaN:Number(qtySource.quantity),price=opt.materialUnitHT===''?null:Number(opt.materialUnitHT),hours=opt.hoursPerUnit===''?null:Number(opt.hoursPerUnit);
  const rate=Number(state.labor.hourlyRate);
  const quantity=Number.isFinite(q)&&q>0?q:0;
  const validPrice=price!==null&&Number.isFinite(price)&&price>=0;
  const validHours=hours!==null&&Number.isFinite(hours)&&hours>=0;
  const material=validPrice?quantity*price:null,labour=validHours&&Number.isFinite(rate)?quantity*hours*rate:null;
- return {material,labour,hours:validHours?quantity*hours:null,amount:material===null||labour===null?null:material+labour};
+ return {material,labour,hours:validHours&&Number.isFinite(q)?quantity*hours:null,amount:!Number.isFinite(q)||material===null||labour===null?null:material+labour,qtySource};
 }
 function cartView(){
  const totals=state.extras.map(optionTotals);
@@ -267,11 +268,13 @@ function cartView(){
   return '<article class="cart-item"><div class="cart-item-top"><div><strong>'+esc(o.name)+'</strong>'
    +'<small>'+esc(o.referenceSource?o.referenceSource+' · ligne '+o.referenceRow:'Prestation à paramétrer')+'</small></div>'
    +button('✕','remove-extra','data-index="'+i+'" aria-label="Supprimer '+esc(o.name)+'"','danger')+'</div>'
-   +'<div class="cart-fields">'+field('Quantité',path+'.quantity',o.quantity)
+   +(o.unit==='m²'?extraScopePicker(o,i):'')
+   +'<div class="cart-fields">'+(o.autoQuantity?'<div class="cart-auto-quantity"><span>Surface nette automatique</span><strong>'+(price.qtySource.quantity===null?'À confirmer':fmt(price.qtySource.quantity)+' m²')+'</strong><small>Actualisée si les dimensions ou ouvertures changent</small></div>':field('Quantité',path+'.quantity',o.quantity))
    +(o.referenceId?'<div class="cart-unit"><span>Unité du barème</span><strong>'+esc(o.unit)+'</strong></div>':
       select('Unité',path+'.unit',o.unit,[['forfait','Forfait'],['m²','m²'],['ml','ml'],['unité','Unité']]))
    +field('Fournitures HT / '+esc(o.unit),path+'.materialUnitHT',o.materialUnitHT)
    +field('Temps h / '+esc(o.unit),path+'.hoursPerUnit',o.hoursPerUnit)+'</div>'
+   +(price.qtySource.reason?'<small class="cart-note cart-error">'+esc(price.qtySource.reason)+'</small>':'')
    +(o.notes?'<small class="cart-note">'+esc(o.notes)+'</small>':'')
    +'<div class="cart-line-total">'+(price.amount===null?'<span>À compléter</span>':'<strong>'+money(price.amount)+' HT</strong>')+'</div>'
    +'</article>';
@@ -304,6 +307,7 @@ function stepOptions(){
    +'<div class="company-rate"><span>Taux horaire entreprise</span><strong>'+money(state.labor.hourlyRate)+' / h</strong><small>Valeur de démonstration : les paramètres entreprise seront utilisés dans SpeedArti.</small></div>'
    +gear('taux horaire entreprise (simulation uniquement)',field('Taux horaire HT (€)','labor.hourlyRate',state.labor.hourlyRate)))
  +'<div class="options-layout"><div class="options-catalog">'
+ +card('Support ciblé pour les prestations au m²',scopePicker()+'<p class="hint">Les options au m² reprennent la surface nette du mur ou plafond sélectionné, avec les déductions d’ouvertures. La quantité se recalcule si les cotes changent. Forfaits et unités restent manuels.</p>')
  +'<h2>Choisissez vos prestations</h2>'
  +'<p class="hint">Six familles, sans rubrique « Barème Guillaume » séparée. Les options aux unités différentes restent des variantes d’un même service.</p>'
  +CLASSIFIED_OPTION_CATEGORIES.map(classifiedOptions).join('')
@@ -370,15 +374,28 @@ function act(t){
   state.works.push(newWork(type,(type==='room'?'Pièce ':type==='wall'?'Mur simple ':'Surface simple ')+number));
   selected={wi:state.works.length-1,key:type==='room'?'A':'surface'};render();return;
  }
- if(action==='remove-work'){state.works.splice(wi,1);selected={wi:0,key:'A'};render();return;}
- if(action==='pick-work'){selected={wi,key:state.works[wi].type==='room'?'A':'surface'};go(1);return;}
- if(action==='pick-support'){selected={wi,key:t.dataset.key};if(step===0)go(1);else render();return;}
+ if(action==='remove-work'){state.works.splice(wi,1);selected={wi:0,key:'A'};optionScope='';render();return;}
+ if(action==='pick-work'){selected={wi,key:state.works[wi].type==='room'?'A':'surface'};
+  const w=state.works[wi],sf=w.type==='room'?w.walls.A:w.surface;
+  optionScope=w.id+'::'+sf.id;go(1);return;}
+ if(action==='pick-support'){selected={wi,key:t.dataset.key};
+  const w=state.works[wi],sf=w.type==='room'?(selected.key==='ceiling'?w.ceiling:w.walls[selected.key]):w.surface;
+  if(sf)optionScope=w.id+'::'+sf.id;
+  if(step===0)go(1);else render();return;}
  if(action==='add-opening'){get(t.dataset.root).openings.push(newOpening());render();return;}
  if(action==='remove-opening'){get(t.dataset.root).openings.splice(index,1);render();return;}
  if(action==='add-extra'){
   const opt=[...OPTION_CATEGORIES,...CLASSIFIED_OPTION_CATEGORIES].flatMap(g=>g.items.flatMap(x=>[x,...(x.variants||[])])).find(x=>x.id===t.dataset.option);
-  if(opt&&!alreadySelected(opt,state.extras)){
-    state.extras.push(createExtra(opt));cartExpanded=true;cartScrollToLast=true;
+  if(opt&&!alreadyForScope(opt)){
+    const extra=createExtra(opt),scope=effectiveScope();
+    if(extra.unit==='m²'&&scope&&scope!=='manual'){
+      const target=activeScopes().find(x=>x.key===scope);
+      if(target){
+        extra.autoQuantity=true;extra.targetWorkId=target.workId;extra.targetSurfaceId=target.surfaceId;
+        extra.quantity=target.area;
+      }
+    }else if(extra.unit==='m²'&&!scope){extra.quantity='';}
+    state.extras.push(extra);cartExpanded=true;cartScrollToLast=true;
   }
   render();return;
  }
@@ -392,6 +409,22 @@ function act(t){
  }
 }
 function onChange(t){
+ if(t.dataset.optionScope!==undefined){optionScope=t.value;render();return;}
+ if(t.dataset.extraScope!==undefined){
+   const i=Number(t.dataset.extraScope),extra=state.extras[i];if(!extra)return;
+   const old=optionQuantity(state,extra);
+   if(t.value==='manual'){
+     extra.autoQuantity=false;extra.targetWorkId=null;extra.targetSurfaceId=null;
+     extra.quantity=old.quantity??(extra.quantity===''?1:extra.quantity);
+   }else if(t.value){
+     const target=activeScopes().find(x=>x.key===t.value);
+     if(target){
+       extra.autoQuantity=true;extra.targetWorkId=target.workId;extra.targetSurfaceId=target.surfaceId;
+       extra.quantity=target.area;
+     }
+   }else {extra.autoQuantity=false;extra.targetWorkId=null;extra.targetSurfaceId=null;extra.quantity='';}
+   render();return;
+ }
  const path=t.dataset.path;if(!path)return;
  const old=get(path),next=t.type==='checkbox'?t.checked:t.value;
  set(path,next);
