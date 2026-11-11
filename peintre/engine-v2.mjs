@@ -321,7 +321,7 @@ export function calculateEstimate(state){
  for(const opt of state.extras||[]){
    if(opt.enabled===false)continue;
    const base=opt.serviceKey||opt.catalogId||String(opt.name||'').toLowerCase().trim();
-   const scoped=opt.unit==='m²'&&opt.autoQuantity&&opt.targetWorkId&&opt.targetSurfaceId;
+   const scoped=opt.unit==='m²'&&opt.targetWorkId&&opt.targetSurfaceId;
    const key=base+'::'+(scoped?opt.targetWorkId+'::'+opt.targetSurfaceId:'manual');
    if(seenServices.has(key)||(scoped&&seenManual.has(base))||(!scoped&&seenBase.has(base)))
      duplicatedServices.push(String(opt.name||base));
