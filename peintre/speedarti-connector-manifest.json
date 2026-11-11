@@ -4,7 +4,7 @@
     "status": "DEMO_ON_GITHUB_PAGES_NOT_CONNECTED_TO_PRODUCTION",
     "repository": "AGENCE-GSTAI-EN-COURS/-speedarti-plaquiste-demo-v2",
     "branch": "main",
-    "version": "2.4.0",
+    "version": "2.5.0",
     "source_reference_read_only": "GSTAI-Sp/speedarti-v2",
     "other_trades_unchanged": true
   },
@@ -19,7 +19,9 @@
     "bareme": "peintre/guillaume-bareme-v2-4.mjs",
     "baremeMapping": "peintre/guillaume-mapping-v2-4.mjs",
     "testsV24": "peintre/tests-v2-4.mjs",
-    "testsUI": "peintre/tests-ui-v2-4.mjs"
+    "testsUI": "peintre/tests-ui-v2-4.mjs",
+    "classifiedOptions": "peintre/classified-options-v2-5.mjs",
+    "testsUIV25": "peintre/tests-ui-v2-5.mjs"
   },
   "connectors": [
     {
@@ -56,15 +58,15 @@
     {
       "id": "angel",
       "target": "BASE_CONNAISSANCE_ANGEL_EXISTANTE",
-      "status": "DELTA_V2_4_PREPARED_NOT_IMPORTED",
+      "status": "DELTA_V2_5_PREPARED_NOT_IMPORTED",
       "delta": "peintre/ANGEL_KNOWLEDGE_DELTA.md",
       "rule": "Aucune base de connaissance parallèle"
     }
   ],
   "review": {
     "engine_tests": "77/77 (simulation V2.4)",
-    "ui_simulated_interactions": "15/15 (simulation V2.4) + test Node CI",
-    "real_browser_test": "PENDING",
+    "ui_simulated_interactions": "V2.5 panier/recherche/catégories + tests GitHub Actions",
+    "real_browser_test": "PENDING HUMAN PC/MOBILE",
     "human_acceptance": "PENDING"
   },
   "security": {
