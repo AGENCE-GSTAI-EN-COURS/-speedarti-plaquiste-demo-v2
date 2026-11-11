@@ -59,3 +59,12 @@ Statut : PENDING_REVIEW / NOT_IMPORTED. Ce fichier est un delta documentaire, pa
 - PNT-GUILLAUME-036 : le contexte TVA et effectif sont à expliquer au moment des résultats ; 10 % de TVA uniquement si conditions d'éligibilité confirmées.
 
 Ne pas créer de nouvelle base Ángel, ni déclarer le statut terminé sans raccordement effectif, test et validation humaine.
+
+
+## Delta V2.5 — À IMPORTER dans les connaissances Ángel EXISTANTES (pas de base parallèle)
+- PNT-OPTIONS-037 : les options sont classées uniquement en six familles métier Guillaume : traitements spécifiques, finitions décoratives, boiseries intérieures, revêtements/décoration complémentaires, prestations techniques/spécialisées, services complémentaires facturables.
+- PNT-OPTIONS-038 : les 92 barèmes PDF deviennent des variantes de ces familles, jamais une catégorie métier séparée, et leurs unités ne sont pas converties implicitement.
+- PNT-OPTIONS-039 : l'assistant demande le libellé, l'unité/variante (m², ml, unité, forfait), la quantité, puis fournitures et temps ; il évite de compter plusieurs variantes du même ouvrage.
+- PNT-OPTIONS-040 : l'interface expose un panier de sélection consultable en continu, avec modification et suppression de chaque option et sous-total indicatif.
+- PNT-FISCAL-041 : contexte du chantier, effectif et TVA doivent être visibles avant les options, tout en restant contrôlables au récapitulatif ; le taux horaire vient des paramètres entreprise lors de l'intégration réelle.
+Statut : DOCUMENTATION À VALIDER ET IMPORTER DANS LA BASE CENTRALE. Aucun import runtime réalisé.
