@@ -176,7 +176,7 @@ function classifiedOptions(group){
  +(expanded?'<div class="classified-body"><label class="category-search-label" for="search-'+esc(group.id)+'">Rechercher dans '+esc(group.name.toLowerCase())+'</label>'
   +'<div class="category-search"><span aria-hidden="true">⌕</span><input id="search-'+esc(group.id)+'" type="search" data-category-search="'+esc(group.id)+'" value="'+esc(query)+'" placeholder="Rechercher une prestation ou un revêtement..." autocomplete="off" aria-label="Rechercher dans '+esc(group.name)+'"></div>'
   +'<p class="category-count" data-search-count="'+esc(group.id)+'">'+filtered.length+' / '+group.items.length+' prestations affichées</p>'
-  +'<div class="classified-rows" data-search-list="'+esc(group.id)+'">'+(items||'<div class="empty-option">Aucun résultat dans cette catégorie.</div>')+'</div></div>':'')
+  +'<div class="classified-rows" data-search-list="'+esc(group.id)+'">'+items+'<div class="empty-option" '+(filtered.length?'hidden':'')+'>Aucun résultat dans cette catégorie.</div></div></div>':'')
  +'</section>';
 }
 function moneyOrPending(value) {
@@ -210,9 +210,8 @@ function cartView(){
    +'</article>';
  }).join(''):'<div class="cart-empty">Cliquez sur une prestation à gauche pour l’ajouter au panier.</div>';
  return '<aside id="peintre-options-cart" class="options-cart '+(cartExpanded?'expanded':'')+'" aria-label="Panier des prestations sélectionnées">'
-   +'<button type="button" class="cart-header" data-action="toggle-cart" aria-expanded="'+cartExpanded+'">'
-   +'<span><strong>Panier des options</strong><small>'+state.extras.length+' prestation(s) sélectionnée(s)</small></span>'
-   +'<span class="cart-mobile-toggle" aria-hidden="true">'+(cartExpanded?'−':'+')+'</span></button>'
+   +'<div class="cart-header"><span><strong>Panier des options</strong><small>'+state.extras.length+' prestation(s) sélectionnée(s)</small></span>'
+   +'<button type="button" class="cart-mobile-toggle" data-action="toggle-cart" aria-label="'+(cartExpanded?'Réduire':'Ouvrir')+' le panier" aria-expanded="'+cartExpanded+'">'+(cartExpanded?'−':'+')+'</button></div>'
    +'<div class="cart-content"><div class="cart-list">'+content+'</div>'
    +'<div class="cart-total"><span>'+(complete?'Sous-total options HT':'Sous-total connu HT · incomplet')+'</span><strong>'+money(known)+'</strong></div>'
    +(!complete?'<p class="cart-warning">Certaines prestations attendent un prix ou un temps. Le total du devis reste incomplet.</p>':'')
