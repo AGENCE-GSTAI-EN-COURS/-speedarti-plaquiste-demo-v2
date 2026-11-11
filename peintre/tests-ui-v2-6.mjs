@@ -53,7 +53,7 @@ test('Mur simple : surface calculée puis liée au ratissage et mise à jour',as
   click('go',{index:'0'});change('works.0.surface.length','7','number');click('go',{index:'2'});
   assert.ok(nodes.content.innerHTML.includes('data-path="extras.0.quantity"'));
   events.change({target:{dataset:{extraScope:'0'},value:key[1]}});
-  assert.ok(nodes.content.innerHTML.includes('Surface nette automatique'));
+  assert.ok(nodes.content.innerHTML.includes('Surface du support préremplie automatiquement'));
   assert.ok(nodes.content.innerHTML.includes('15,5 m²'));
  });
 });
