@@ -134,3 +134,11 @@
  .surface-area-summary .area-value{font-size:19px}
  .cart-scope select{min-width:0}
 }
+
+
+/* Peintre V2.7 — quantité personnalisable et retour à la surface automatique */
+.cart-qty-mode{display:flex;flex-direction:column;justify-content:center;gap:6px;padding:8px 0;min-width:0}
+.cart-qty-mode small{font-size:11px;line-height:1.45;color:#4b6586}
+.cart-qty-mode .btn{align-self:flex-start;white-space:normal;text-align:left;font-size:11px;padding:7px 9px}
+.cart-fields .field input[data-path$=".quantity"]{font-weight:750;color:#1d4ed8}
+@media(max-width:760px){.cart-qty-mode .btn{width:100%;font-size:11px}}
