@@ -68,3 +68,12 @@ Ne pas créer de nouvelle base Ángel, ni déclarer le statut terminé sans racc
 - PNT-OPTIONS-040 : l'interface expose un panier de sélection consultable en continu, avec modification et suppression de chaque option et sous-total indicatif.
 - PNT-FISCAL-041 : contexte du chantier, effectif et TVA doivent être visibles avant les options, tout en restant contrôlables au récapitulatif ; le taux horaire vient des paramètres entreprise lors de l'intégration réelle.
 Statut : DOCUMENTATION À VALIDER ET IMPORTER DANS LA BASE CENTRALE. Aucun import runtime réalisé.
+
+
+## Delta V2.6 — À FUSIONNER dans la base Ángel EXISTANTE (NON IMPORTÉ)
+- PNT-AREA-042 : chaque mur simple, mur de pièce A-H, plafond ou surface simple possède une surface calculée en m² ; on communique la surface nette et, à titre informatif, la surface brute et les déductions d'ouvertures.
+- PNT-AREA-043 : si une option au m² concerne le mur entier, demander/confirmer le support et reprendre automatiquement sa surface nette, jamais 1 m² par défaut.
+- PNT-AREA-044 : lier l'option aux identifiants stables du mur/ouvrage pour recalculer quantité, matériaux et temps après modification des dimensions ou ouvertures, sans doubler le poste.
+- PNT-AREA-045 : une prestation identique peut exister sur des murs distincts, mais pas deux fois sur le même support ; une option non liée reste à compléter, ou à chiffrer explicitement en métrage libre.
+- PNT-AREA-046 : un mur désactivé, supprimé ou inaccessible après changement de géométrie doit signaler un rattachement invalide et bloquer le total au lieu de conserver un chiffrage obsolète.
+Statut : delta documentaire préparé uniquement ; aucune écriture dans la base de connaissances centrale.
