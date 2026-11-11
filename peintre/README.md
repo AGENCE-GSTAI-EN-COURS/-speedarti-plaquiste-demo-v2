@@ -1,4 +1,4 @@
-# SpeedArti — Métier Peintre V2.5 (démo commune)
+# SpeedArti — Métier Peintre V2.6 (démo commune)
 
 ## Périmètre
 Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
@@ -103,3 +103,16 @@ Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop)
 - Les mêmes paramètres fiscaux peuvent être revérifiés à l'étape 4 Résultats ; une seule source de calcul est utilisée.
 - Tests : 77 tests moteur V2 à V2.4 inchangés, nouveaux contrôles V2.5 de couverture du catalogue, filtres, variantes, panier et parcours d'étape. Workflow GitHub Actions étendu.
 - L'interface réelle sur navigateur PC/mobile et l'import dans la base de connaissances **existante** d'Ángel restent à valider. Aucun changement dans GSTAI-Sp/speedarti-v2 ou la production.
+
+
+## Correctif V2.6 — surfaces visibles et options liées à un support
+- Étape 1 : afficher sur chaque ouvrage ses surfaces nettes en m² ; pour les pièces Rectangle/L/T/U, afficher la surface de chaque mur actif/inactif et du plafond.
+- Étape 2 : afficher **Surface nette (m²)** en face du mur simple, mur A-H, plafond ou surface simple ; mise à jour dès la saisie des dimensions. Surface nette = longueur × hauteur (ou aire géométrique du plafond) moins les ouvertures déduites.
+- Étape 3 : au-dessus des catégories, sélectionner le **support concerné par les options au m²**. Si l'utilisateur a choisi un mur à l'étape 2, ce mur est présélectionné. Si un seul support est disponible, l'automatisme s'applique à celui-ci.
+- Les options ayant comme unité physique m² utilisent la surface **nette du support lié** : par exemple 5 m × 2,5 m = 12,50 m², moins une ouverture déduite de 2 m² = 10,50 m² ; l'option Ratissage est chiffrée sur 10,50 m².
+- Modifier les dimensions, ouvertures ou la forme de pièce recalcule la quantité de l'option, les fournitures et les heures automatiquement. Une surface non sélectionnée, désactivée ou supprimée ne peut jamais être facturée sur la base fictive de 1 m² ; le devis devient incomplet avec explication.
+- Le panier permet de voir/changer le support de chaque prestation au m², ou de basculer vers une saisie **libre** si la surface traitée diffère de celle du mur entier.
+- Une prestation identique peut être sélectionnée sur plusieurs murs **distincts**, sans permettre un doublon sur le même mur. Les options au ml, à l'unité et au forfait ne deviennent pas automatiquement des prestations au m².
+- Sont préservées les six familles de Guillaume, les 92 références, le catalogue métiers et les règles fiscales existantes. Démo isolée, aucune production modifiée.
+- Tests automatisés V2.6 : 12 nouveaux scénarios moteur + 2 parcours UI Node ; ajout au workflow GitHub en complément des 77 tests moteur historiques et six parcours UI antérieurs.
+- Limites : tests navigateur réel PC/mobile et intégration aux paramètres entreprise, devis et base centrale Ángel restent à valider.

@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: '22'
       - name: Vérifier tests calcul et interface
-        run: node --test peintre/tests-v2.mjs peintre/tests-v2-2.mjs peintre/tests-v2-3.mjs peintre/tests-v2-4.mjs peintre/tests-ui-v2-4.mjs peintre/tests-ui-v2-5.mjs
+        run: node --test peintre/tests-v2.mjs peintre/tests-v2-2.mjs peintre/tests-v2-3.mjs peintre/tests-v2-4.mjs peintre/tests-ui-v2-4.mjs peintre/tests-ui-v2-5.mjs peintre/tests-v2-6.mjs peintre/tests-ui-v2-6.mjs

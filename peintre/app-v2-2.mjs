@@ -1,6 +1,6 @@
-import {createDefaultState,newWork,newOpening,calculateEstimate,PREPARATIONS,PREP_DEFAULTS,WOOD_PREP_DEFAULTS,preparationRates,roomPolygon,roomSegments,roomArea,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
+import {createDefaultState,newWork,newOpening,calculateEstimate,PREPARATIONS,PREP_DEFAULTS,WOOD_PREP_DEFAULTS,preparationRates,roomPolygon,roomSegments,roomArea,measureSurface,optionQuantity,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
 import {OPTION_CATEGORIES} from './options-catalog-v2.mjs';
-import {referenceForOption,alreadySelected,createExtra} from './guillaume-mapping-v2-4.mjs';
+import {referenceForOption,alreadySelected,createExtra,serviceKey} from './guillaume-mapping-v2-4.mjs';
 import {CLASSIFIED_OPTION_CATEGORIES,filterCategory} from './classified-options-v2-5.mjs';
 
 let state=createDefaultState(),step=0,selected={wi:0,key:'A'},lastError='';
@@ -8,6 +8,8 @@ const categoryOpen=Object.fromEntries(CLASSIFIED_OPTION_CATEGORIES.map((g,i)=>[g
 const optionSearch=Object.create(null);
 let cartExpanded=false;
 let cartScrollToLast=false;
+let optionScope='';
+let scopeWarning='';
 const el=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 const money=x=>x==null?'À confirmer':Number(x).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
@@ -20,7 +22,7 @@ const tick=(title,path,val)=>'<label class="tick"><input type="checkbox" data-pa
 const grid=(...fields)=>'<div class="grid-fields">'+fields.join('')+'</div>';
 const card=(title,body)=>'<section class="card"><h3>'+esc(title)+'</h3>'+body+'</section>';
 const button=(label,action,args='',klass='outline')=>'<button type="button" class="btn '+klass+'" data-action="'+action+'" '+args+'>'+label+'</button>';
-const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.5</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
+const heading=(h,p)=>'<div class="section-heading"><div><span class="eyebrow">SPEEDARTI — PEINTRE V2.6</span><h1>'+h+'</h1><p>'+p+'</p></div></div>';
 const gear=(title,html)=>'<details class="advanced"><summary aria-label="Ouvrir les paramètres de '+esc(title)+'"><span class="tool-icon" aria-hidden="true">⚙<small>🔧</small></span><strong>Paramètres '+esc(title)+'</strong><span class="advanced-chevron">▾</span></summary><div class="advanced-body">'+html+'</div></details>';
 function current(){
  const wi=Math.min(Math.max(0,selected.wi),state.works.length-1);
@@ -45,6 +47,71 @@ function plan(work,wi) {
  }).join('')
  +'<g data-action="pick-support" data-wi="'+wi+'" data-key="ceiling" role="button" tabindex="0" aria-label="Plafond"><rect x="142" y="102" width="116" height="47" rx="9" fill="white" stroke="#bed6f5"/><text x="200" y="122" text-anchor="middle" class="ceiling-label">Plafond</text><text x="200" y="139" text-anchor="middle" class="ceiling-small">'+(work.ceiling.active?'Actif':'Exclu')+'</text></g></svg></div>';
 }
+function areaOutput(wi,s){
+ let textValue='Cotes à vérifier';
+ try{textValue=fmt(measureSurface(state.works[wi],s).net)+' m²';}catch(e){}
+ return '<output class="area-value" aria-live="polite" data-area-work="'+wi+'" data-area-surface="'+esc(s.id)+'">'+textValue+'</output>';
+}
+function overview(w,wi){
+ let surfaces;try{surfaces=w.type==='room'?[...roomSegments(w).map(k=>w.walls[k.id]),w.ceiling]:[w.surface];}
+ catch(e){return '<p class="hint">Dimensions à corriger : '+esc(e.message)+'</p>';}
+ return '<section class="work-area-overview"><h4>Surfaces calculées</h4><div class="area-stat-grid">'
+ +surfaces.map(s=>{
+  let meta='';
+  try{const m=measureSurface(w,s);meta=fmt(m.gross)+' m² bruts'+(m.deduction?' − '+fmt(m.deduction)+' m² d’ouvertures':'');}catch(e){meta='Dimensions à vérifier';}
+  return '<div class="area-stat"><span>'+esc(s.name)+(s.active?'':' (exclu)')+'</span>'+areaOutput(wi,s)+'<small>'+meta+'</small></div>';
+ }).join('')+'</div></section>';
+}
+function activeScopes(){
+ const rows=[];
+ for(const w of state.works){
+  let surfaces;try{surfaces=w.type==='room'?[...roomSegments(w).map(k=>w.walls[k.id]),w.ceiling]:[w.surface];}catch(e){continue;}
+  for(const sf of surfaces){
+   if(!sf.active||sf.mode==='none')continue;
+   try{const m=measureSurface(w,sf);
+    rows.push({key:w.id+'::'+sf.id,workId:w.id,surfaceId:sf.id,area:m.net,label:w.name+' — '+sf.name+' ('+fmt(m.net)+' m² nets)'});
+   }catch(e){}
+  }
+ }
+ return rows;
+}
+function effectiveScope(){
+ const rows=activeScopes();
+ if(optionScope==='manual')return 'manual';
+ if(optionScope&&rows.some(x=>x.key===optionScope))return optionScope;
+ return rows.length===1?rows[0].key:'';
+}
+function availableSelections(option){
+ if(option.unit!=='m²')return state.extras;
+ const scope=effectiveScope();
+ if(!scope||scope==='manual')return state.extras;
+ const [w,s]=scope.split('::');
+ return state.extras.filter(x=>!x.autoQuantity||x.targetWorkId===w&&x.targetSurfaceId===s);
+}
+function alreadyForScope(option){return alreadySelected(option,availableSelections(option));}
+function scopePicker(){
+ const selected=effectiveScope();
+ return '<label class="field"><span>Mur ou surface concerné(e) par les options au m²</span><select data-option-scope aria-label="Choisir le support pour les options">'
+ +'<option value="" '+(!selected?'selected':'')+'>Sélectionner un support</option>'
+ +activeScopes().map(x=>'<option value="'+esc(x.key)+'" '+(selected===x.key?'selected':'')+'>'+esc(x.label)+'</option>').join('')
+ +'<option value="manual" '+(selected==='manual'?'selected':'')+'>Métrage libre à saisir</option></select></label>';
+}
+function extraScopePicker(opt,i){
+ const value=opt.autoQuantity?opt.targetWorkId+'::'+opt.targetSurfaceId:opt.quantity===''?'':'manual';
+ return '<label class="field cart-scope"><span>À appliquer sur</span><select data-extra-scope="'+i+'">'
+ +'<option value="" '+(!value?'selected':'')+'>Choisir un support</option>'
+ +activeScopes().map(x=>'<option value="'+esc(x.key)+'" '+(value===x.key?'selected':'')+'>'+esc(x.label)+'</option>').join('')
+ +'<option value="manual" '+(value==='manual'?'selected':'')+'>Saisie libre</option></select></label>';
+}
+function updateAreaOutputs(){
+ document.querySelectorAll?.('[data-area-work][data-area-surface]')?.forEach(el=>{
+  const w=state.works[Number(el.dataset.areaWork)];if(!w)return;
+  try{const sf=w.type==='room'?(w.ceiling.id===el.dataset.areaSurface?w.ceiling:Object.values(w.walls).find(x=>x.id===el.dataset.areaSurface)):w.surface;
+    el.textContent=sf?fmt(measureSurface(w,sf).net)+' m²':'—';
+  }catch(e){el.textContent='Cotes à vérifier';}
+ });
+}
+
 function stepWorks(){
  return heading('Choix des ouvrages','Comme sur Plaquiste : créez des pièces Rectangle, L, T ou U, des murs simples ou des surfaces seules.')
  +'<div class="add-works">'+[['room','▣','Ajouter une pièce'],['wall','▥','Ajouter un mur simple'],['surface','◫','Ajouter une surface simple']].map(([kind,ico,title])=>'<button class="add-card" data-action="add-work" data-type="'+kind+'" type="button"><span class="add-ico">'+ico+'</span><strong>'+title+'</strong><span class="add-plus">+ Ajouter</span></button>').join('')+'</div>'
@@ -67,7 +134,7 @@ function stepWorks(){
    +button('Configurer','pick-work','data-wi="'+i+'"','primary')+button('Supprimer','remove-work','data-wi="'+i+'"','danger')+'</div></div>'
    +grid(field('Nom',root+'.name',w.name,'text'),...fields)
    +(w.type==='room'?'<div class="shape-ceiling">'+tick('Inclure le plafond',root+'.ceiling.active',w.ceiling.active)+'</div>':'')
-   +preview+'</article>';
+   +preview+overview(w,i)+'</article>';
  }).join(''):'<div class="empty">Ajoutez une pièce, un mur ou une surface pour commencer.</div>');
 }
 function paintEditor(path,p){
@@ -137,10 +204,10 @@ function stepSupports(){
  )+tick('Inclure fourniture de plinthes bois (hors peinture)','works.'+wi+'.plinth.includeWood',w.plinth.includeWood)
  +(w.plinth.includeWood?field('Fourniture bois HT/ml','works.'+wi+'.plinth.woodPriceMl',w.plinth.woodPriceMl):'')
  +'<p class="hint">La peinture des plinthes est calculée en litres et regroupée avec les pots du chantier ; le bois est exclu par défaut.</p>'+paintEditor('works.'+wi+'.plinth.paint',w.plinth.paint)):'')+'</div>':'')
- +'</aside><section class="editor-column"><div class="support-top"><h2>'+esc(s.name)+'</h2>'+tick('Inclure',path+'.active',s.active)+'</div>'
+ +'</aside><section class="editor-column"><div class="support-top"><div><h2>'+esc(s.name)+'</h2><div class="surface-area-summary">Surface nette : '+areaOutput(wi,s)+'</div></div>'+tick('Inclure',path+'.active',s.active)+'</div>'
  +(s.active?'<div class="support-body">'
   +(w.type!=='room'?card('Dimensions',grid(field('Longueur (m)',path+'.length',s.length),field(w.type==='wall'?'Hauteur (m)':'Largeur (m)',path+'.height',s.height),
-    ...(w.type==='surface'?[field('Surface directe (m²)',path+'.areaOverride',s.areaOverride)]:[]))):'<p class="note">Dimensions calculées automatiquement depuis la géométrie de la pièce.</p>')
+    ...(w.type==='surface'?[field('Surface directe (m²)',path+'.areaOverride',s.areaOverride)]:[]))+'<div class="area-highlight">Surface calculée : '+areaOutput(wi,s)+'</div>'):'<p class="note">Dimensions calculées automatiquement depuis la géométrie de la pièce.</p>')
   +card('Revêtement',select('Type',path+'.mode',s.mode,[['paint','Peinture'],['wallpaper','Papier peint'],['none','Aucun']])
     +(s.mode==='paint'?paintEditor(path+'.paint',s.paint):s.mode==='wallpaper'?wallpaperEditor(path+'.wallpaper',s.wallpaper):''))
   +card('Préparation',preparationEditor(path+'.preparation',s.preparation))
@@ -155,7 +222,7 @@ function classifiedOptions(group){
  const items=filtered.map(item=>{
    const variants=item.variants.length?item.variants:[{id:item.id,label:item.label,unit:item.unit,materialUnitHT:null,hoursPerUnit:null}];
    const actions=variants.map(v=>{
-     const already=alreadySelected(v,state.extras);
+     const already=alreadyForScope(v);
      const isKnown=v.materialUnitHT!=null&&v.hoursPerUnit!=null;
      const label=variants.length>1?'+ '+esc(v.unit):'+ Ajouter';
      const helper=isKnown
@@ -184,13 +251,14 @@ function moneyOrPending(value) {
  return value===null||value===undefined||value===''?'À confirmer':money(value);
 }
 function optionTotals(opt){
- const q=Number(opt.quantity),price=opt.materialUnitHT===''?null:Number(opt.materialUnitHT),hours=opt.hoursPerUnit===''?null:Number(opt.hoursPerUnit);
+ const qtySource=optionQuantity(state,opt);
+ const q=qtySource.quantity===null||qtySource.quantity===''?NaN:Number(qtySource.quantity),price=opt.materialUnitHT===''?null:Number(opt.materialUnitHT),hours=opt.hoursPerUnit===''?null:Number(opt.hoursPerUnit);
  const rate=Number(state.labor.hourlyRate);
  const quantity=Number.isFinite(q)&&q>0?q:0;
  const validPrice=price!==null&&Number.isFinite(price)&&price>=0;
  const validHours=hours!==null&&Number.isFinite(hours)&&hours>=0;
  const material=validPrice?quantity*price:null,labour=validHours&&Number.isFinite(rate)?quantity*hours*rate:null;
- return {material,labour,hours:validHours?quantity*hours:null,amount:material===null||labour===null?null:material+labour};
+ return {material,labour,hours:validHours&&Number.isFinite(q)?quantity*hours:null,amount:!Number.isFinite(q)||material===null||labour===null?null:material+labour,qtySource};
 }
 function cartView(){
  const totals=state.extras.map(optionTotals);
@@ -201,11 +269,13 @@ function cartView(){
   return '<article class="cart-item"><div class="cart-item-top"><div><strong>'+esc(o.name)+'</strong>'
    +'<small>'+esc(o.referenceSource?o.referenceSource+' · ligne '+o.referenceRow:'Prestation à paramétrer')+'</small></div>'
    +button('✕','remove-extra','data-index="'+i+'" aria-label="Supprimer '+esc(o.name)+'"','danger')+'</div>'
-   +'<div class="cart-fields">'+field('Quantité',path+'.quantity',o.quantity)
+   +(o.unit==='m²'?extraScopePicker(o,i):'')
+   +'<div class="cart-fields">'+(o.autoQuantity?'<div class="cart-auto-quantity"><span>Surface nette automatique</span><strong>'+(price.qtySource.quantity===null?'À confirmer':fmt(price.qtySource.quantity)+' m²')+'</strong><small>Actualisée si les dimensions ou ouvertures changent</small></div>':field('Quantité',path+'.quantity',o.quantity))
    +(o.referenceId?'<div class="cart-unit"><span>Unité du barème</span><strong>'+esc(o.unit)+'</strong></div>':
       select('Unité',path+'.unit',o.unit,[['forfait','Forfait'],['m²','m²'],['ml','ml'],['unité','Unité']]))
    +field('Fournitures HT / '+esc(o.unit),path+'.materialUnitHT',o.materialUnitHT)
    +field('Temps h / '+esc(o.unit),path+'.hoursPerUnit',o.hoursPerUnit)+'</div>'
+   +(price.qtySource.reason?'<small class="cart-note cart-error">'+esc(price.qtySource.reason)+'</small>':'')
    +(o.notes?'<small class="cart-note">'+esc(o.notes)+'</small>':'')
    +'<div class="cart-line-total">'+(price.amount===null?'<span>À compléter</span>':'<strong>'+money(price.amount)+' HT</strong>')+'</div>'
    +'</article>';
@@ -213,7 +283,7 @@ function cartView(){
  return '<aside id="peintre-options-cart" class="options-cart '+(cartExpanded?'expanded':'')+'" aria-label="Panier des prestations sélectionnées">'
    +'<div class="cart-header"><span><strong>Panier des options</strong><small>'+state.extras.length+' prestation(s) sélectionnée(s)</small></span>'
    +'<button type="button" class="cart-mobile-toggle" data-action="toggle-cart" aria-label="'+(cartExpanded?'Réduire':'Ouvrir')+' le panier" aria-expanded="'+cartExpanded+'">'+(cartExpanded?'−':'+')+'</button></div>'
-   +'<div class="cart-content"><div class="cart-list">'+content+'</div>'
+   +'<div class="cart-content">'+(scopeWarning?'<div class="cart-warning" role="alert">'+esc(scopeWarning)+'</div>':'')+'<div class="cart-list">'+content+'</div>'
    +'<div class="cart-total"><span>'+(complete?'Sous-total options HT':'Sous-total connu HT · incomplet')+'</span><strong>'+money(known)+'</strong></div>'
    +(!complete?'<p class="cart-warning">Certaines prestations attendent un prix ou un temps. Le total du devis reste incomplet.</p>':'')
    +'<p class="cart-disclaimer">Tarifs de fournitures HT et temps indicatifs issus des barèmes Guillaume, modifiables. Le taux horaire entreprise complète la main-d’œuvre.</p></div></aside>';
@@ -238,6 +308,7 @@ function stepOptions(){
    +'<div class="company-rate"><span>Taux horaire entreprise</span><strong>'+money(state.labor.hourlyRate)+' / h</strong><small>Valeur de démonstration : les paramètres entreprise seront utilisés dans SpeedArti.</small></div>'
    +gear('taux horaire entreprise (simulation uniquement)',field('Taux horaire HT (€)','labor.hourlyRate',state.labor.hourlyRate)))
  +'<div class="options-layout"><div class="options-catalog">'
+ +card('Support ciblé pour les prestations au m²',scopePicker()+'<p class="hint">Les options au m² reprennent la surface nette du mur ou plafond sélectionné, avec les déductions d’ouvertures. La quantité se recalcule si les cotes changent. Forfaits et unités restent manuels.</p>')
  +'<h2>Choisissez vos prestations</h2>'
  +'<p class="hint">Six familles, sans rubrique « Barème Guillaume » séparée. Les options aux unités différentes restent des variantes d’un même service.</p>'
  +CLASSIFIED_OPTION_CATEGORIES.map(classifiedOptions).join('')
@@ -304,15 +375,29 @@ function act(t){
   state.works.push(newWork(type,(type==='room'?'Pièce ':type==='wall'?'Mur simple ':'Surface simple ')+number));
   selected={wi:state.works.length-1,key:type==='room'?'A':'surface'};render();return;
  }
- if(action==='remove-work'){state.works.splice(wi,1);selected={wi:0,key:'A'};render();return;}
- if(action==='pick-work'){selected={wi,key:state.works[wi].type==='room'?'A':'surface'};go(1);return;}
- if(action==='pick-support'){selected={wi,key:t.dataset.key};if(step===0)go(1);else render();return;}
+ if(action==='remove-work'){state.works.splice(wi,1);selected={wi:0,key:'A'};optionScope='';render();return;}
+ if(action==='pick-work'){selected={wi,key:state.works[wi].type==='room'?'A':'surface'};
+  const w=state.works[wi],sf=w.type==='room'?w.walls.A:w.surface;
+  optionScope=w.id+'::'+sf.id;go(1);return;}
+ if(action==='pick-support'){selected={wi,key:t.dataset.key};
+  const w=state.works[wi],sf=w.type==='room'?(selected.key==='ceiling'?w.ceiling:w.walls[selected.key]):w.surface;
+  if(sf)optionScope=w.id+'::'+sf.id;
+  if(step===0)go(1);else render();return;}
  if(action==='add-opening'){get(t.dataset.root).openings.push(newOpening());render();return;}
  if(action==='remove-opening'){get(t.dataset.root).openings.splice(index,1);render();return;}
  if(action==='add-extra'){
+  scopeWarning='';
   const opt=[...OPTION_CATEGORIES,...CLASSIFIED_OPTION_CATEGORIES].flatMap(g=>g.items.flatMap(x=>[x,...(x.variants||[])])).find(x=>x.id===t.dataset.option);
-  if(opt&&!alreadySelected(opt,state.extras)){
-    state.extras.push(createExtra(opt));cartExpanded=true;cartScrollToLast=true;
+  if(opt&&!alreadyForScope(opt)){
+    const extra=createExtra(opt),scope=effectiveScope();
+    if(extra.unit==='m²'&&scope&&scope!=='manual'){
+      const target=activeScopes().find(x=>x.key===scope);
+      if(target){
+        extra.autoQuantity=true;extra.targetWorkId=target.workId;extra.targetSurfaceId=target.surfaceId;
+        extra.quantity=target.area;
+      }
+    }else if(extra.unit==='m²'&&!scope){extra.quantity='';}
+    state.extras.push(extra);cartExpanded=true;cartScrollToLast=true;
   }
   render();return;
  }
@@ -326,6 +411,26 @@ function act(t){
  }
 }
 function onChange(t){
+ if(t.dataset.optionScope!==undefined){optionScope=t.value;render();return;}
+ if(t.dataset.extraScope!==undefined){
+   const i=Number(t.dataset.extraScope),extra=state.extras[i];if(!extra)return;
+   scopeWarning='';
+   const old=optionQuantity(state,extra);
+   if(t.value==='manual'){
+     extra.autoQuantity=false;extra.targetWorkId=null;extra.targetSurfaceId=null;
+     extra.quantity=old.quantity??(extra.quantity===''?1:extra.quantity);
+   }else if(t.value){
+     const target=activeScopes().find(x=>x.key===t.value);
+     if(target){
+       const sameService=state.extras.some((other,j)=>j!==i&&serviceKey(other)===serviceKey(extra)&&(
+         !other.autoQuantity||(other.targetWorkId===target.workId&&other.targetSurfaceId===target.surfaceId)));
+       if(sameService){scopeWarning='Cette prestation existe déjà sur ce support. Sélectionnez un autre mur ou supprimez le doublon.';render();return;}
+       extra.autoQuantity=true;extra.targetWorkId=target.workId;extra.targetSurfaceId=target.surfaceId;
+       extra.quantity=target.area;
+     }
+   }else {extra.autoQuantity=false;extra.targetWorkId=null;extra.targetSurfaceId=null;extra.quantity='';}
+   render();return;
+ }
  const path=t.dataset.path;if(!path)return;
  const old=get(path),next=t.type==='checkbox'?t.checked:t.value;
  set(path,next);
@@ -385,6 +490,7 @@ document.addEventListener('input',e=>{const t=e.target;
    if(paint&&paint.color==='color'&&paint.colorRef!==t.value){paint.potPrice='';paint.priceSource='color-needs-price';}
   }
   set(t.dataset.path,t.value);
+  if(/\.(length|height|width|shapeA|shapeB|areaOverride)$/.test(t.dataset.path))updateAreaOutputs();
  }});
 document.addEventListener('change',e=>onChange(e.target));
 el('previous').addEventListener('click',()=>go(step-1));
