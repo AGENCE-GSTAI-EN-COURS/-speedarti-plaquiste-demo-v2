@@ -1,6 +1,6 @@
 import {createDefaultState,newWork,newOpening,calculateEstimate,PREPARATIONS,PREP_DEFAULTS,WOOD_PREP_DEFAULTS,preparationRates,roomPolygon,roomSegments,roomArea,measureSurface,optionQuantity,demoYield,DEMO_REFERENCE} from './engine-v2.mjs';
 import {OPTION_CATEGORIES} from './options-catalog-v2.mjs';
-import {referenceForOption,alreadySelected,createExtra} from './guillaume-mapping-v2-4.mjs';
+import {referenceForOption,alreadySelected,createExtra,serviceKey} from './guillaume-mapping-v2-4.mjs';
 import {CLASSIFIED_OPTION_CATEGORIES,filterCategory} from './classified-options-v2-5.mjs';
 
 let state=createDefaultState(),step=0,selected={wi:0,key:'A'},lastError='';
@@ -9,6 +9,7 @@ const optionSearch=Object.create(null);
 let cartExpanded=false;
 let cartScrollToLast=false;
 let optionScope='';
+let scopeWarning='';
 const el=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 const money=x=>x==null?'À confirmer':Number(x).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
@@ -282,7 +283,7 @@ function cartView(){
  return '<aside id="peintre-options-cart" class="options-cart '+(cartExpanded?'expanded':'')+'" aria-label="Panier des prestations sélectionnées">'
    +'<div class="cart-header"><span><strong>Panier des options</strong><small>'+state.extras.length+' prestation(s) sélectionnée(s)</small></span>'
    +'<button type="button" class="cart-mobile-toggle" data-action="toggle-cart" aria-label="'+(cartExpanded?'Réduire':'Ouvrir')+' le panier" aria-expanded="'+cartExpanded+'">'+(cartExpanded?'−':'+')+'</button></div>'
-   +'<div class="cart-content"><div class="cart-list">'+content+'</div>'
+   +'<div class="cart-content">'+(scopeWarning?'<div class="cart-warning" role="alert">'+esc(scopeWarning)+'</div>':'')+'<div class="cart-list">'+content+'</div>'
    +'<div class="cart-total"><span>'+(complete?'Sous-total options HT':'Sous-total connu HT · incomplet')+'</span><strong>'+money(known)+'</strong></div>'
    +(!complete?'<p class="cart-warning">Certaines prestations attendent un prix ou un temps. Le total du devis reste incomplet.</p>':'')
    +'<p class="cart-disclaimer">Tarifs de fournitures HT et temps indicatifs issus des barèmes Guillaume, modifiables. Le taux horaire entreprise complète la main-d’œuvre.</p></div></aside>';
@@ -385,6 +386,7 @@ function act(t){
  if(action==='add-opening'){get(t.dataset.root).openings.push(newOpening());render();return;}
  if(action==='remove-opening'){get(t.dataset.root).openings.splice(index,1);render();return;}
  if(action==='add-extra'){
+  scopeWarning='';
   const opt=[...OPTION_CATEGORIES,...CLASSIFIED_OPTION_CATEGORIES].flatMap(g=>g.items.flatMap(x=>[x,...(x.variants||[])])).find(x=>x.id===t.dataset.option);
   if(opt&&!alreadyForScope(opt)){
     const extra=createExtra(opt),scope=effectiveScope();
@@ -412,6 +414,7 @@ function onChange(t){
  if(t.dataset.optionScope!==undefined){optionScope=t.value;render();return;}
  if(t.dataset.extraScope!==undefined){
    const i=Number(t.dataset.extraScope),extra=state.extras[i];if(!extra)return;
+   scopeWarning='';
    const old=optionQuantity(state,extra);
    if(t.value==='manual'){
      extra.autoQuantity=false;extra.targetWorkId=null;extra.targetSurfaceId=null;
@@ -419,6 +422,9 @@ function onChange(t){
    }else if(t.value){
      const target=activeScopes().find(x=>x.key===t.value);
      if(target){
+       const sameService=state.extras.some((other,j)=>j!==i&&serviceKey(other)===serviceKey(extra)&&(
+         !other.autoQuantity||(other.targetWorkId===target.workId&&other.targetSurfaceId===target.surfaceId)));
+       if(sameService){scopeWarning='Cette prestation existe déjà sur ce support. Sélectionnez un autre mur ou supprimez le doublon.';render();return;}
        extra.autoQuantity=true;extra.targetWorkId=target.workId;extra.targetSurfaceId=target.surfaceId;
        extra.quantity=target.area;
      }
