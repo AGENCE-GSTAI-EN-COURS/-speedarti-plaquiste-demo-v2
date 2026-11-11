@@ -36,9 +36,9 @@ test('Mur simple : surface calculée puis liée au ratissage et mise à jour',as
   assert.ok(nodes.content.innerHTML.includes('Support ciblé pour les prestations au m²'));
   click('add-extra',{option:'guillaume-p1-02'});
   let html=nodes.content.innerHTML;
-  assert.ok(html.includes('Surface nette automatique'));
+  assert.ok(html.includes('Surface du support préremplie automatiquement'));
   assert.ok(html.includes('10,5 m²'));
-  assert.equal(html.includes('data-path="extras.0.quantity"'),false);
+  assert.equal(html.includes('data-path="extras.0.quantity"'),true); // V2.7 : quantité éditable même quand liée
   click('go',{index:'0'});
   change('works.0.surface.length','6','number');
   click('go',{index:'2'});
@@ -53,7 +53,7 @@ test('Mur simple : surface calculée puis liée au ratissage et mise à jour',as
   click('go',{index:'0'});change('works.0.surface.length','7','number');click('go',{index:'2'});
   assert.ok(nodes.content.innerHTML.includes('data-path="extras.0.quantity"'));
   events.change({target:{dataset:{extraScope:'0'},value:key[1]}});
-  assert.ok(nodes.content.innerHTML.includes('Surface nette automatique'));
+  assert.ok(nodes.content.innerHTML.includes('Surface du support préremplie automatiquement'));
   assert.ok(nodes.content.innerHTML.includes('15,5 m²'));
  });
 });
@@ -68,7 +68,7 @@ test('Pièce en L : support B choisi, même option autorisée sur C mais pas deu
   click('go',{index:'2'});
   click('add-extra',{option:'guillaume-p1-02'});
   let html=nodes.content.innerHTML;
-  assert.ok(html.includes('Surface nette automatique'));
+  assert.ok(html.includes('Surface du support préremplie automatiquement'));
   click('add-extra',{option:'guillaume-p1-02'});
   assert.equal((nodes.content.innerHTML.match(/data-extra-scope="\d+"/g)||[]).length,1);
   click('go',{index:'1'});

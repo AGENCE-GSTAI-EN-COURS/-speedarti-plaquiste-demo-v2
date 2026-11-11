@@ -77,3 +77,10 @@ Statut : DOCUMENTATION À VALIDER ET IMPORTER DANS LA BASE CENTRALE. Aucun impor
 - PNT-AREA-045 : une prestation identique peut exister sur des murs distincts, mais pas deux fois sur le même support ; une option non liée reste à compléter, ou à chiffrer explicitement en métrage libre.
 - PNT-AREA-046 : un mur désactivé, supprimé ou inaccessible après changement de géométrie doit signaler un rattachement invalide et bloquer le total au lieu de conserver un chiffrage obsolète.
 Statut : delta documentaire préparé uniquement ; aucune écriture dans la base de connaissances centrale.
+
+
+## Delta V2.7 — À FUSIONNER dans la base de connaissances Ángel EXISTANTE (NON IMPORTÉ)
+- PNT-QTY-047 : lorsqu'une option au m² reprend automatiquement le mur ou plafond, l'artisan peut rectifier sa quantité pour une intervention partielle, sans modifier la surface géométrique du support.
+- PNT-QTY-048 : une quantité personnalisée est prioritaire jusqu'au choix explicite « Reprendre les m² du support », qui recalcule alors la superficie nette courante.
+- PNT-QTY-049 : recalculer les fournitures et les heures selon la quantité réellement retenue ; conserver les contrôles anti-doublon et d'intégrité du support.
+Statut : documentation prête à examiner ; aucun import dans la base centrale Ángel.
