@@ -1,4 +1,4 @@
-# SpeedArti — Métier Peintre V2.6 (démo commune)
+# SpeedArti — Métier Peintre V2.7 (démo commune)
 
 ## Périmètre
 Refonte de l'interface V0.1 selon le parcours Plaquiste V2 demandé par Guillaume.
@@ -116,3 +116,13 @@ Cela ne remplace pas une recette complète sur navigateur réel (mobile/desktop)
 - Sont préservées les six familles de Guillaume, les 92 références, le catalogue métiers et les règles fiscales existantes. Démo isolée, aucune production modifiée.
 - Tests automatisés V2.6 : 12 nouveaux scénarios moteur + 2 parcours UI Node ; ajout au workflow GitHub en complément des 77 tests moteur historiques et six parcours UI antérieurs.
 - Limites : tests navigateur réel PC/mobile et intégration aux paramètres entreprise, devis et base centrale Ángel restent à valider.
+
+
+## V2.7 — quantité de prestation personnalisable dans le panier
+- Chaque prestation possède désormais un champ « Quantité » directement éditable, y compris celles préremplies en m² nets depuis un mur ou plafond.
+- La saisie d’une quantité différente sur une prestation liée passe uniquement cette prestation en mode quantité personnalisée, sans perdre son lien avec le support.
+- Un bouton « ↺ Reprendre les m² du support » restaure le mode automatique ; il récupère alors la dernière superficie nette du support, déductions comprises.
+- Modifier les cotes ensuite n’écrase pas la quantité personnalisée. Une prestation restant en automatique continue de suivre la surface du support.
+- Prix des fournitures et heures-homme sont recalculés à partir de la quantité retenue. Les options au ml, à l’unité et au forfait restent directement modifiables.
+- Les contrôles anti-doublon restent basés sur le support même lorsque sa quantité est personnalisée ; un mur désactivé invalide encore une option qui lui est liée.
+- Tests dédiés : 8 tests métier + 1 parcours interface, ajoutés au workflow GitHub. La recette sur navigateur réel reste nécessaire.
