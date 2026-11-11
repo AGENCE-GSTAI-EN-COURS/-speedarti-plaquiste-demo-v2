@@ -1007,7 +1007,7 @@ test('S6.6 prix catalogue : fibres à confirmer, anti-termite tarifé',()=>{
 
 test('S6.6 options : les accordéons ouverts sont restaurés après rerender',()=>{
   const app=fs.readFileSync(new URL('./app.js',import.meta.url),'utf8');
-  assert.match(app,/\$\$\('details\.accordion\[open\]'/);assert.match(app,/\$\$\('details\.accordion','#stepHost'\)\.forEach/);assert.match(app,/d\.open=true/);
+  assert.match(app,/\$\$\('details\.accordion\[open\]',\$\('#stepHost'\)\)/);assert.match(app,/\$\$\('details\.accordion',\$\('#stepHost'\)\)\.forEach/);assert.ok(!app.includes("$('details.accordion','#stepHost')"));assert.match(app,/d\.open=true/);
 });
 
 test('S6.6 validation : données bloquantes contrôlées avant étape suivante',()=>{
