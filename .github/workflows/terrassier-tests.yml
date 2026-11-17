@@ -16,6 +16,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Vérifier la syntaxe du code et des tests
+        run: |
+          node --check terrassier/assets/v13-ui.mjs
+          node --check terrassier/assets/v13-model.mjs
+          node --check terrassier/tests/v13-browser.test.mjs
       - name: Exécuter les tests métier
         run: npm run test --prefix terrassier
   tests-navigateur:

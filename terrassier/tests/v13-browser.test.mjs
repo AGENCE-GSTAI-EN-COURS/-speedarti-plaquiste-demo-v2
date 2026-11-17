@@ -43,7 +43,7 @@ test('Terrassier V1.3 — plusieurs familles, plusieurs prestations et configura
   // Option stage 3 par ouvrage, indépendante de l'autre prestation.
   const supp=page.locator('#supplementsV13 .v13-work-card').filter({has:page.getByRole('heading',{name:/Tranchée et fouille/})});
   await supp.locator('input[aria-label^="Option Signalisation"]').check();
-  assert.equal(await page.locator('#recapV13').getByText(/Signalisation \\/ balisage chantier/).count(),1);
+  assert.equal(await page.locator('#recapV13').getByText('Signalisation / balisage chantier (complément)').count(),1);
   // Mise à jour du récapitulatif total
   const totals=page.locator('#recapV13 .v13-total b');
   assert.equal(await totals.count(),3);
