@@ -1,0 +1,48 @@
+<!doctype html><html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2066e4">
+<title>SpeedArti — Terrassier V1.2 (ancienne version)</title>
+<meta name="description" content="Terrassier SpeedArti : 25 prestations, formulaires adaptés, estimation indicative et catalogue de prix personnalisable.">
+<link rel="stylesheet" href="./assets/styles.css"><link rel="stylesheet" href="./assets/v12.css">
+</head><body>
+<header class="top"><a class="brand" href="../"><span class="brandLogo">S</span><span><b>SpeedArti</b><small>Terrassier · V1.2</small></span></a>
+<div class="topEnd"><span class="chip">Démo indépendante</span><a href="../" class="back">← Tous les métiers</a></div></header>
+<main class="container v12"><p class="notice"><a href="./" style="font-weight:700;color:#1553be">← Retour au nouveau parcours multi-prestations V1.3</a></p>
+<section class="hero"><div><span class="eyebrow">CHIFFRAGE TERRASSIER · V1.2</span><h1>Une prestation,<br><em>un vrai formulaire dédié.</em></h1><p>Choisissez l’ouvrage, saisissez vos dimensions, ajustez les coûts et contrôlez chaque ligne.</p></div><div class="heroGraphic"><span>🏗️</span><strong>25</strong><small>prestations différenciées</small></div></section>
+<div class="notice"><strong>Simulation uniquement — tarifs non validés commercialement en 2026.</strong> Les prix historiques et certaines provisions sont à confirmer avec vos fournisseurs. Ce module n'envoie aucune donnée à SpeedArti V2 et ne crée aucun devis réglementaire.</div>
+<div id="saveStatut" class="saveStatut" role="status">Vérification de la sauvegarde locale…</div>
+<section class="panel v12Nav"><div class="step"><span>1</span><div><h2>Famille de travaux</h2><p>Chaque bouton change les prestations proposées et les champs demandés.</p></div></div><div id="familles" class="v12Familles" role="group" aria-label="Familles de travaux"></div></section>
+<section class="panel v12Nav"><div class="step"><span>2</span><div><h2>Prestation précise</h2><p>Sélectionnez le travail qui correspond réellement au chantier.</p></div></div><div id="prestations" class="v12Prestations" role="group" aria-label="Prestations"></div><p id="travauxAvertissement" class="helper"></p></section>
+<section class="panel"><div class="step"><span>3</span><div><h2 id="titreFormulaire">Dimensions de l’ouvrage</h2><p id="descriptionFormulaire">Les champs sont adaptés au type de prestation.</p></div></div>
+<form id="formulaireV12" novalidate>
+ <div class="fields thirds" id="mesures"></div>
+ <div class="v12Options">
+  <div class="fields thirds">
+   <label>Nature du sol<select id="v12Sol"><option value="terre_meuble">Terre meuble</option><option value="sable">Sable</option><option value="argile">Argile/limon</option><option value="roche">Roche tendre</option><option value="roche_dure">Roche dure</option></select></label>
+   <label>Accès chantier<select id="v12Acces"><option value="normal">Normal</option><option value="difficile">Difficile</option></select></label>
+   <label>Engin<select id="v12Engin"><option value="auto">Choix automatique par prestation</option></select></label>
+  </div>
+  <div class="v12Checks"><label><input type="checkbox" id="v12Evac"> Évacuation hors chantier</label><label><input type="checkbox" id="v12Transport"> Acheminement de l’engin</label></div>
+  <div class="fields" style="max-width:280px"><label>Taux de TVA <small>À confirmer selon l'opération</small><select id="v12Tva"><option value="20">20 %</option><option value="10">10 %</option><option value="5.5">5,5 %</option><option value="0">0 %</option></select></label></div>
+ </div>
+ <div id="metresV12" class="metrics"></div>
+ <div class="actions"><button type="button" class="btn secondary" id="resetTravaux">Rétablir cette prestation</button><button type="submit" class="btn primary">Voir mon chiffrage ↓</button></div>
+ <p id="erreurV12" class="error" role="alert" hidden></p>
+</form></section>
+<section class="panel" id="rapport" aria-live="polite"><div class="step"><span>4</span><div><h2>Détail et corrections du chiffrage</h2><p>Fournitures, locations et heures de main-d'œuvre en postes séparés, pour éviter les doublons.</p></div></div>
+<div class="v12Totals" id="totauxV12"></div>
+<div id="noticePrix" class="notice">Tous les montants sont indicatifs HT sauf le total TTC. Les prix fournisseurs et les contraintes d'exécution restent à vérifier.</div>
+<div class="scroll"><table class="v12Table"><thead><tr><th>Poste</th><th>Qté calculée</th><th>Qté retenue</th><th>Unité</th><th>Prix HT / unité</th><th>Total HT</th><th>Statut</th></tr></thead><tbody id="lignesV12"></tbody></table></div>
+<div class="v12Warn"><div><h3>Points de vigilance</h3><ul id="alertesV12"></ul></div><div><h3>À faire vérifier / hors périmètre</h3><ul id="limitesV12"></ul></div></div>
+<div class="actions"><button id="clearCorrections" type="button" class="btn secondary">Annuler les corrections de lignes</button><button id="exportCSV12" type="button" class="btn secondary">Exporter CSV</button><button id="exportJSON12" type="button" class="btn secondary">Sauvegarde JSON</button><button id="imprimer12" type="button" class="btn primary">Imprimer / PDF</button></div>
+<p class="helper">Les corrections de ce type d'ouvrage sont enregistrées localement sur cet appareil, sans modifier le catalogue de prix général.</p>
+</section>
+<section class="panel" id="cataloguePrix"><div class="step"><span>€</span><div><h2>Ma bibliothèque de prix</h2><p>Un prix de référence historique et votre prix personnalisé, sauvegardé uniquement sur cet appareil.</p></div></div>
+<details id="catalogueDetails"><summary>Consulter et personnaliser les tarifs HT du module</summary>
+<div class="v12PriceToolbar"><label>Rechercher un poste<input type="search" id="recherchePrix" placeholder="Pelle, béton, PVC, main-d'œuvre…"></label><button id="prixReset" type="button" class="btn secondary">Supprimer mes prix personnels</button><button id="importJSON12" type="button" class="btn secondary">Importer sauvegarde JSON</button><input id="fichierJSON12" type="file" accept=".json,application/json" hidden></div>
+<div class="scroll"><table class="v12Table"><thead><tr><th>Poste</th><th>Tarif de base HT</th><th>Unité</th><th>Mon tarif HT</th><th>Source / origine</th></tr></thead><tbody id="prixLignes"></tbody></table></div>
+<p class="helper">Références V2 : 2024–2025. Certaines lignes sont des provisions ajoutées pour la démo. Avant de valider un prix, comparer au moins deux sources locales et renseigner une date/source de contrôle.</p>
+<div class="v12Sources"><a href="https://pellejaune.fr/prix-location-mini-pelle/" target="_blank" rel="noopener noreferrer">Comparatif location 2026</a><a href="https://conseils.hellopro.fr/combien-coute-le-beton-pret-a-l-emploi-4395.html" target="_blank" rel="noopener noreferrer">Fourchettes béton 2026</a></div>
+</details></section>
+<footer>SpeedArti Terrassier V1.2 — Démo GitHub Pages isolée. Aucune donnée de chantier n’est transmise à la production.</footer>
+</main><script type="module" src="./assets/v12-ui.mjs"></script></body></html>

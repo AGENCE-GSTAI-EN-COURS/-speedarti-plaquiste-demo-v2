@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
-const BASE=process.env.TERRASSIER_E2E_URL||'http://127.0.0.1:8020/terrassier/';
+const BASE=process.env.TERRASSIER_E2E_URL||'http://127.0.0.1:8020/terrassier/v12-single.html';
 const num=t=>Number(t.replace(/[^\d,]/g,'').replace(',','.'));
 test('V1.2 navigation des 5 familles, 25 prestations, champs spécifiques, tarifs et sauvegarde',async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});

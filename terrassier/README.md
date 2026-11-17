@@ -1,36 +1,34 @@
-# SPEEDARTI — TERRASSIER V1.2 (DEMO INDÉPENDANTE)
+# SPEEDARTI — TERRASSIER V1.3 | Chantiers multi-prestations
 
-Dépôt autorisé : `AGENCE-GSTAI-EN-COURS/-speedarti-plaquiste-demo-v2`, dossier `/terrassier/`. Branche `main`. Version source `GSTAI-Sp/speedarti-v2` **LECTURE SEULE absolue**, aucune modification faite sur la production.
+## Demande Guillaume du 16 novembre 2026
 
-## Couverture réelle
+L'utilisateur compose un seul chantier à partir de **plusieurs familles** et de **plusieurs prestations par famille**.
 
-- 5 catégories, **25 prestations disposant chacune d'une recette distincte** : terrassements/fondations, chemins/parkings, enrobés, réseaux, démolition
-- Formulaire contextuel pour chaque prestation : dimensions, profondeur, épaisseurs, regards, pente, bordures, souches, etc.
-- BPU historique et provisions, calculs indicatifs par unité HT : engins, matériaux, main-d'œuvre, transport/évacuation
-- Chiffrage réactif à chaque saisie, tarif global personnalisable ou correction du prix/quantité d'une ligne
-- Conservation locale (`localStorage`) des prix, dimensions et corrections par prestation ; export/import JSON et export CSV
-- Avertissements explicites sur les devis incomplets (fondations profondes, réseaux eau potable, réseaux secs, ANC)
-- Des tests pour les recettes métier et un parcours de navigation en navigateur Chromium (actions GitHub)
+- **Étape 1** : sélectionner plusieurs familles puis cocher toutes les prestations nécessaires dans chacune. Les prestations déjà sélectionnées sont conservées.
+- **Étape 2** : paramétrer chaque prestation indépendamment : dimensions, type de sol, engin (dont pelle 4 t à prix manuel), distance d'évacuation, stockage sur place, conducteur seul ou avec 1–3 aides, TVA.
+- **Étape 3** : options additionnelles par prestation, quantité paramétrable, rejet des doublons si la ligne figure déjà dans la recette.
+- **Récapitulatif** : détail par ouvrage et total global HT/TVA/TTC, sauvegarde locale, exports CSV et JSON.
 
-## Limites métiers et commerciales
+**Démo historique V1.2 conservée** dans `terrassier/v12-single.html`.
 
-**Ce n'est pas un catalogue tarifaire vérifié en 2026.** Les valeurs de base proviennent du BPU SpeedArti V2 (moyennes 2024–2025) et de quelques **provisions internes non sourcées**. Les loueurs, décharges, distributeurs et centrales béton appliquent des tarifs locaux différents. Prix et quantités doivent être vérifiés avant devis. Les résultats ne sont pas destinés à être intégrés automatiquement aux documents facturables.
+## Base de données
 
-Attention :
-- Fondations profondes : pas de forage spécialisé, armatures, béton spécifique, essais et études structure.
-- ANC : pas de filière d'épandage, contrôle SPANC, étude de sol ni accessoires complets.
-- Réseaux eau potable / secs : raccords, vannes, gestionnaire, tests et câblage non chiffrés.
-- Démolition : diagnostics, désamiantage, contraintes structurelles et éventuelles autorisations hors chiffrage.
-- Les tarifs d'engins sont sans opérateur et la MO reste séparée ; vérifier que le devis du loueur ne contient pas déjà un conducteur.
-- Les prix personnalisés sont conservés **sur le navigateur seulement** : vider les données du site les supprime. Exporter JSON pour les garder.
+- `database/referentiel-v13.json` : extraction datée des fichiers existants : **5 familles, 25 prestations, 17 types de champs, 59 tarifs**. Aucun tarif 2026 inventé.
+- `database/schema-staging.sql` : proposition de tables relationnelles PostgreSQL : familles, prestations, champs, prix, recettes, options, chantiers et lignes multiples.
+- `database/seed-staging.sql` : peuplement des référentiels historiques et des champs. **AUCUN SQL N'A ÉTÉ EXÉCUTÉ**, aucun raccordement Supabase/production.
+- Le moteur de calcul utilise directement les référentiels `assets/v12-data.mjs` et `assets/v12-engine.mjs` de la démo validée, encapsulés par `assets/v13-model.mjs`.
+- L'interface sauvegarde les chantiers dans le navigateur (`localStorage`), clé `speedarti.terrassier.demo.v13`, et réutilise les **prix personnalisés V1.2** présents dans ce navigateur.
 
-## Sources de contexte 2026 (comparaisons, non prix contractuels)
+## Précautions
 
-- Relevés d'offres de location : https://pellejaune.fr/prix-location-mini-pelle/
-- Fourchettes béton prêt à l'emploi : https://conseils.hellopro.fr/combien-coute-le-beton-pret-a-l-emploi-4395.html
-- Ces recherches ne remplacent pas une collecte de devis fournisseurs localisés pour chaque article.
+- Prix historiques 2024–2025 et provisions de démonstration ; consulter `AUDIT_PRIX_2026.md`.
+- Pelle 4 t : **aucun prix confirmé dans la BPU actuelle**. Le choix de cette machine affiche un poste explicitement non tarifé jusqu'à saisie manuelle du prix HT/jour.
+- Les effectifs sont modélisés en hypothèse de coût : conducteur seul => reprise des heures d'aide par le conducteur ; avec aides => multiplication des heures d'aide. Ce n'est pas un calcul de productivité chantier certifié.
+- Certaines recettes restent **partielles** (fondations, ANC, réseaux spécialisés, etc.) : le chiffrage affiché est marqué incomplet ; export CSV/impression désactivé tant que l'ensemble n'est pas exploitable.
+- Aucune connexion au dépôt `GSTAI-Sp/speedarti-v2` en écriture. Aucun envoi de données, aucune modification de production.
+- Sauvegarde locale seulement ; l'export JSON est conseillé pour partager un chantier ou éviter sa perte.
 
-## Commandes de test
+## Tests
 
 ```bash
 npm install --prefix terrassier
@@ -40,6 +38,12 @@ python3 -m http.server 8020
 npm run test:e2e --prefix terrassier
 ```
 
-## Sprint futur d'intégration
+Les tests du moteur V1.2 sont conservés et ceux de sélection multiple V1.3 ajoutés ; les tests navigateur valident les deux parcours.
 
-La réintégration éventuelle dans SpeedArti requiert audit de compatibilité par Anne-Sophie et enrichissement de la base de connaissances existante d'Ángel — jamais de base parallèle. Aucun lien Supabase ou API n'est configuré pour cette démo.
+## À faire pour Guillaume avant intégration
+
+1. Examiner/valider le schéma et la migration sur une copie staging, avec droits et RLS adaptés.
+2. Obtenir les cotes et rendements métier définitifs, prix fournisseurs 2026, conditions d'achat et unités.
+3. Définir précisément les options supplémentaires propres à chaque ouvrage de l'étape 3.
+4. Faire valider l'hypothèse conducteur seul / avec aides par un terrassier.
+5. Ajouter ces nouvelles connaissances à la **base existante** d'Ángel, sans créer de base parallèle.

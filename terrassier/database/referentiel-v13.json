@@ -1,0 +1,1075 @@
+{
+  "version": "1.3.0",
+  "date_extraction": "2026-11-17",
+  "base": "Dépôt de démonstration actuel — aucune modification de GSTAI-Sp/speedarti-v2",
+  "statut_prix": "Prix historiques 2024–2025 ou provisions internes non validées en 2026",
+  "familles": [
+    {
+      "code": "terrassement_fondation",
+      "designation": "Terrassement et fondations",
+      "ordre": 1
+    },
+    {
+      "code": "chemin_acces",
+      "designation": "Chemins et parkings",
+      "ordre": 2
+    },
+    {
+      "code": "enrobe",
+      "designation": "Enrobé et voirie",
+      "ordre": 3
+    },
+    {
+      "code": "reseaux",
+      "designation": "Réseaux et canalisations",
+      "ordre": 4
+    },
+    {
+      "code": "demolition",
+      "designation": "Démolition",
+      "ordre": 5
+    }
+  ],
+  "prestations": [
+    {
+      "code": "tranchee",
+      "famille": "terrassement_fondation",
+      "designation": "Tranchée et fouille en rigole",
+      "mesure": "volume",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "tranchee",
+      "defaults": {
+        "L": 20,
+        "W": 0.6,
+        "D": 1
+      },
+      "ordre": 1
+    },
+    {
+      "code": "fouille",
+      "famille": "terrassement_fondation",
+      "designation": "Fouille en masse",
+      "mesure": "volume",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "fouille",
+      "defaults": {
+        "L": 12,
+        "W": 10,
+        "D": 1.5
+      },
+      "ordre": 2
+    },
+    {
+      "code": "fondations_superficielles",
+      "famille": "terrassement_fondation",
+      "designation": "Fondations superficielles",
+      "mesure": "volume",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "fondations_superficielles",
+      "defaults": {
+        "L": 45,
+        "W": 0.5,
+        "D": 0.6
+      },
+      "ordre": 3
+    },
+    {
+      "code": "fondations_profondes",
+      "famille": "terrassement_fondation",
+      "designation": "Fondations profondes (pré-étude)",
+      "mesure": "volume",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "N"
+      ],
+      "recette": "fondations_profondes",
+      "defaults": {
+        "L": 12,
+        "W": 0.6,
+        "D": 2.5,
+        "N": 4
+      },
+      "ordre": 4
+    },
+    {
+      "code": "nivellement",
+      "famille": "terrassement_fondation",
+      "designation": "Nivellement et réglage",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E"
+      ],
+      "recette": "nivellement",
+      "defaults": {
+        "S": 250,
+        "E": 10,
+        "evac": false
+      },
+      "ordre": 5
+    },
+    {
+      "code": "decaissement",
+      "famille": "terrassement_fondation",
+      "designation": "Décaissement de plateforme",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "distance"
+      ],
+      "recette": "decaissement",
+      "defaults": {
+        "S": 120,
+        "E": 30
+      },
+      "ordre": 6
+    },
+    {
+      "code": "allee_beton",
+      "famille": "chemin_acces",
+      "designation": "Allée béton",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "gnt",
+        "distance"
+      ],
+      "recette": "allee_beton",
+      "defaults": {
+        "S": 75,
+        "E": 12,
+        "gnt": 15
+      },
+      "ordre": 7
+    },
+    {
+      "code": "allee_enrobe",
+      "famille": "chemin_acces",
+      "designation": "Allée enrobée",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "gnt",
+        "distance"
+      ],
+      "recette": "allee_enrobe",
+      "defaults": {
+        "S": 90,
+        "E": 6,
+        "gnt": 20
+      },
+      "ordre": 8
+    },
+    {
+      "code": "allee_paves",
+      "famille": "chemin_acces",
+      "designation": "Allée pavée",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "gnt",
+        "distance"
+      ],
+      "recette": "allee_paves",
+      "defaults": {
+        "S": 65,
+        "E": 6,
+        "gnt": 20
+      },
+      "ordre": 9
+    },
+    {
+      "code": "allee_gravier",
+      "famille": "chemin_acces",
+      "designation": "Allée gravillonnée",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "gnt",
+        "distance"
+      ],
+      "recette": "allee_gravier",
+      "defaults": {
+        "S": 100,
+        "E": 5,
+        "gnt": 20
+      },
+      "ordre": 10
+    },
+    {
+      "code": "parking",
+      "famille": "chemin_acces",
+      "designation": "Parking / aire de stationnement",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "gnt",
+        "BR",
+        "distance"
+      ],
+      "recette": "parking",
+      "defaults": {
+        "S": 200,
+        "E": 6,
+        "gnt": 25,
+        "BR": 60
+      },
+      "ordre": 11
+    },
+    {
+      "code": "pose_enrobe_neuf",
+      "famille": "enrobe",
+      "designation": "Enrobé neuf",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "gnt"
+      ],
+      "recette": "pose_enrobe_neuf",
+      "defaults": {
+        "S": 150,
+        "E": 6,
+        "gnt": 20,
+        "evac": false
+      },
+      "ordre": 12
+    },
+    {
+      "code": "pose_enrobe_multicouches",
+      "famille": "enrobe",
+      "designation": "Enrobé multicouche",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "ep2",
+        "gnt"
+      ],
+      "recette": "pose_enrobe_multicouches",
+      "defaults": {
+        "S": 180,
+        "E": 6,
+        "ep2": 4,
+        "gnt": 20,
+        "evac": false
+      },
+      "ordre": 13
+    },
+    {
+      "code": "enrobe_rechargement",
+      "famille": "enrobe",
+      "designation": "Rechargement d’enrobé",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E"
+      ],
+      "recette": "enrobe_rechargement",
+      "defaults": {
+        "S": 150,
+        "E": 4,
+        "evac": false
+      },
+      "ordre": 14
+    },
+    {
+      "code": "reparation",
+      "famille": "enrobe",
+      "designation": "Réparation / reprise locale",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E"
+      ],
+      "recette": "reparation",
+      "defaults": {
+        "S": 30,
+        "E": 5,
+        "evac": false
+      },
+      "ordre": 15
+    },
+    {
+      "code": "assainissement_eu",
+      "famille": "reseaux",
+      "designation": "Réseaux d’eaux usées",
+      "mesure": "reseau",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "nbRegards",
+        "p",
+        "distance"
+      ],
+      "recette": "assainissement_eu",
+      "defaults": {
+        "L": 30,
+        "W": 0.6,
+        "D": 1.1,
+        "nbRegards": 3,
+        "p": 1.5
+      },
+      "ordre": 16
+    },
+    {
+      "code": "assainissement_ep",
+      "famille": "reseaux",
+      "designation": "Réseaux d’eaux pluviales",
+      "mesure": "reseau",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "nbRegards",
+        "p",
+        "distance"
+      ],
+      "recette": "assainissement_ep",
+      "defaults": {
+        "L": 25,
+        "W": 0.6,
+        "D": 0.9,
+        "nbRegards": 2,
+        "p": 1
+      },
+      "ordre": 17
+    },
+    {
+      "code": "eau_potable",
+      "famille": "reseaux",
+      "designation": "Réseau eau potable (estimatif)",
+      "mesure": "reseau",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "eau_potable",
+      "defaults": {
+        "L": 30,
+        "W": 0.5,
+        "D": 0.8
+      },
+      "ordre": 18
+    },
+    {
+      "code": "reseau_sec",
+      "famille": "reseaux",
+      "designation": "Fourreaux / réseaux secs",
+      "mesure": "reseau",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "reseau_sec",
+      "defaults": {
+        "L": 40,
+        "W": 0.5,
+        "D": 0.7
+      },
+      "ordre": 19
+    },
+    {
+      "code": "fosse_septique",
+      "famille": "reseaux",
+      "designation": "Fosse toutes eaux / ANC",
+      "mesure": "unite",
+      "champs": [
+        "N",
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "fosse_septique",
+      "defaults": {
+        "N": 1,
+        "L": 6,
+        "W": 3,
+        "D": 1.6
+      },
+      "ordre": 20
+    },
+    {
+      "code": "drainage",
+      "famille": "reseaux",
+      "designation": "Drainage périphérique",
+      "mesure": "reseau",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "drainage",
+      "defaults": {
+        "L": 35,
+        "W": 0.5,
+        "D": 0.8
+      },
+      "ordre": 21
+    },
+    {
+      "code": "demolition_beton",
+      "famille": "demolition",
+      "designation": "Démolition de béton",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "distance"
+      ],
+      "recette": "demolition_beton",
+      "defaults": {
+        "S": 65,
+        "E": 15
+      },
+      "ordre": 22
+    },
+    {
+      "code": "demolition_enrobe",
+      "famille": "demolition",
+      "designation": "Fraisage / dépose d’enrobé",
+      "mesure": "surface",
+      "champs": [
+        "S",
+        "E",
+        "distance"
+      ],
+      "recette": "demolition_enrobe",
+      "defaults": {
+        "S": 130,
+        "E": 8
+      },
+      "ordre": 23
+    },
+    {
+      "code": "depose_reseaux",
+      "famille": "demolition",
+      "designation": "Dépose d’anciennes canalisations",
+      "mesure": "reseau",
+      "champs": [
+        "L",
+        "W",
+        "D",
+        "distance"
+      ],
+      "recette": "depose_reseaux",
+      "defaults": {
+        "L": 30,
+        "W": 0.55,
+        "D": 0.8
+      },
+      "ordre": 24
+    },
+    {
+      "code": "dessouchage",
+      "famille": "demolition",
+      "designation": "Dessouchage",
+      "mesure": "unite",
+      "champs": [
+        "arbres",
+        "diametreArbre",
+        "distance"
+      ],
+      "recette": "dessouchage",
+      "defaults": {
+        "arbres": 4,
+        "diametreArbre": 45
+      },
+      "ordre": 25
+    }
+  ],
+  "champs": [
+    {
+      "code": "L",
+      "designation": "Longueur",
+      "unite": "m",
+      "defaut": 20
+    },
+    {
+      "code": "W",
+      "designation": "Largeur",
+      "unite": "m",
+      "defaut": 0.6
+    },
+    {
+      "code": "D",
+      "designation": "Profondeur",
+      "unite": "m",
+      "defaut": 0.8
+    },
+    {
+      "code": "S",
+      "designation": "Surface",
+      "unite": "m²",
+      "defaut": 80
+    },
+    {
+      "code": "E",
+      "designation": "Épaisseur",
+      "unite": "cm",
+      "defaut": 20
+    },
+    {
+      "code": "N",
+      "designation": "Nombre",
+      "unite": "u",
+      "defaut": 1
+    },
+    {
+      "code": "p",
+      "designation": "Pente de réseau",
+      "unite": "%",
+      "defaut": 1.5
+    },
+    {
+      "code": "distance",
+      "designation": "Distance vers décharge",
+      "unite": "km",
+      "defaut": 20
+    },
+    {
+      "code": "BR",
+      "designation": "Longueur de bordures",
+      "unite": "ml",
+      "defaut": 0
+    },
+    {
+      "code": "gnt",
+      "designation": "Épaisseur de GNT",
+      "unite": "cm",
+      "defaut": 20
+    },
+    {
+      "code": "nbRegards",
+      "designation": "Nombre de regards",
+      "unite": "u",
+      "defaut": 2
+    },
+    {
+      "code": "nbCouches",
+      "designation": "Nombre de couches",
+      "unite": "u",
+      "defaut": 2
+    },
+    {
+      "code": "ep2",
+      "designation": "Épaisseur 2e couche",
+      "unite": "cm",
+      "defaut": 4
+    },
+    {
+      "code": "arbres",
+      "designation": "Nombre de souches",
+      "unite": "u",
+      "defaut": 2
+    },
+    {
+      "code": "diametreArbre",
+      "designation": "Diamètre moyen des souches",
+      "unite": "cm",
+      "defaut": 40
+    },
+    {
+      "code": "prepa",
+      "designation": "Épaisseur à déposer",
+      "unite": "cm",
+      "defaut": 6
+    },
+    {
+      "code": "securite",
+      "designation": "Marge de sécurité",
+      "unite": "%",
+      "defaut": 0
+    }
+  ],
+  "tarifs": [
+    {
+      "code": "MO_COND",
+      "designation": "Conducteur d’engin",
+      "prix_ht": 55,
+      "unite": "h",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "MO_OUV",
+      "designation": "Ouvrier terrassier",
+      "prix_ht": 45,
+      "unite": "h",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "MO_CHEF",
+      "designation": "Chef d’équipe",
+      "prix_ht": 60,
+      "unite": "h",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "MO_MAN",
+      "designation": "Manœuvre",
+      "prix_ht": 38,
+      "unite": "h",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_1_5",
+      "designation": "Mini-pelle 1,5 t",
+      "prix_ht": 280,
+      "unite": "jour",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_3",
+      "designation": "Mini-pelle 3 t",
+      "prix_ht": 350,
+      "unite": "jour",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_8",
+      "designation": "Pelle 8 t",
+      "prix_ht": 520,
+      "unite": "jour",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_14",
+      "designation": "Pelle 14 t",
+      "prix_ht": 750,
+      "unite": "jour",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_BULL",
+      "designation": "Bulldozer",
+      "prix_ht": 680,
+      "unite": "jour",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_ROUL",
+      "designation": "Compacteur / rouleau",
+      "prix_ht": 320,
+      "unite": "jour",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_FIN",
+      "designation": "Finisseur",
+      "prix_ht": 1200,
+      "unite": "jour",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ENG_BRH",
+      "designation": "BRH et accessoires",
+      "prix_ht": 155,
+      "unite": "jour",
+      "origine": "provision"
+    },
+    {
+      "code": "ENG_CAMION",
+      "designation": "Camion benne 3,5 t",
+      "prix_ht": 260,
+      "unite": "jour",
+      "origine": "provision"
+    },
+    {
+      "code": "ENG_CAROT",
+      "designation": "Carotteuse / scie de sol",
+      "prix_ht": 170,
+      "unite": "jour",
+      "origine": "provision"
+    },
+    {
+      "code": "ENG_FRAIS",
+      "designation": "Raboteuse compacte",
+      "prix_ht": 570,
+      "unite": "jour",
+      "origine": "provision"
+    },
+    {
+      "code": "ENG_DESS",
+      "designation": "Rogneuse de souches",
+      "prix_ht": 310,
+      "unite": "jour",
+      "origine": "provision"
+    },
+    {
+      "code": "ENG_PLAQUE",
+      "designation": "Plaque vibrante",
+      "prix_ht": 95,
+      "unite": "jour",
+      "origine": "provision"
+    },
+    {
+      "code": "TRANSPORT_ENG",
+      "designation": "Acheminement aller-retour engin",
+      "prix_ht": 180,
+      "unite": "forfait",
+      "origine": "provision"
+    },
+    {
+      "code": "TRANSPORT_DECH",
+      "designation": "Rotation transport déblais",
+      "prix_ht": 1.8,
+      "unite": "m³·km",
+      "origine": "provision"
+    },
+    {
+      "code": "B20",
+      "designation": "Béton C20/25 (hors mise en œuvre)",
+      "prix_ht": 105,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "B25",
+      "designation": "Béton C25/30 (hors mise en œuvre)",
+      "prix_ht": 120,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "B30",
+      "designation": "Béton C30/37",
+      "prix_ht": 135,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "B35",
+      "designation": "Béton haute résistance",
+      "prix_ht": 155,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "MORTIER",
+      "designation": "Mortier de scellement",
+      "prix_ht": 120,
+      "unite": "m³",
+      "origine": "provision"
+    },
+    {
+      "code": "EN_BBSG",
+      "designation": "Enrobé BBSG",
+      "prix_ht": 85,
+      "unite": "t",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "EN_BBM",
+      "designation": "Enrobé BBM",
+      "prix_ht": 90,
+      "unite": "t",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "EN_BBME",
+      "designation": "Enrobé BBME",
+      "prix_ht": 95,
+      "unite": "t",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "ACCRO",
+      "designation": "Couche d’accrochage",
+      "prix_ht": 1.8,
+      "unite": "m²",
+      "origine": "provision"
+    },
+    {
+      "code": "PAVES",
+      "designation": "Pavés autobloquants fournis",
+      "prix_ht": 55,
+      "unite": "m²",
+      "origine": "provision"
+    },
+    {
+      "code": "DALLES",
+      "designation": "Dalles béton fournies",
+      "prix_ht": 45,
+      "unite": "m²",
+      "origine": "provision"
+    },
+    {
+      "code": "GRAN_GNT",
+      "designation": "GNT 0/31,5",
+      "prix_ht": 28,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "GRAN_080",
+      "designation": "Grave 0/80",
+      "prix_ht": 22,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "GRAN_SABLE",
+      "designation": "Sable 0/4",
+      "prix_ht": 32,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "GRAN_GRAV",
+      "designation": "Gravillon décoratif",
+      "prix_ht": 55,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "GEOT_200",
+      "designation": "Géotextile 200 g/m²",
+      "prix_ht": 2.5,
+      "unite": "m²",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "POLY",
+      "designation": "Polyane 200 µ",
+      "prix_ht": 1.5,
+      "unite": "m²",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "DRAIN",
+      "designation": "Drain perforé Ø100",
+      "prix_ht": 9,
+      "unite": "ml",
+      "origine": "provision"
+    },
+    {
+      "code": "PVC_100",
+      "designation": "Tuyau PVC Ø100",
+      "prix_ht": 12.5,
+      "unite": "ml",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "PVC_125",
+      "designation": "Tuyau PVC Ø125",
+      "prix_ht": 18,
+      "unite": "ml",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "PVC_160",
+      "designation": "Tuyau PVC Ø160",
+      "prix_ht": 28,
+      "unite": "ml",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "PVC_200",
+      "designation": "Tuyau PVC Ø200",
+      "prix_ht": 42,
+      "unite": "ml",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "AEP_32",
+      "designation": "PEHD eau potable Ø32",
+      "prix_ht": 5.5,
+      "unite": "ml",
+      "origine": "provision"
+    },
+    {
+      "code": "TPC_63",
+      "designation": "Gaine TPC Ø63",
+      "prix_ht": 4.8,
+      "unite": "ml",
+      "origine": "provision"
+    },
+    {
+      "code": "GRILLAGE",
+      "designation": "Grillage avertisseur",
+      "prix_ht": 1.6,
+      "unite": "ml",
+      "origine": "provision"
+    },
+    {
+      "code": "REG_40",
+      "designation": "Regard 40×40",
+      "prix_ht": 85,
+      "unite": "u",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "REG_50",
+      "designation": "Regard 50×50",
+      "prix_ht": 120,
+      "unite": "u",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "REG_60",
+      "designation": "Regard 60×60",
+      "prix_ht": 165,
+      "unite": "u",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "FOSSE_3000",
+      "designation": "Fosse toutes eaux 3 000 L",
+      "prix_ht": 1200,
+      "unite": "u",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "FOSSE_5000",
+      "designation": "Fosse toutes eaux 5 000 L",
+      "prix_ht": 1800,
+      "unite": "u",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "MICRO_4",
+      "designation": "Micro-station 4 EH",
+      "prix_ht": 5500,
+      "unite": "u",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "MICRO_6",
+      "designation": "Micro-station 6 EH",
+      "prix_ht": 7200,
+      "unite": "u",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "EVAC_TERRE",
+      "designation": "Filière déblais inertes",
+      "prix_ht": 25,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "EVAC_GRAV",
+      "designation": "Filière gravats / roche",
+      "prix_ht": 45,
+      "unite": "m³",
+      "origine": "historique_2024_2025"
+    },
+    {
+      "code": "EVAC_VERT",
+      "designation": "Filière déchets verts",
+      "prix_ht": 30,
+      "unite": "m³",
+      "origine": "provision"
+    },
+    {
+      "code": "EVAC_ENROBE",
+      "designation": "Filière enrobé recyclé",
+      "prix_ht": 48,
+      "unite": "m³",
+      "origine": "provision"
+    },
+    {
+      "code": "POMPAGE",
+      "designation": "Pompage provisoire",
+      "prix_ht": 180,
+      "unite": "jour",
+      "origine": "provision"
+    },
+    {
+      "code": "BLINDAGE",
+      "designation": "Blindage provisoire",
+      "prix_ht": 35,
+      "unite": "m²",
+      "origine": "provision"
+    },
+    {
+      "code": "BORDURE",
+      "designation": "Bordure fournie avec pose",
+      "prix_ht": 42,
+      "unite": "ml",
+      "origine": "provision"
+    },
+    {
+      "code": "SIGNAL",
+      "designation": "Signalisation / balisage chantier",
+      "prix_ht": 95,
+      "unite": "forfait",
+      "origine": "provision"
+    }
+  ],
+  "options": {
+    "POMPAGE": {
+      "name": "Pompage / gestion de l’eau",
+      "families": [
+        "terrassement_fondation",
+        "reseaux"
+      ],
+      "qte": 1
+    },
+    "BLINDAGE": {
+      "name": "Blindage provisoire de fouille",
+      "families": [
+        "terrassement_fondation",
+        "reseaux"
+      ],
+      "qte": 10
+    },
+    "SIGNAL": {
+      "name": "Signalisation de chantier",
+      "families": [
+        "terrassement_fondation",
+        "chemin_acces",
+        "enrobe",
+        "reseaux",
+        "demolition"
+      ],
+      "qte": 1
+    },
+    "BORDURE": {
+      "name": "Bordures et pose complémentaires",
+      "families": [
+        "chemin_acces"
+      ],
+      "qte": 10
+    },
+    "GEOT_200": {
+      "name": "Géotextile complémentaire",
+      "families": [
+        "terrassement_fondation",
+        "chemin_acces",
+        "reseaux"
+      ],
+      "qte": 10
+    }
+  }
+}

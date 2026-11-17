@@ -1,0 +1,74 @@
+/* Terrassier V1.3 — sélection multiple et formulaires par prestation. */
+.v13-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.v13-nav a{display:flex;align-items:center;gap:8px;border:1px solid #d7e5f4;border-radius:10px;background:white;padding:12px 9px;font-size:12px;font-weight:700;color:#28547f}
+.v13-nav b{display:inline-grid;place-items:center;border-radius:100%;background:#e8f1ff;color:#1e60d2;min-width:27px;height:27px}
+.v13-toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:14px;padding:12px 16px;margin-bottom:10px;background:white;border:1px solid #d6e3f4;border-radius:12px}
+.v13-toolbar label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:#40618a;min-width:240px;flex:1}
+.v13-toolbar input{width:100%;min-height:43px;border-radius:8px;border:1px solid #cbddef;padding:10px 12px;font:inherit;color:#1b4267}
+#localStatus{font-size:12px;color:#34714a;background:#edfaf0;border:1px solid #d0e8d5;border-radius:8px;padding:10px}
+#localStatus.warn{background:#fff3e4;color:#9b581b}.legacy-link{font-size:12px;color:#1c62c7;text-decoration:underline;padding:8px}
+.v13-familles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.v13-family{display:flex;position:relative;align-items:center;flex-direction:column;justify-content:center;gap:7px;border:1px solid #d9e7f4;border-radius:11px;padding:16px 8px;background:#f8fbff;cursor:pointer;text-align:center;min-height:118px}
+.v13-family input{position:absolute;top:9px;left:9px;width:19px;height:19px;accent-color:#2166e6}
+.v13-family>span{font-size:26px}.v13-family strong{font-size:12px;color:#24476e}
+.v13-family small{font-size:11px;color:#6b809c}
+.v13-family.selected{background:#e9f2ff;border:2px solid #2e70eb}
+.v13-listes-prestations{display:flex;flex-direction:column;gap:16px;margin-top:20px}
+.v13-family-group{border-radius:13px;background:#f9fbff;border:1px solid #dbe7f6;padding:16px}
+.v13-family-group h3{font-size:16px;color:#234d80;margin:0 0 12px}
+.v13-service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.v13-service{display:flex;gap:9px;align-items:center;cursor:pointer;border:1px solid #dae6f3;border-radius:9px;padding:12px;background:white;color:#3d5878;font-size:13px;min-height:51px;font-weight:650}
+.v13-service input{width:18px;height:18px;flex:none;accent-color:#1c64df}
+.v13-service.selected{border:1.5px solid #226be9;background:#f0f6ff;color:#174fa7}
+.v13-stepfoot{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px solid #e0eaf6;padding-top:16px;margin-top:20px}
+#selectionCompteur{font-weight:700;color:#305782;font-size:13px}
+.v13-empty{background:#f5f9ff;border:1px dashed #cddcef;border-radius:10px;color:#597796;padding:16px;font-size:13px}
+.v13-ouvrage-list{display:flex;flex-direction:column;gap:15px}
+.v13-work-card{border-radius:13px;border:1px solid #d7e4f5;padding:18px;background:linear-gradient(110deg,#fff,#faffff)}
+.v13-work-card h3{margin:0 0 5px;font-size:17px;color:#164d90}
+.v13-work-card .helper{font-size:12px;color:#6d8095;margin:0 0 12px}
+.v13-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v13-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:#345b85;min-width:0}
+.v13-field input,.v13-field select{width:100%;min-width:0;border:1px solid #cbddef;color:#214a7c;background:white;border-radius:8px;padding:9px 11px;font-size:14px;min-height:43px}
+.v13-field small{font-size:11px;color:#768ba0;font-weight:400}
+.v13-field-secondary{margin-top:18px;padding-top:18px;border-top:1px solid #e2edf6}
+.v13-addon-list{display:grid;gap:9px}
+.v13-addon{display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid #dce7f2;border-radius:9px;background:#fcfdff;padding:12px}
+.v13-addon.included{background:#f6f7f8;opacity:.7}
+.v13-addon-label{display:flex;align-items:center;gap:9px;min-width:220px;flex:1;color:#315274;font-size:13px;font-weight:650;cursor:pointer}
+.v13-addon-label input{width:17px;height:17px;accent-color:#2166e6}
+.v13-addon .v13-field{max-width:130px}.v13-addon .v13-field input{min-height:37px}
+.v13-price-hint{font-size:11px;color:#69809a}
+.v13-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.v13-total{padding:16px;background:#f1f6ff;border:1px solid #d5e4f9;border-radius:12px;display:flex;flex-direction:column;gap:8px}
+.v13-total small{font-size:12px;color:#6381a3}.v13-total b{font-size:20px;color:#1b579d}
+.v13-total.main{background:#1e62d3;border-color:#1e62d3}
+.v13-total.main small,.v13-total.main b{color:white}
+.v13-alert{background:#fff0e6;color:#a04529;border-left-color:#e17e58}
+.v13-recap-work{margin:14px 0;border:1px solid #dce6f2;border-radius:10px;background:white;overflow:hidden}
+.v13-recap-work summary{cursor:pointer;padding:14px 16px;background:#f4f9ff;color:#214c7c;font-weight:750}
+.v13-report-table{width:100%;min-width:610px}
+.v13-report-table th,.v13-report-table td{font-size:12px;vertical-align:top}
+.v13-notes{font-size:12px;color:#865731;padding:0 22px 12px 37px;line-height:1.6}
+.v13-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:16px}
+.v13-actions button:disabled{opacity:.5;cursor:not-allowed}
+.v13 .panel{scroll-margin-top:16px}
+@media(max-width:850px){
+.v13-familles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v13-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.v13-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+.v13-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:540px){
+.v13-familles{grid-template-columns:repeat(2,minmax(0,1fr))}
+.v13-service-grid{grid-template-columns:1fr}
+.v13-fields,.v13-totals{grid-template-columns:1fr}
+.v13-nav{grid-template-columns:1fr 1fr}
+.v13-nav a{font-size:11px;padding:9px}
+.v13-toolbar label{min-width:150px}
+.v13-family{min-height:102px}
+.v13 .panel{padding:16px}
+.v13-work-card{padding:12px}
+.v13-stepfoot a{width:100%;text-align:center}
+}
+@media print{.top,.hero,.notice,.v13-toolbar,.v13-nav,#etape1,#etape2,#etape3,.v13-actions,footer{display:none!important}#etape4{display:block!important;border:0;box-shadow:none;padding:0}.v13-recap-work{break-inside:avoid}.v13-report-table{min-width:0}}
