@@ -18,3 +18,6 @@
 
 /* V0.4.0 — recherche tuiles et accessoires VELUX */
 .tile-search-results{margin-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.tile-search-hit{border:1px solid #dbe4ef;background:#fff;border-radius:9px;padding:9px 10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;color:#172238}.tile-search-hit:hover,.tile-search-hit.active{border-color:#1769f3;background:#eff6ff}.tile-search-hit span{font-size:11px;color:#68788e}.check-stack{display:flex;flex-direction:column;gap:7px}.velux-card{grid-template-columns:repeat(4,minmax(0,1fr))}.velux-card>div{min-width:0}@media(max-width:780px){.tile-search-results{grid-template-columns:1fr}.velux-card{grid-template-columns:1fr 1fr}}@media(max-width:520px){.velux-card{grid-template-columns:1fr}}
+.accessory-quantity{min-width:85px;max-width:110px}
+#pricedAccessories .source{white-space:normal;overflow-wrap:anywhere}
+#pricedAccessories .table td{vertical-align:top}

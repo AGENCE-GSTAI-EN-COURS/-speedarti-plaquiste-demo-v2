@@ -30,21 +30,7 @@
     'edilians-plein-sud-reabilis':{min:2.47,mean:2.55,max:2.63,gauge_min_mm:380,gauge_mean_mm:392,gauge_max_mm:404,source:'EDILIANS Encyclopédie 2026 — PLEIN SUD RÉABILIS'},
     'edilians-plate-artis-17x27':{min:10.00,mean:10.53,max:11.11,gauge_min_mm:90,gauge_mean_mm:95,gauge_max_mm:100,source:'EDILIANS Encyclopédie 2026 — PLATE ARTIS 17X27'}
   };
-  const priceCorrections={
-    'edilians-mediane-plus':{
-      currency:'EUR',
-      price_type:'public_market_benchmark',
-      unit_price_ht_estimated:3.24,
-      source:'Chausson — Médiane Plus 101+ affichée à 3,89 €/pièce sur plusieurs teintes ; conversion indicative en HT à 20%',
-      source_url:'https://www.chausson.fr/materiaux/tuiles-tuile-mediane-plus-tradition-p-141031-19',
-      observations:[
-        {supplier:'Chausson',variant:'Tradition',display_price:3.89,display_unit:'piece',tax_status:'public_display',url:'https://www.chausson.fr/materiaux/tuiles-tuile-mediane-plus-tradition-p-141031-19'},
-        {supplier:'Chausson',variant:'Rouergue',display_price:3.89,display_unit:'piece',tax_status:'public_display',url:'https://www.chausson.fr/materiaux/tuile-mediane-terre-cuite-double-emboitement-edilians-101-p-141031-20'},
-        {supplier:'Point.P',variant:'Rouergue',display_price:5258.89,display_unit:'mille',tax_status:'TTC',equivalent_ttc_per_piece:5.25889,url:'https://www.pointp.fr/p/couverture/tuile-mediane-plus-gelis-101-rouergue-84-A6427698'}
-      ],
-      warning:'Prix distributeur variable selon teinte, agence et compte professionnel ; ne pas considérer ce benchmark comme tarif fournisseur contractuel.'
-    }
-  };
+  const priceCorrections={};
   const corrections={
     'edilians-beauvoise-graphite':{min:20.2,max:20.7,source:'EDILIANS Encyclopédie 2026 — BEAUVOISE GRAPHITE'},
     'edilians-plate-17x27':{min:59.5,max:66.1,source:'EDILIANS Encyclopédie 2026 — PLATE 17X27'},
