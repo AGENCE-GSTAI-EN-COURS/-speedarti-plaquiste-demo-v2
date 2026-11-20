@@ -1,0 +1,30 @@
+name: Couvreur — tarifs et interface
+on:
+  push:
+    paths: ['couvreur/**', '.github/workflows/couvreur-tests.yml']
+  pull_request:
+    paths: ['couvreur/**', '.github/workflows/couvreur-tests.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: couvreur/package-lock.json
+      - run: npm ci --prefix couvreur --ignore-scripts
+      - run: npx --prefix couvreur playwright install --with-deps chromium
+      - run: npm test --prefix couvreur
+        env:
+          COUVREUR_SCREENSHOT_DIR: ${{ runner.temp }}/couvreur-ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: couvreur-ui
+          path: ${{ runner.temp }}/couvreur-ui
+          if-no-files-found: ignore

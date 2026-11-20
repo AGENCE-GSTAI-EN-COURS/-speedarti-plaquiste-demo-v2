@@ -1,0 +1,11 @@
+{
+  "name": "speedarti-couvreur-demo",
+  "private": true,
+  "version": "0.6.0",
+  "scripts": {
+    "test": "node --test tests/pricing.test.cjs && node tests/pricing-ui.test.cjs",
+    "test:engine": "node --test tests/pricing.test.cjs",
+    "test:ui": "node tests/pricing-ui.test.cjs"
+  },
+  "devDependencies": { "playwright": "1.62.1" }
+}

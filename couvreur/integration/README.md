@@ -1,4 +1,8 @@
-# Couvreur — Couche d'intégration SpeedArti V0.5.2
+# Couvreur — Couche d'intégration SpeedArti V0.6.0
+
+## Tarifs tuiles et accessoires fournisseur
+
+Les tarifs professionnels réels priment désormais pour 101 modèles ; 21 autres utilisent une moyenne publique HT. Un coloris tarifé suffit pour le modèle. Les 788 accessoires fournisseur sont recherchables et ajoutables ou affectables en remplacement d’un poste indicatif. Les références, unités, conditionnements, sources et dates restent disponibles à l’export. Voir [les règles et contrôles des prix](../PRIX_DEMO.md).
 
 Le dépôt `GSTAI-Sp/speedarti-v2` a été audité **uniquement en lecture**. Cette couche prépare le raccordement sans modifier le dépôt source.
 

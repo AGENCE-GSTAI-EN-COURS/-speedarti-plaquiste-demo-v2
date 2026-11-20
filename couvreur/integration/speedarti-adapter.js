@@ -57,7 +57,11 @@
         stock_disponible:0,
         a_commander:stockPhysical?m.quantity:0,
         coef_perte_applique:1,
-        notes:[m.source,m.note,m.product_reference?('Réf. fabricant '+m.product_reference):''].filter(Boolean).join(' — '),
+        date_prix:m.price_observed_at||null,
+        unite_vente:m.sale_unit||null,
+        prix_unite_vente_ht:m.sale_price_ht??null,
+        pieces_par_unite_vente:m.pieces_per_sale_unit??null,
+        notes:[m.source,m.note].filter(Boolean).join(' — '),
         _stock_physical:stockPhysical
       };
     });
